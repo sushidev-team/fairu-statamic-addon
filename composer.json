@@ -1,5 +1,5 @@
 {
-    "name": "sushidev-team/fairu",
+    "name": "sushidev-team/fairu-statamic",
     "autoload": {
         "psr-4": {
             "SushidevTeam\\Fairu\\": "src"
