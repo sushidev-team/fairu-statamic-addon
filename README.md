@@ -1,14 +1,14 @@
-# Fairu
+# Fairu (WIP)
 
-> Fairu is a Statamic addon that does something pretty neat.
+> This is the official fairu addon for statamic. Fairu is powerful image and file proxy with the goal in mind to deliver 
+your files in an optimized way.
 
 ## Features
 
-This addon does:
+This addon provides:
 
-- This
-- And this
-- And even this
+- Import functions to bring all your assets into fairu.app
+- Tags and field to easily embed fairu hosted files into your next project.
 
 ## How to Install
 
@@ -20,4 +20,4 @@ composer require sushidev-team/fairu
 
 ## How to Use
 
-Here's where you can explain how to use this wonderful addon.
+Follow the instructions at https://docs.fairu.app/docs/statamic/get-started
