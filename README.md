@@ -15,7 +15,7 @@ This addon provides:
 You can install this addon via Composer:
 
 ``` bash
-composer require sushidev-team/fairu
+composer require sushidev-team/fairu-statamic
 ```
 
 ## How to Use
