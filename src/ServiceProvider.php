@@ -10,6 +10,11 @@ class ServiceProvider extends AddonServiceProvider
         Commands\Setup::class,
     ];
 
+    protected $routes = [
+        'cp' => __DIR__.'/../routes/cp.php',
+        'web' => __DIR__.'/../routes/web.php',
+    ];
+
     public function bootAddon()
     {
         
