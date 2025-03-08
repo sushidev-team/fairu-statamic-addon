@@ -27,6 +27,18 @@ class Fairu {
     protected function endpoint(string $path){
         return config('fairu.url') . "/$path";
     }
+
+    public function getFile(string $id): ?array {
+
+        $result = $this->client->get($this->endpoint('api/files/'.$id));
+
+        if ($result->status() != 200){
+            throw new Exception(json_encode($result?->json()));
+        }
+
+        return $result->json();
+
+    }
     
     public function getScopeFromEndpoint(): ?array {
 

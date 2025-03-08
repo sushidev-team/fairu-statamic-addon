@@ -12,6 +12,10 @@ class ServiceProvider extends AddonServiceProvider
         Commands\Setup::class,
     ];
 
+    protected $tags = [
+        \SushidevTeam\Fairu\Tags\FairuAssetTags::class,
+    ];
+
     protected $routes = [
         'cp' => __DIR__ . '/../routes/cp.php',
         'web' => __DIR__ . '/../routes/web.php',
