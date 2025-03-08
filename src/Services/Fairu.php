@@ -2,6 +2,7 @@
 
 namespace SushidevTeam\Fairu\Services;
 
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Ramsey\Uuid\Uuid;
 
@@ -30,7 +31,36 @@ class Fairu {
     public function getScopeFromEndpoint(): ?array {
 
         $result = $this->client->get($this->endpoint('api/users/scope'));
+
+        if ($result->status() != 200){
+            throw new Exception(json_encode($result?->json()));
+        }
+
         return $result->json();
+
+    }
+
+    public function createFolder(array $folder): ?array {
+
+        $result = $this->client->post($this->endpoint('api/folders'), $folder);
+
+        if ($result->status() != 200){
+            throw new Exception(json_encode($result?->json()));
+        }
+
+        return $result?->json();
+
+    }
+
+    public function createFile(array $file): ?array {
+
+        $result = $this->client->post($this->endpoint('api/files'), $file);
+
+        if ($result->status() != 200){
+            throw new Exception(json_encode($result?->json()));
+        }
+
+        return $result?->json();
 
     }
 

@@ -4,6 +4,8 @@ namespace SushidevTeam\Fairu\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Asset;
 use Statamic\Facades\AssetContainer as FacadesAssetContainer;
@@ -18,6 +20,7 @@ use function Laravel\Prompts\spin;
 
 use Ramsey\Uuid\Uuid;
 use Statamic\Contracts\Assets\Asset as AssetsAsset;
+use Throwable;
 
 class Setup extends Command
 {
@@ -94,27 +97,36 @@ class Setup extends Command
         );
 
         // 2) Create folder list
-        $list = spin(
+        $folders = spin(
             message: 'Create list of folders...',
-            callback: fn () => (new ServicesImport)->buildFlatFodlerListByFolderArray($folderList->toArray())
+            callback: fn() => (new ServicesImport)->buildFlatFolderListByFolderArray($folderList->toArray())
         );
 
-        // 3) Create folder entries in fairu
+        try {
+
+            // 3) Create folder entries in fairu
+            progress(
+                label: 'Creating folders in fairu...',
+                steps: $folders,
+                callback: function ($folder, $progress) {
+                    (new ServicesFairu($this->connection))->createFolder($folder);
+                },
+                hint: 'This may take some time, because we are creating this folders in fairu.'
+            );
+        } catch (Throwable $ex) {
+            $this->error("Seems like there is an error while creating the folders: ". $ex->getMessage());
+        }
+
+        // 4) Upload files
         progress(
-            label: 'Creating folders in fairu...',
-            steps: $list,
-            callback: function ($asset, $progress) {
-                
+            label: 'Upload files to fairu...',
+            steps: $assets,
+            callback: function ($asset, $progress) use ($folders) {
+                $uuid = (new ServicesFairu($this->connection))->convertToUuid($asset->id);
+                $this->importAssetToFairu($asset, $uuid, $folders);
             },
-            hint: 'This may take some time.'
+            hint: 'This may take some time, because we are uploading the files to fairu.'
         );
-        
-        dd($list);
-
-        $assets->each(function ($asset) {
-            $uuid = (new ServicesFairu($this->connection))->convertToUuid($asset->id);
-            $this->importAssetToFairu($asset, $uuid);
-        });
 
         $restart = confirm(
             label: 'Do you want to import another container?',
@@ -131,9 +143,32 @@ class Setup extends Command
         return $this->importFiles();
     }
 
-    protected function importAssetToFairu(AssetsAsset $asset, $uuid)
+    protected function importAssetToFairu(AssetsAsset $asset, string $uuid, array $folders)
     {
-        // TODO: Write import logic
-        $this->line($asset->path);
+
+        $folder = (new ServicesImport)->getFolderPath($asset->path);
+        $folderId = data_get(collect($folders)->where('path', $folder)->first(), 'id');
+        
+        $fileContent = $asset->contents();
+
+        $fairuAssetEntry = [
+            'id' => $uuid,
+            'folder' => $folderId,
+            'type' => 'standard',
+            'filename' => $asset->basename()
+        ];
+
+
+        $result = (new ServicesFairu($this->connection))->createFile($fairuAssetEntry);
+
+        $response = Http::withHeaders([
+            "x-amz-acl" => "public-read",
+            'Content-Type' => $asset->mime_type,
+        ])->withBody($fileContent, $asset->mime_type)->put(data_get($result, 'upload_url'));
+
+        if ($response->status() == 200){
+            Http::get(data_get($result, 'sync_url'));
+        }
+        
     }
 }
