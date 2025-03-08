@@ -11,6 +11,10 @@ use Statamic\Facades\Asset;
 use Statamic\Facades\AssetContainer as FacadesAssetContainer;
 use SushidevTeam\Fairu\Services\Fairu as ServicesFairu;
 use SushidevTeam\Fairu\Services\Import as ServicesImport;
+use Statamic\Fieldtypes\Bard as FieldtypesBard;
+use Statamic\Fieldtypes\Bard\Augmentor;
+
+use Illuminate\Support\Str;
 
 
 use function Laravel\Prompts\confirm;
@@ -114,7 +118,7 @@ class Setup extends Command
                 hint: 'This may take some time, because we are creating this folders in fairu.'
             );
         } catch (Throwable $ex) {
-            $this->error("Seems like there is an error while creating the folders: ". $ex->getMessage());
+            $this->error("Seems like there is an error while creating the folders: " . $ex->getMessage());
         }
 
         // 4) Upload files
@@ -123,7 +127,7 @@ class Setup extends Command
             steps: $assets,
             callback: function ($asset, $progress) use ($folders) {
                 $uuid = (new ServicesFairu($this->connection))->convertToUuid($asset->id);
-                $this->importAssetToFairu($asset, $uuid, $folders);
+                $this->importAssetToFairu($asset, $uuid, $folders, $progress);
             },
             hint: 'This may take some time, because we are uploading the files to fairu.'
         );
@@ -143,32 +147,45 @@ class Setup extends Command
         return $this->importFiles();
     }
 
-    protected function importAssetToFairu(AssetsAsset $asset, string $uuid, array $folders)
+    protected function importAssetToFairu(AssetsAsset $asset, string $uuid, array $folders, $progress)
     {
 
         $folder = (new ServicesImport)->getFolderPath($asset->path);
         $folderId = data_get(collect($folders)->where('path', $folder)->first(), 'id');
-        
+
         $fileContent = $asset->contents();
 
         $fairuAssetEntry = [
             'id' => $uuid,
             'folder' => $folderId,
             'type' => 'standard',
-            'filename' => $asset->basename()
+            'filename' => $asset->basename(),
+            'alt' => data_get($asset->data(), 'alt'),
+            'focal_point' => data_get($asset->data(), 'focus'),
+            'copyright' => data_get($asset->data(), config('fairu.migration.copyright'))
         ];
 
+        $caption = Str::replace(["\n", '<br>', "\r", "\t", '|', ''], '', (new Augmentor(new FieldtypesBard))->augment(data_get($asset->data(), config('fairu.migration.caption'))));
+        $description = Str::replace(["\n", '<br>', "\r", "\t", '|', ''], '', (new Augmentor(new FieldtypesBard))->augment(data_get($asset->data(), config('fairu.migration.description'))));
+
+        data_set($fairuAssetEntry, 'caption', $caption);
+        data_set($fairuAssetEntry, 'description', $description);
+
+        $progress
+            ->label("Create file entry " . $asset->basename());
 
         $result = (new ServicesFairu($this->connection))->createFile($fairuAssetEntry);
+
+        $progress
+            ->label("Uploading " . $asset->basename());
 
         $response = Http::withHeaders([
             "x-amz-acl" => "public-read",
             'Content-Type' => $asset->mime_type,
         ])->withBody($fileContent, $asset->mime_type)->put(data_get($result, 'upload_url'));
 
-        if ($response->status() == 200){
+        if ($response->status() == 200) {
             Http::get(data_get($result, 'sync_url'));
         }
-        
     }
 }
