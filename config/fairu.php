@@ -28,4 +28,16 @@ return [
     */
     'url' => env('FAIRU_URL', 'https://fairu.app'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Previous Assets System
+    |--------------------------------------------------------------------------
+    |
+    | Should the old or default asset system provided by statamic
+    | be deactivated in the frontend?
+    |
+    */
+
+    'deactivate_old' => env('FAIRU_DEACTIVATE_OLD', true),
+
 ];

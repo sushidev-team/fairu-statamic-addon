@@ -21,11 +21,15 @@ class ServiceProvider extends AddonServiceProvider
     {
         $packageName = str_replace('\\', '-', strtolower(__NAMESPACE__)); // z. B. "fairu-statamic"
 
-        View::addNamespace('fairu-statamic', base_path("resources/views/vendor/{$packageName}"));
+        if (config('fairu.deactivate_old') == true){
+            View::addNamespace('fairu-statamic', base_path("resources/views/vendor/{$packageName}"));
+        }
     }
 
     public function register()
     {
-        $this->app->bind(\Statamic\Http\Controllers\CP\Utilities\CacheController::class, \SushidevTeam\Fairu\Http\Controllers\CacheController::class);
+        if (config('fairu.deactivate_old') == true){
+            $this->app->bind(\Statamic\Http\Controllers\CP\Utilities\CacheController::class, \SushidevTeam\Fairu\Http\Controllers\CacheController::class);
+        }
     }
 }

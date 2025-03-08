@@ -8,9 +8,13 @@ use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Asset;
 use Statamic\Facades\AssetContainer as FacadesAssetContainer;
 use SushidevTeam\Fairu\Services\Fairu as ServicesFairu;
+use SushidevTeam\Fairu\Services\Import as ServicesImport;
+
 
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\progress;
 use function Laravel\Prompts\select;
+use function Laravel\Prompts\spin;
 
 use Ramsey\Uuid\Uuid;
 use Statamic\Contracts\Assets\Asset as AssetsAsset;
@@ -73,6 +77,39 @@ class Setup extends Command
         );
 
         $assets = Asset::whereContainer($assetContainer);
+        $folderList = FacadesAssetContainer::find($assetContainer)?->folders();
+
+        $paths = collect([]);
+
+        // 1) Create the list of files 
+        //    This step is important because otherwise we will not be
+        //    able to push the file into correct fairu folder.
+        progress(
+            label: 'Prepare list of files...',
+            steps: $assets,
+            callback: function ($asset, $progress) use (&$paths) {
+                $paths->push($asset->path);
+            },
+            hint: 'This may take some time.'
+        );
+
+        // 2) Create folder list
+        $list = spin(
+            message: 'Create list of folders...',
+            callback: fn () => (new ServicesImport)->buildFlatFodlerListByFolderArray($folderList->toArray())
+        );
+
+        // 3) Create folder entries in fairu
+        progress(
+            label: 'Creating folders in fairu...',
+            steps: $list,
+            callback: function ($asset, $progress) {
+                
+            },
+            hint: 'This may take some time.'
+        );
+        
+        dd($list);
 
         $assets->each(function ($asset) {
             $uuid = (new ServicesFairu($this->connection))->convertToUuid($asset->id);
@@ -97,5 +134,6 @@ class Setup extends Command
     protected function importAssetToFairu(AssetsAsset $asset, $uuid)
     {
         // TODO: Write import logic
+        $this->line($asset->path);
     }
 }
