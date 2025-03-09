@@ -18,7 +18,7 @@ class FairuAssetTags extends Tags
 
     protected function getFile(string $id){
         return Cache::flexible('file-'.$id, config('app.debug') ? [0,0]: config('fairu.caching_meta'), function(){
-            return (new Fairu($this->params->get('connection', 'default')))->getFile($this->params->get('id'));
+            return data_get((new Fairu($this->params->get('connection', 'default')))->getFile($this->params->get('id')), 'data');
         });
     }
 
@@ -59,7 +59,7 @@ class FairuAssetTags extends Tags
       return Cache::flexible($cacheKey, config('app.debug') ? [0,0]: config('fairu.caching_meta'), function(){
 
             $file = $this->getFile($this->params->get('id'));
-            $url = $this->getUrl($this->params->get('id'), $this->params->get('name') ?? data_get($file, 'filename'));
+            $url = $this->getUrl($this->params->get('id'), $this->params->get('name') ?? data_get($file, 'name'));
 
             $set = data_get($file, 'data');
             data_set($set, 'url', $url,);
