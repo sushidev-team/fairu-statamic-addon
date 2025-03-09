@@ -27,6 +27,7 @@ return [
     |
     */
     'url' => env('FAIRU_URL', 'https://fairu.app'),
+    'url_proxy' => env('FAIRU_URL_PROXY', 'https://files.fairu.app'),
 
     /*
     |--------------------------------------------------------------------------
@@ -61,6 +62,16 @@ return [
         // Define the field that will contain the copyright
         'copyright' => env('FAIRU_MIGRATION_FIELD_COPYRIGHT', 'copyright'),
 
-    ]
+    ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Caching
+    |--------------------------------------------------------------------------
+    |
+    | Define how long meta data should be cached
+    |
+    */
+
+    'caching_meta' => [60, 120]
 ];

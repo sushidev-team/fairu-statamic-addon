@@ -2,6 +2,7 @@
 
 namespace SushidevTeam\Fairu\Tags;
 
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
 use Statamic\SeoPro\Cascade;
 use Statamic\SeoPro\GetsSectionDefaults;
@@ -15,6 +16,36 @@ class FairuAssetTags extends Tags
 
     protected static $handle = 'fairu';
 
+    protected function getFile(string $id){
+        return Cache::flexible('file-'.$id, config('app.debug') ? [0,0]: config('fairu.caching_meta'), function(){
+            return (new Fairu($this->params->get('connection', 'default')))->getFile($this->params->get('id'));
+        });
+    }
+
+    protected function getUrl(string $id, ?string $filename){
+        $params = [
+            'width' =>$this->params->get('width'),
+            'height' => $this->params->get('height'),
+            'quality' => $this->params->get('quality', 90),
+            'format' => $this->params->get('format'),
+            'focal' => $this->params->get('focal_point'),
+        ];
+
+        $queryString = http_build_query($params);
+
+        return (Str::endsWith(config('fairu.url_proxy'), "/") ? config('fairu.url_proxy') : config('fairu.url_proxy') . "/") . $id . "/" . ($filename ?? 'file') . '?' . $queryString;
+
+    }
+
+    /**
+     * The {{ fairu:url }} tag.
+     *
+     * @return string
+     */
+    public function url() {
+        return $this->getUrl($this->params->get('id'), $this->params->get('name', 'file'));
+    }
+
     /**
      * The {{ fairu }} tag.
      *
@@ -22,13 +53,18 @@ class FairuAssetTags extends Tags
      */
     public function index()
     {
-       return Cache::flexible($this->params->get('id'), [30, 120], function(){
+    
+      $cacheKey = md5(json_encode($this->params->toArray()));
 
-            $result = (new Fairu($this->params->get('connection', 'default')))->getFile($this->params->get('id'));
+      return Cache::flexible($cacheKey, config('app.debug') ? [0,0]: config('fairu.caching_meta'), function(){
 
-            $set = data_get($result, 'data');
+            $file = $this->getFile($this->params->get('id'));
+            $url = $this->getUrl($this->params->get('id'), $this->params->get('name') ?? data_get($file, 'filename'));
 
-            data_set($set, 'url', data_get($set, 'stream'));
+            $set = data_get($file, 'data');
+            data_set($set, 'url', $url,);
+
+            data_set($set, 'fields', array_keys($set));
 
             return $set;
 
