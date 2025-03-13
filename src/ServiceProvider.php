@@ -5,6 +5,7 @@ namespace SushidevTeam\Fairu;
 use Illuminate\Support\Facades\View;
 use Statamic\Providers\AddonServiceProvider;
 use Statamic\Facades\Utility;
+use SushidevTeam\Fairu\Fieldtypes\Fairu;
 
 class ServiceProvider extends AddonServiceProvider
 {
@@ -14,6 +15,14 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $tags = [
         \SushidevTeam\Fairu\Tags\FairuAssetTags::class,
+    ];
+
+    protected $vite = [
+        'input' => [
+            'resources/js/cp.js',
+            'resources/css/cp.css',
+        ],
+        'publicDirectory' => 'resources/dist',
     ];
 
     protected $routes = [
@@ -35,5 +44,7 @@ class ServiceProvider extends AddonServiceProvider
         if (config('fairu.deactivate_old') == true){
             $this->app->bind(\Statamic\Http\Controllers\CP\Utilities\CacheController::class, \SushidevTeam\Fairu\Http\Controllers\CacheController::class);
         }
+
+        Fairu::register();
     }
 }
