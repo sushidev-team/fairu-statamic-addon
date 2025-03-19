@@ -1,7 +1,7 @@
 # Fairu (WIP)
 
-> This is the official fairu addon for statamic. Fairu is powerful image and file proxy with the goal in mind to deliver 
-your files in an optimized way.
+> This is the official fairu addon for statamic. Fairu is powerful image and file proxy with the goal in mind to deliver
+> your files in an optimized way.
 
 ## Features
 
@@ -14,13 +14,20 @@ This addon provides:
 
 You can install this addon via Composer:
 
-``` bash
-composer require sushidev-team/fairu-statamic
+```bash
+composer require sushidev/fairu-statamic
 ```
 
 ## How to Use
 
 Follow the instructions at https://docs.fairu.app/docs/statamic/get-started to get started.
+
+### Add env variables
+
+```bash
+FAIRU_TENANT=[YOUR_TENANT_ID]
+FAIRU_TENANT_SECRET=[YOUR_API_KEY_SECRET]
+```
 
 ### Import
 
@@ -33,12 +40,13 @@ php please fairu:setup
 Using fairu in your application is pretty simple.
 
 ```antlers
-{{fairu id="ID"}}
-    <img src="{{url}}" alt="{{alt}}" />
-{{/fairu}}
-
+{{ fairu id="ID" }}
+    <img
+        src="{{ url }}"
+        alt="{{ alt }}" />
+{{ /fairu }}
 ```
 
 ### Detailed
 
-Follow the instructions at https://docs.fairu.app/docs/statamic/get-started to find out what you can do 
+Follow the instructions at https://docs.fairu.app/docs/statamic/get-started to find out what you can do.

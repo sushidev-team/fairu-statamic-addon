@@ -4,15 +4,8 @@
     "isEntry": true,
     "src": "resources/css/cp.css"
   },
-  "resources/js/cp.css": {
-    "file": "assets/cp-e3b0c442.css",
-    "src": "resources/js/cp.css"
-  },
   "resources/js/cp.js": {
-    "css": [
-      "assets/cp-e3b0c442.css"
-    ],
-    "file": "assets/cp-84614a4d.js",
+    "file": "assets/cp-fcb519b5.js",
     "isEntry": true,
     "src": "resources/js/cp.js"
   }

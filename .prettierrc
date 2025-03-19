@@ -1,0 +1,32 @@
+{
+    "plugins": ["prettier-plugin-tailwindcss", "prettier-plugin-antlers"],
+    "tailwindConfig": "./tailwind.config.js",
+    "htmlWhitespaceSensitivity": "strict",
+    "singleAttributePerLine": true,
+    "bracketSameLine": true,
+    "printWidth": 120,
+    "tabWidth": 4,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "semi": true,
+    "overrides": [
+        {
+            "files": ["*.antlers.html"],
+            "options": {
+                "parser": "antlers"
+            }
+        },
+        {
+            "files": ["./*.js"],
+            "options": {
+                "tabWidth": 2
+            }
+        },
+        {
+            "files": ["*.yml", "*.yaml", "composer.json", "composer.lock", ".babelrc"],
+            "options": {
+                "tabWidth": 2
+            }
+        }
+    ]
+}

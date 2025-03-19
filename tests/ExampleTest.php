@@ -1,6 +1,6 @@
 <?php
 
-namespace SushidevTeam\Fairu\Tests;
+namespace Sushidev\Fairu\Tests;
 
 class ExampleTest extends TestCase
 {

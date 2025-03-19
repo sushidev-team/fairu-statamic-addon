@@ -1,6 +1,6 @@
 <?php
 
-namespace SushidevTeam\Fairu\Tags;
+namespace Sushidev\Fairu\Tags;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
@@ -10,7 +10,7 @@ use Statamic\SeoPro\GetsSectionDefaults;
 use Statamic\SeoPro\RendersMetaHtml;
 use Statamic\SeoPro\SiteDefaults;
 use Statamic\Tags\Tags;
-use SushidevTeam\Fairu\Services\Fairu;
+use Sushidev\Fairu\Services\Fairu;
 use Throwable;
 
 class FairuAssetTags extends Tags

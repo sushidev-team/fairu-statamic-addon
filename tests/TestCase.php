@@ -1,8 +1,8 @@
 <?php
 
-namespace SushidevTeam\Fairu\Tests;
+namespace Sushidev\Fairu\Tests;
 
-use SushidevTeam\Fairu\ServiceProvider;
+use Sushidev\Fairu\ServiceProvider;
 use Statamic\Testing\AddonTestCase;
 
 abstract class TestCase extends AddonTestCase

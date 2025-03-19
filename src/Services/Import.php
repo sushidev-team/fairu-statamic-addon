@@ -1,15 +1,16 @@
 <?php
 
-namespace SushidevTeam\Fairu\Services;
+namespace Sushidev\Fairu\Services;
 
 use Illuminate\Support\Str;
 
 class Import
 {
-    public function buildFlatFolderListByFolderArray(array $folderPaths, ?string $connection = 'default'): array {
+    public function buildFlatFolderListByFolderArray(array $folderPaths, ?string $connection = 'default'): array
+    {
         $folders = [];
         $uuids = [];
-       
+
         usort($folderPaths, function ($a, $b) {
             return substr_count($a, '/') - substr_count($b, '/');
         });
@@ -72,7 +73,8 @@ class Import
         return $folders;
     }
 
-    public function getFolderPath(string $path): string {
+    public function getFolderPath(string $path): string
+    {
         return dirname($path) !== '.' ? dirname($path) : '';
     }
 }

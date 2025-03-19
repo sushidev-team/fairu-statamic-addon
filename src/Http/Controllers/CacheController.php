@@ -1,6 +1,6 @@
 <?php
 
-namespace SushidevTeam\Fairu\Http\Controllers;
+namespace Sushidev\Fairu\Http\Controllers;
 
 class CacheController extends \Statamic\Http\Controllers\CP\Utilities\CacheController
 {
@@ -13,5 +13,4 @@ class CacheController extends \Statamic\Http\Controllers\CP\Utilities\CacheContr
             'images' => $this->getImageCacheStats(),
         ]);
     }
-
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace SushidevTeam\Fairu\Commands;
+namespace Sushidev\Fairu\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Log;
 use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Asset;
 use Statamic\Facades\AssetContainer as FacadesAssetContainer;
-use SushidevTeam\Fairu\Services\Fairu as ServicesFairu;
-use SushidevTeam\Fairu\Services\Import as ServicesImport;
+use Sushidev\Fairu\Services\Fairu as ServicesFairu;
+use Sushidev\Fairu\Services\Import as ServicesImport;
 use Statamic\Fieldtypes\Bard as FieldtypesBard;
 use Statamic\Fieldtypes\Bard\Augmentor;
 

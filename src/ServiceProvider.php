@@ -1,11 +1,10 @@
 <?php
 
-namespace SushidevTeam\Fairu;
+namespace Sushidev\Fairu;
 
 use Illuminate\Support\Facades\View;
 use Statamic\Providers\AddonServiceProvider;
 use Statamic\Facades\Utility;
-use SushidevTeam\Fairu\Fieldtypes\Fairu;
 
 class ServiceProvider extends AddonServiceProvider
 {
@@ -14,7 +13,11 @@ class ServiceProvider extends AddonServiceProvider
     ];
 
     protected $tags = [
-        \SushidevTeam\Fairu\Tags\FairuAssetTags::class,
+        \Sushidev\Fairu\Tags\FairuAssetTags::class,
+    ];
+
+    protected $fieldtypes = [
+        \Sushidev\Fairu\Fieldtypes\Fairu::class,
     ];
 
     protected $vite = [
@@ -23,6 +26,7 @@ class ServiceProvider extends AddonServiceProvider
             'resources/css/cp.css',
         ],
         'publicDirectory' => 'resources/dist',
+        'hotFile' => __DIR__ . '/../resources/dist/hot',
     ];
 
     protected $routes = [
@@ -30,21 +34,37 @@ class ServiceProvider extends AddonServiceProvider
         'web' => __DIR__ . '/../routes/web.php',
     ];
 
+    protected $config = false;
+
     public function bootAddon()
     {
-        $packageName = str_replace('\\', '-', strtolower(__NAMESPACE__)); // z. B. "fairu-statamic"
+        $packageName = str_replace('\\', '-', strtolower(__NAMESPACE__));
 
-        if (config('fairu.deactivate_old') == true){
+        if (config('fairu.deactivate_old') == true) {
             View::addNamespace('fairu-statamic', base_path("resources/views/vendor/{$packageName}"));
         }
+
+        $this->bootAddonConfig();
     }
+
+    protected function bootAddonConfig()
+    {
+        $this->mergeConfigFrom(__DIR__ . '/../config/fairu.php', 'statamic.fairu');
+
+        $this->publishes([
+            __DIR__ . '/../config/fairu.php' => config_path('statamic/fairu.php'),
+        ], 'fairu-config');
+
+        return $this;
+    }
+
 
     public function register()
     {
-        if (config('fairu.deactivate_old') == true){
-            $this->app->bind(\Statamic\Http\Controllers\CP\Utilities\CacheController::class, \SushidevTeam\Fairu\Http\Controllers\CacheController::class);
+        if (config('fairu.deactivate_old') == true) {
+            $this->app->bind(\Statamic\Http\Controllers\CP\Utilities\CacheController::class, \Sushidev\Fairu\Http\Controllers\CacheController::class);
         }
 
-        Fairu::register();
+        $this->mergeConfigFrom(__DIR__ . '/../config/fairu.php', 'fairu');
     }
 }

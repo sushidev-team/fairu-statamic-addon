@@ -1,6 +1,6 @@
 <?php
 
-namespace SushidevTeam\Fairu\Fieldtypes;
+namespace Sushidev\Fairu\Fieldtypes;
 
 use Statamic\Fields\Fieldtype;
 use Statamic\Exceptions\AssetContainerNotFoundException;
@@ -10,6 +10,11 @@ use Statamic\Statamic;
 
 class Fairu extends Fieldtype
 {
+    public function icon()
+    {
+        return file_get_contents(__DIR__ . '/../../resources/svg/fairu-favicon.svg');
+    }
+
     /**
      * The blank/default value.
      *
@@ -33,7 +38,7 @@ class Fairu extends Fieldtype
 
     public function preload()
     {
-        
+        return ['tenant_id' => config('fairu.connections.default.tenant')];
     }
 
     public function getItemData($items)
@@ -57,22 +62,17 @@ class Fairu extends Fieldtype
     public $categories = ['media'];
 
 
-    public static $title = 'Fairu / Asset Field';
+    public static $title = 'Fairu Assets';
 
     public static function handle(): string
     {
         return 'fairu';
     }
 
-    protected function container()
-    {
-       
-    }
+    protected function container() {}
 
     protected function configFieldItems(): array
     {
-        return [
-            
-        ];
+        return [];
     }
 }

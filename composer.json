@@ -1,38 +1,39 @@
 {
-    "name": "sushidev-team/fairu-statamic",
-    "autoload": {
-        "psr-4": {
-            "SushidevTeam\\Fairu\\": "src"
-        }
+  "name": "sushidev/fairu-statamic",
+  "type": "statamic-addon",
+  "autoload": {
+    "psr-4": {
+      "Sushidev\\Fairu\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Sushidev\\Fairu\\Tests\\": "tests"
+    }
+  },
+  "require": {
+    "statamic/cms": "^5.51",
+    "laravel/prompts": "^0.3.5"
+  },
+  "require-dev": {
+    "orchestra/testbench": "^9.0"
+  },
+  "config": {
+    "allow-plugins": {
+      "pixelfear/composer-dist-plugin": true
+    }
+  },
+  "extra": {
+    "statamic": {
+      "name": "Fairu",
+      "description": "Fairu addon"
     },
-    "autoload-dev": {
-        "psr-4": {
-            "SushidevTeam\\Fairu\\Tests\\": "tests"
-        }
-    },
-    "require": {
-        "statamic/cms": "^5.0",
-        "laravel/prompts": "^0.3.5"
-    },
-    "require-dev": {
-        "orchestra/testbench": "^9.0"
-    },
-    "config": {
-        "allow-plugins": {
-            "pixelfear/composer-dist-plugin": true
-        }
-    },
-    "extra": {
-        "statamic": {
-            "name": "Fairu",
-            "description": "Fairu addon"
-        },
-        "laravel": {
-            "providers": [
-                "SushidevTeam\\Fairu\\ServiceProvider"
-            ]
-        }
-    },
-    "minimum-stability": "dev",
-    "prefer-stable": true
+    "laravel": {
+      "providers": [
+        "Sushidev\\Fairu\\ServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
 }
