@@ -38,7 +38,7 @@ class Fairu extends Fieldtype
 
     public function preload()
     {
-        return ['tenant_id' => config('fairu.connections.default.tenant')];
+        return ['proxy' => config('fairu.url_proxy')];
     }
 
     public function getItemData($items)
