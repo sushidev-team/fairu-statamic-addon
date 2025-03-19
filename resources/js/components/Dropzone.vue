@@ -13,7 +13,7 @@
                 class="hidden"
                 ref="nativeFileField" />
             <div
-                class="bg-gray-100 dark:bg-gray-900 fa-transition-opacity fa-duration-300 fa-place-items-center fa-flex fa-justify-center pointer-events-none absolute inset-0 z-10 rounded"
+                class="bg-gray-100 dark:bg-gray-900 fa-transition-opacity fa-duration-150 fa-place-items-center fa-flex fa-justify-center pointer-events-none absolute inset-0 z-10 rounded"
                 :class="dragging ? 'fa-opacity-90' : 'fa-opacity-0'"
                 ><i class="material-symbols-outlined mr-2 inline-block">drive_folder_upload</i>
                 <span>Drop files here</span>
@@ -26,8 +26,6 @@
 </template>
 
 <script>
-import { nanoid } from 'nanoid';
-
 export default {
     props: {
         enabled: {

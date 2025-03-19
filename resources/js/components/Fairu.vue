@@ -181,8 +181,8 @@
                             >Powered by</span
                         >
                         <img
-                            class="h-auto w-12"
-                            src="/images/logos/fairu-logo.svg"
+                            class="ml-1 h-auto w-12"
+                            src="../../svg/fairu-logo.svg"
                             alt="Fairu Asset Service" />
                     </a>
                 </div>
@@ -285,11 +285,6 @@ export default {
 
     methods: {
         openSearchNow() {
-            if (this.portal == null) {
-                this.$toast.error('Bitte zunächst Portal auswählen.');
-                this.$progress.complete('upload' + this._uid);
-                return;
-            }
             this.searchOpen = true;
         },
         getExtension(mime) {
@@ -389,7 +384,6 @@ export default {
             this.loading = true;
             axios
                 .post('/fairu/folders/create', {
-                    portal: this.portal,
                     name: this.newFolderName,
                     folder: this.folder,
                 })
@@ -539,11 +533,7 @@ export default {
         },
     },
 
-    mounted() {
-        console.log('this is here');
-        console.log(this);
-        console.log(this.canUpload());
-    },
+    mounted() {},
     beforeDestroy() {
         // Falls der Observer noch aktiv ist, beim Zerstören der Komponente aufräumen
         if (this.observer) {
