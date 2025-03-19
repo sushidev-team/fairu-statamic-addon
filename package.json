@@ -5,6 +5,7 @@
         "build": "vite build",
         "format": "prettier ./resources/**/*.{css,js,vue} --write"
     },
+    "type": "module",
     "devDependencies": {
         "@vitejs/plugin-vue2": "^2.3.3",
         "eslint": "^9.7.0",
