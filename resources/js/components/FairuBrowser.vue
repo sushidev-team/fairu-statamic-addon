@@ -2,20 +2,25 @@
     <stack @closed="emitClose">
         <div
             slot-scope="{ close }"
-            class="bg-white dark:bg-dark-800 grid h-full"
+            class="grid h-full bg-white dark:bg-dark-800"
             style="grid-template-rows: auto 1fr auto">
             <section>
-                <div class="bg-white dark:bg-dark-800 data-list-border flex justify-stretch gap-2 p-2">
+                <input
+                    class="hidden"
+                    type="file"
+                    ref="upload"
+                    @change="handleUpload" />
+                <div class="flex gap-2 p-2 bg-white dark:bg-dark-800 data-list-border justify-stretch">
                     <button
-                        href="#"
-                        class="btn btn-primary flex items-center gap-1 text-base"
+                        type="button"
+                        class="flex items-center gap-1 text-base btn btn-primary"
                         @click="openFile(folder)"
                         v-if="!createFolderInputVisible">
                         <i class="text-gray-700 material-symbols-outlined">upload</i> <span>Upload</span>
                     </button>
                     <button
                         href="#"
-                        class="btn flex items-center gap-1 text-base"
+                        class="flex items-center gap-1 text-base btn"
                         @click="openCreateFolder"
                         v-if="!createFolderInputVisible">
                         <i class="text-gray-700 material-symbols-outlined">create_new_folder</i>
@@ -31,15 +36,15 @@
                             placeholder="Neuer Ordnername"
                             v-model="newFolderName" />
                         <button
-                            class="btn btn-primary flex items-center gap-1 text-base"
+                            class="flex items-center gap-1 text-base btn btn-primary"
                             @click="handleCreateFolder">
-                            <i class="text-gray-700 material-symbols-outlined text-lg">check_circle</i
+                            <i class="text-lg text-gray-700 material-symbols-outlined">check_circle</i
                             ><span>Erstellen</span>
                         </button>
                         <button
-                            class="btn flex items-center gap-1 text-base"
+                            class="flex items-center gap-1 text-base btn"
                             @click="closeCreateFolder">
-                            <i class="text-gray-700 material-symbols-outlined text-lg">cancel</i><span>Abbrechen</span>
+                            <i class="text-lg text-gray-700 material-symbols-outlined">cancel</i><span>Abbrechen</span>
                         </button>
                     </div>
                     <input
@@ -52,30 +57,30 @@
                     <a
                         :href="`${meta.folder}${folder != null ? '/' + folder : ''}`"
                         target="_blank"
-                        class="btn flex items-center gap-1 text-base"
+                        class="flex items-center gap-1 text-base btn"
                         v-if="!createFolderInputVisible">
                         <i class="text-gray-700 material-symbols-outlined">open_in_new</i>
                     </a>
                     <a
-                        class="text-gray-700 link flex items-center gap-1 text-sm"
+                        class="flex items-center gap-1 text-sm text-gray-700 link"
                         @click.prevent="close">
-                        <i class="material-symbols-outlined text-xl">close</i>
+                        <i class="text-xl material-symbols-outlined">close</i>
                     </a>
                 </div>
             </section>
             <div class="overflow-y-auto">
                 <div
                     v-if="loadingList"
-                    class="grid h-full w-full items-center justify-center p-8">
+                    class="grid items-center justify-center w-full h-full p-8">
                     <ring-loader
                         color="#4a4a4a"
-                        class="h-5 w-5"
+                        class="w-5 h-5"
                         size="24"
                         v-if="loadingList" />
                 </div>
                 <div v-show="!loadingList">
                     <div
-                        class="data-list-border px-2"
+                        class="px-2 data-list-border"
                         v-if="folder">
                         <a
                             href="#"
@@ -88,7 +93,7 @@
                     <div
                         v-for="(item, index) in folderContent?.data"
                         v-key="item?.id"
-                        class="data-list-border px-2">
+                        class="px-2 data-list-border">
                         <a
                             v-if="item.type == 'folder'"
                             href="#"
@@ -103,67 +108,67 @@
                             v-if="item.type !== 'folder'">
                             <a
                                 href="#"
-                                class="flex w-full grow cursor-pointer gap-1"
+                                class="flex w-full gap-1 cursor-pointer grow"
                                 @click.prevent="selectItem(item.id)">
                                 <div
-                                    class="bg-gray-300 flex flex-none items-center justify-center overflow-hidden rounded-full"
+                                    class="flex items-center justify-center flex-none overflow-hidden bg-gray-300 rounded-full"
                                     style="width: 34px; height: 34px">
                                     <img
                                         v-if="proxyUrl && item?.blocked != true && item?.mime?.startsWith('image/')"
                                         :src="`${proxyUrl}/${item.id}/thumbnail.webp?width=34&height=34`"
                                         class="object-cover" />
                                     <span
-                                        class="text-gray-600 block"
+                                        class="block text-gray-600"
                                         style="font-size: 8px"
                                         v-if="item?.mime?.startsWith('image/') == false">
                                         {{ getExtension(item.mime) }}
                                     </span>
                                 </div>
-                                <div class="flex grow items-center gap-2 text-sm"> {{ item.name }} </div>
+                                <div class="flex items-center gap-2 text-sm grow"> {{ item.name }} </div>
                             </a>
                             <div class="flex gap-1">
                                 <a
                                     :href="`${meta.file}${item.id}`"
                                     target="_blank"
                                     title="In Fairu bearbeiten"
-                                    class="flex cursor-pointer gap-1 text-xs"
-                                    ><i class="text-gray-300 material-symbols-outlined text-xl">edit</i>
+                                    class="flex gap-1 text-xs cursor-pointer"
+                                    ><i class="text-xl text-gray-300 material-symbols-outlined">edit</i>
                                 </a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="border-gray-100 dark:border-dark-600 flex flex-wrap justify-between gap-4 border-t px-4 py-2">
-                <div class="-mt-px flex items-center justify-end gap-1">
+            <div class="flex flex-wrap justify-between gap-4 px-4 py-2 border-t border-gray-100 dark:border-dark-600">
+                <div class="flex items-center justify-end gap-1 -mt-px">
                     <button
                         :disabled="page <= 1"
                         @click.prevent="goToPage(1)"
-                        class="btn btn-sm flex items-center gap-1 text-base">
-                        <i class="text-dark-800 dark:text-gray-300 material-symbols-outlined text-xl">first_page</i>
+                        class="flex items-center gap-1 text-base btn btn-sm">
+                        <i class="text-xl text-dark-800 dark:text-gray-300 material-symbols-outlined">first_page</i>
                     </button>
                     <button
                         :disabled="page <= 1"
                         @click.prevent="previousPage"
-                        class="btn btn-sm flex items-center gap-1 text-base">
+                        class="flex items-center gap-1 text-base btn btn-sm">
                         Zurück
                     </button>
                     <div class="px-2">{{ page }} / {{ lastPage || 1 }}</div>
                     <button
                         :disabled="page >= lastPage"
                         @click.prevent="nextPage"
-                        class="btn btn-sm flex items-center gap-1 text-base">
+                        class="flex items-center gap-1 text-base btn btn-sm">
                         Weiter
                     </button>
                     <button
                         :disabled="page >= lastPage"
                         @click.prevent="goToPage(lastPage)"
-                        class="btn btn-sm flex items-center gap-1 text-base">
-                        <i class="text-gray-300 material-symbols-outlined text-xl">last_page</i>
+                        class="flex items-center gap-1 text-base btn btn-sm">
+                        <i class="text-xl text-gray-300 material-symbols-outlined">last_page</i>
                     </button>
                 </div>
                 <a
-                    class="text-2xs flex items-center gap-1"
+                    class="flex items-center gap-1 text-2xs"
                     href="https://fairu.app"
                     style="color: #666">
                     <span
@@ -172,7 +177,7 @@
                         >Powered by</span
                     >
                     <img
-                        class="ml-1 h-auto w-12"
+                        class="w-12 h-auto ml-1"
                         src="../../svg/fairu-logo.svg"
                         alt="Fairu Asset Service" />
                 </a>
@@ -184,7 +189,8 @@
 <script>
 import { RingLoader } from 'vue-spinners-css';
 import Dropzone from './Dropzone.vue';
-import { fairuLoadFolder } from '../utils/fetches';
+import { fairuLoadFolder, fairuUpload } from '../utils/fetches';
+import axios from 'axios';
 
 export default {
     mixins: [Fieldtype],
@@ -196,10 +202,17 @@ export default {
 
     data() {
         return {
+            asset_id: null,
             searchOpen: false,
             loading: false,
             observer: null,
+            folder: null,
+            uploadFolder: false,
             loadingList: false,
+            percentUploaded: 0,
+            folderParent: null,
+            folderContent: null,
+            createFolderInputVisible: false,
         };
     },
     props: {
@@ -249,58 +262,39 @@ export default {
             });
             this.emitClose();
         },
-        handleFileChange() {
-            this.percentUploaded = 0;
-            this.loading = true;
+        handleUpload(evt) {
+            const errorCallback = (error) => {
+                this.loading = false;
+                this.$progress.complete('upload' + this._uid);
+                this.$toast.error(err.response.data.message);
+                this.$refs.upload.value = null;
+            };
+
+            const successCallback = (result) => {
+                this.asset_id = result.data.id;
+                this.searchOpen = false;
+                this.$progress.complete('upload' + this._uid);
+                this.$toast.success('Datei erfolgreich hochgeladen.');
+                this.$nextTick(() => {
+                    this.sendUpdate();
+                    this.loadMetaData();
+                });
+            };
             this.$forceUpdate();
             this.$progress.start('upload' + this._uid);
-            const file = event.target.files[0];
-            axios
-                .post(this.meta.upload, {
-                    portal: this.portal,
-                    filename: file.name,
-                    mime: file.type,
-                    folder: this.uploadFolder != null ? this.uploadFolder : null,
-                })
-                .then(async (result) => {
-                    let resultUpload = await axios
-                        .put(result.data.upload_url, file, {
-                            headers: {
-                                'x-amz-acl': 'public-read',
-                                'Content-Type': file.type?.toString(),
-                            },
-                            onUploadProgress: (progressEvent) => {
-                                this.percentUploaded = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                                this.$forceUpdate();
-                            },
-                        })
-                        .then((resultUpload) => {
-                            this.asset_id = result.data.id;
-                            this.emitClose();
-
-                            this.syncingMeta = true;
-                            axios.get(result.data.sync_url).then(() => {
-                                this.$toast.success('Datei erfolgreich hochgeladen.');
-                                this.$progress.complete('upload' + this._uid);
-                                this.syncingMeta = false;
-                                this.$nextTick(() => {
-                                    this.sendUpdate();
-                                    this.loadMetaData();
-                                });
-                            });
-                        })
-                        .catch((error) => {
-                            this.$toast.error('Es ist ein Fehler beim Upload zu Fairu aufgetreten');
-                            this.$progress.complete('upload' + this._uid);
-                            this.$refs.upload.value = null;
-                        });
-                })
-                .catch((error) => {
-                    this.$toast.error(error.response.data.message);
-                    this.loading = false;
-                    this.$progress.complete('upload' + this._uid);
-                    this.$refs.upload.value = null;
-                });
+            this.percentUploaded = 0;
+            this.loading = true;
+            const file = evt.target.files[0];
+            fairuUpload({
+                file,
+                folder: this.uploadFolder != null ? this.uploadFolder : null,
+                onUploadProgressCallback: (progressEvent) => {
+                    this.percentUploaded = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    this.$forceUpdate();
+                },
+                successCallback,
+                errorCallback,
+            });
         },
         handleCreateFolder() {
             this.loading = true;
@@ -368,7 +362,7 @@ export default {
         loadMetaData() {
             this.loading = true;
             axios
-                .get(this.meta.api + this.asset_id)
+                .get('/fairu/files/' + this.asset_id)
                 .then((result) => {
                     try {
                         this.asset_data = result.data.data;
@@ -393,15 +387,13 @@ export default {
             const element = document.getElementById(this._uid);
 
             const options = {
-                root: null, // Standard: das Browser-Viewport
+                root: null,
                 rootMargin: '0px',
                 threshold: 0.1,
             };
 
-            // Callback, das aufgerufen wird, sobald sich Sichtbarkeit ändert
             this.observer = new IntersectionObserver((entries) => {
                 entries.forEach((entry) => {
-                    // Falls das Element zu mindestens 10% (threshold = 0.1) sichtbar ist
                     if (entry.isIntersecting) {
                         this.loadMetaData();
                         this.observer.unobserve(entry.target);
@@ -409,7 +401,6 @@ export default {
                 });
             }, options);
 
-            // Los geht's: Beobachten des referenzierten Divs starten
             if (element) {
                 this.observer.observe(element);
             }
