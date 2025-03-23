@@ -38,44 +38,49 @@
         </dropzone>
         <div
             :id="_uid"
-            class="flex items-center gap-2"
+            class="flex items-center gap-2 p-3 border rounded border-slate-400 fa-bg-slate-100"
             v-if="asset?.id || loading">
             <ring-loader
                 color="#4a4a4a"
                 class="w-5 h-5"
                 size="24"
                 v-if="loading" />
-            <span v-if="loading && !syncingMeta">{{ percentUploaded }}%</span>
-            <span v-else-if="loading && syncingMeta">Meta-Daten werden ermittelt...</span>
+            <span v-if="loading && !fetchingMetaData">{{ percentUploaded }}%</span>
+            <span v-else-if="loading && fetchingMetaData">Meta-Daten werden ermittelt...</span>
             <div
                 v-if="!loading"
                 class="grid w-full min-w-0 gap-2"
                 style="grid-template-columns: auto 1fr auto">
                 <img
                     ref="fileImage"
-                    v-if="loading == false && asset?.mime.startsWith('image/')"
+                    v-if="loading == false && !fetchingMetaData && asset?.mime.startsWith('image/')"
                     style="width: 50px; height: 50px"
                     class="flex-none overflow-hidden rounded-md"
                     :src="url" />
+                <ring-loader
+                    color="#4a4a4a"
+                    class="w-5 h-5"
+                    size="24"
+                    v-if="fetchingMetaData" />
                 <a
                     @click.prevent="openSearch"
-                    class="w-full min-w-0">
+                    class="grid w-full min-w-0 fa-content-center fa-items-center">
                     <div
-                        class="min-w-0 text-sm font-semibold truncate"
+                        class="min-w-0 text-sm truncate"
                         v-html="asset?.name"></div>
-                    <div class="min-w-0 text-sm font-bold truncate">Ändern</div>
+                    <div class="min-w-0 text-xs font-bold truncate">Ändern</div>
                 </a>
                 <div class="flex gap-1">
                     <a
                         :href="asset?.edit_url"
                         target="_blank"
-                        class="text-xs text-gray-500 underline cursor-pointer"
-                        ><i class="text-lg text-gray-300 material-symbols-outlined">edit</i></a
+                        class="text-xs text-gray-500 underline cursor-pointer hover:text-gray-900"
+                        ><i class="text-lg material-symbols-outlined">edit</i></a
                     >
                     <a
-                        class="text-xs text-gray-500 underline cursor-pointer"
+                        class="text-xs text-gray-500 underline cursor-pointer hover:text-gray-900"
                         @click.prevent="clearAsset"
-                        ><i class="text-lg text-gray-300 material-symbols-outlined">delete</i></a
+                        ><i class="text-lg material-symbols-outlined">delete</i></a
                     >
                 </div>
             </div>
@@ -106,6 +111,7 @@ export default {
             loadingList: false,
             asset: null,
             percentUploaded: null,
+            fetchingMetaData: false,
         };
     },
 
@@ -132,9 +138,11 @@ export default {
             });
         },
         handleSelected(asset) {
+            this.fetchingMetaData = true;
             this.asset = asset;
             this.$nextTick(() => {
                 this.sendUpdate();
+                this.fetchingMetaData = false;
             });
         },
         handleFileChange(evt) {
@@ -160,9 +168,11 @@ export default {
                 this.searchOpen = false;
                 this.$progress.complete('upload' + this._uid);
                 this.$toast.success('Datei erfolgreich hochgeladen.');
+                this.fetchingMetaData = true;
                 this.$nextTick(async () => {
                     await this.loadMetaData(result?.data?.id);
                     this.sendUpdate();
+                    this.fetchingMetaData = false;
                 });
             };
             this.$progress.start('upload' + this._uid);

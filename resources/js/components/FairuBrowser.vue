@@ -370,10 +370,7 @@ export default {
                     try {
                         this.asset = result.data.data;
                         this.folder = result.data.parent_id;
-
-                        setTimeout(() => {
-                            this.$refs.fileImage.setAttribute('src', this.$refs.fileImage.getAttribute('data-src'));
-                        }, 500);
+                        this.$refs.fileImage.setAttribute('src', this.$refs.fileImage.getAttribute('data-src'));
                     } catch (err) {
                         this.asset_id = null;
                         this.$toast.error(err.response.data.message);
