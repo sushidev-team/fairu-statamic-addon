@@ -9,7 +9,7 @@
                     class="hidden"
                     type="file"
                     ref="upload"
-                    @change="handleUpload" />
+                    @change="handleFileChange" />
                 <div class="flex gap-2 p-2 bg-white dark:bg-dark-800 data-list-border justify-stretch">
                     <button
                         type="button"
@@ -68,7 +68,10 @@
                     </a>
                 </div>
             </section>
-            <div class="overflow-y-auto">
+            <drop-zone
+                :enabled="true"
+                @dropped="handleFileDrop"
+                class="overflow-y-auto">
                 <div
                     v-if="loadingList"
                     class="grid items-center justify-center w-full h-full p-8">
@@ -94,22 +97,21 @@
                         v-for="(item, index) in folderContent?.data"
                         v-key="item?.id"
                         class="px-2 data-list-border">
-                        <a
+                        <button
                             v-if="item.type == 'folder'"
-                            href="#"
                             class="flex items-center gap-1 px-2 py-1"
                             style="min-height: 3rem"
                             @click="selectFolder(item.id)">
                             <i class="text-gray-700 material-symbols-outlined">folder</i> {{ item.name }}
-                        </a>
+                        </button>
                         <div
                             class="grid items-center gap-2 px-2 py-1"
                             style="min-height: 3rem; grid-template-columns: 1fr auto"
                             v-if="item.type !== 'folder'">
-                            <a
-                                href="#"
+                            <button
+                                type="button"
                                 class="flex w-full gap-1 cursor-pointer grow"
-                                @click.prevent="selectItem(item.id)">
+                                @click.prevent="selectItem(item)">
                                 <div
                                     class="flex items-center justify-center flex-none overflow-hidden bg-gray-300 rounded-full"
                                     style="width: 34px; height: 34px">
@@ -125,7 +127,7 @@
                                     </span>
                                 </div>
                                 <div class="flex items-center gap-2 text-sm grow"> {{ item.name }} </div>
-                            </a>
+                            </button>
                             <div class="flex gap-1">
                                 <a
                                     :href="`${meta.file}${item.id}`"
@@ -138,7 +140,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </drop-zone>
             <div class="flex flex-wrap justify-between gap-4 px-4 py-2 border-t border-gray-100 dark:border-dark-600">
                 <div class="flex items-center justify-end gap-1 -mt-px">
                     <button
@@ -203,10 +205,12 @@ export default {
     data() {
         return {
             asset_id: null,
+            asset: null,
             searchOpen: false,
             loading: false,
-            observer: null,
             folder: null,
+            page: 1,
+            lastPage: 1,
             uploadFolder: false,
             loadingList: false,
             percentUploaded: 0,
@@ -241,28 +245,32 @@ export default {
             this.createFolderInputVisible = false;
             this.newFolderName = null;
         },
-        clearAsset() {
-            this.asset_id = null;
-            this.asset_data = null;
-            this.$nextTick(() => {
-                this.sendUpdate();
-            });
-        },
         selectFolder(folderId) {
             this.folder = folderId;
             this.page = 1;
             this.loadFolder();
             this.$refs.search.value = null;
         },
-        selectItem(id) {
-            this.asset_id = id;
+        selectItem(asset) {
+            this.asset = asset;
+            this.asset_id = asset.id;
+            this.$emit('selected', this.asset);
             this.$nextTick(() => {
-                this.sendUpdate();
-                this.loadMetaData();
+                // this.loadMetaData();
+                this.emitClose();
             });
-            this.emitClose();
         },
-        handleUpload(evt) {
+        handleFileChange(evt) {
+            const file = evt.target.files[0];
+            this.handleUpload(file);
+        },
+        handleFileDrop(files) {
+            const file = files?.[0];
+            if (!file) return;
+
+            this.handleUpload(file);
+        },
+        handleUpload(file) {
             const errorCallback = (error) => {
                 this.loading = false;
                 this.$progress.complete('upload' + this._uid);
@@ -271,26 +279,24 @@ export default {
             };
 
             const successCallback = (result) => {
-                this.asset_id = result.data.id;
+                this.asset = result.data.data;
                 this.searchOpen = false;
                 this.$progress.complete('upload' + this._uid);
                 this.$toast.success('Datei erfolgreich hochgeladen.');
                 this.$nextTick(() => {
                     this.sendUpdate();
-                    this.loadMetaData();
+                    this.loadMetaData(result?.data?.id);
                 });
             };
-            this.$forceUpdate();
             this.$progress.start('upload' + this._uid);
             this.percentUploaded = 0;
             this.loading = true;
-            const file = evt.target.files[0];
+
             fairuUpload({
                 file,
                 folder: this.uploadFolder != null ? this.uploadFolder : null,
                 onUploadProgressCallback: (progressEvent) => {
                     this.percentUploaded = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                    this.$forceUpdate();
                 },
                 successCallback,
                 errorCallback,
@@ -305,7 +311,7 @@ export default {
                 })
                 .then(async (result) => {
                     this.$nextTick(() => {
-                        this.loadMetaData();
+                        // this.loadMetaData();
                         this.closeCreateFolder();
                         this.loadFolder();
                     });
@@ -321,9 +327,6 @@ export default {
                 this.page = 1;
                 this.loadFolder(e.target.value);
             }, 250);
-        },
-        sendUpdate() {
-            this.update(this.asset_id);
         },
         nextPage() {
             this.page = this.page + 1;
@@ -365,7 +368,7 @@ export default {
                 .get('/fairu/files/' + this.asset_id)
                 .then((result) => {
                     try {
-                        this.asset_data = result.data.data;
+                        this.asset = result.data.data;
                         this.folder = result.data.parent_id;
 
                         setTimeout(() => {
@@ -382,28 +385,6 @@ export default {
                     this.loading = false;
                     this.$toast.error(err.response.data.message);
                 });
-        },
-        loadObserver() {
-            const element = document.getElementById(this._uid);
-
-            const options = {
-                root: null,
-                rootMargin: '0px',
-                threshold: 0.1,
-            };
-
-            this.observer = new IntersectionObserver((entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        this.loadMetaData();
-                        this.observer.unobserve(entry.target);
-                    }
-                });
-            }, options);
-
-            if (element) {
-                this.observer.observe(element);
-            }
         },
         canBrowse() {
             const hasPermission =
@@ -434,10 +415,17 @@ export default {
         this.loadFolder();
     },
     beforeDestroy() {
-        // Falls der Observer noch aktiv ist, beim Zerstören der Komponente aufräumen
-        if (this.observer) {
-            this.observer.disconnect();
+        if (this.searchTimer) {
+            clearTimeout(this.searchTimer);
+            this.searchTimer = null;
         }
+
+        if (this.$refs.search) {
+            this.$refs.search.removeEventListener('input', this.handleSearchInput);
+        }
+
+        this.folderContent = null;
+        this.asset = null;
     },
 };
 </script>

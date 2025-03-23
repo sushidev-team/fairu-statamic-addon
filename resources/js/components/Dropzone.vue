@@ -13,9 +13,9 @@
                 class="hidden"
                 ref="nativeFileField" />
             <div
-                class="bg-gray-100 dark:bg-gray-900 fa-transition-opacity fa-duration-150 fa-place-items-center fa-flex fa-justify-center pointer-events-none absolute inset-0 z-10 rounded"
+                class="absolute inset-0 z-10 rounded pointer-events-none dark:fa-bg-dark-900 fa-flex fa-place-items-center fa-justify-center fa-bg-gray-100 fa-transition-opacity fa-duration-150"
                 :class="dragging ? 'fa-opacity-90' : 'fa-opacity-0'"
-                ><i class="material-symbols-outlined mr-2 inline-block">drive_folder_upload</i>
+                ><i class="inline-block mr-2 material-symbols-outlined">drive_folder_upload</i>
                 <span>Drop files here</span>
             </div>
             <div class="relative">
@@ -83,20 +83,17 @@ export default {
         dragenter(e) {
             e.stopPropagation();
             e.preventDefault();
-            console.log('Drag enter');
             this.dragging = true;
         },
 
         dragover(e) {
             e.stopPropagation();
             e.preventDefault();
-            console.log('Drag over');
         },
 
         dragleave(e) {
             // When dragging over a child, the parent will trigger a dragleave.
             if (e.target !== e.currentTarget) return;
-            console.log('Drag leave');
 
             this.dragging = false;
         },
@@ -107,7 +104,6 @@ export default {
             this.dragging = false;
 
             const { files, items } = e.dataTransfer;
-            console.log({ files, items });
 
             this.$emit('dropped', files);
         },

@@ -3,13 +3,13 @@
         <fairu-browser
             v-if="searchOpen"
             @close="searchOpen = false"
+            @selected="handleSelected"
             :proxyUrl="meta.proxy" />
         <dropzone
-            ref="uploader"
             :enabled="canUpload"
             @dropped="handleFileDrop">
             <div
-                v-if="!asset_id && !loading"
+                v-if="!asset?.id && !loading"
                 class="assets-fieldtype">
                 <input
                     class="hidden"
@@ -39,14 +39,14 @@
         <div
             :id="_uid"
             class="flex items-center gap-2"
-            v-if="(asset_id != null && asset_id != undefined) || loading == true">
+            v-if="asset?.id || loading">
             <ring-loader
                 color="#4a4a4a"
                 class="w-5 h-5"
                 size="24"
                 v-if="loading" />
-            <span v-if="loading == true && syncingMeta == false">{{ percentUploaded }}%</span>
-            <span v-if="loading == true && syncingMeta == true">Meta-Daten werden ermittelt...</span>
+            <span v-if="loading && !syncingMeta">{{ percentUploaded }}%</span>
+            <span v-else-if="loading && syncingMeta">Meta-Daten werden ermittelt...</span>
             <div
                 v-if="!loading"
                 class="grid w-full min-w-0 gap-2"
@@ -56,9 +56,9 @@
                     v-if="loading == false && asset?.mime.startsWith('image/')"
                     style="width: 50px; height: 50px"
                     class="flex-none overflow-hidden rounded-md"
-                    :data-src="url" />
+                    :src="url" />
                 <a
-                    @click.prevent="(openSearch(), loadFolder(null, asset?.parent_id))"
+                    @click.prevent="openSearch"
                     class="w-full min-w-0">
                     <div
                         class="min-w-0 text-sm font-semibold truncate"
@@ -103,10 +103,9 @@ export default {
         return {
             searchOpen: false,
             loading: true,
-            observer: null,
             loadingList: false,
-            asset_id: null,
             asset: null,
+            percentUploaded: null,
         };
     },
 
@@ -127,8 +126,13 @@ export default {
             this.$refs.upload.click();
         },
         clearAsset() {
-            this.asset_id = null;
             this.asset = null;
+            this.$nextTick(() => {
+                this.sendUpdate();
+            });
+        },
+        handleSelected(asset) {
+            this.asset = asset;
             this.$nextTick(() => {
                 this.sendUpdate();
             });
@@ -152,17 +156,15 @@ export default {
             };
 
             const successCallback = (result) => {
-                this.asset_id = result.data.id;
                 this.asset = result.data.data;
                 this.searchOpen = false;
                 this.$progress.complete('upload' + this._uid);
                 this.$toast.success('Datei erfolgreich hochgeladen.');
-                this.$nextTick(() => {
+                this.$nextTick(async () => {
+                    await this.loadMetaData(result?.data?.id);
                     this.sendUpdate();
-                    this.loadMetaData();
                 });
             };
-            this.$forceUpdate();
             this.$progress.start('upload' + this._uid);
             this.percentUploaded = 0;
             this.loading = true;
@@ -172,64 +174,29 @@ export default {
                 folder: this.uploadFolder != null ? this.uploadFolder : null,
                 onUploadProgressCallback: (progressEvent) => {
                     this.percentUploaded = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                    this.$forceUpdate();
                 },
                 successCallback,
                 errorCallback,
             });
         },
         sendUpdate() {
-            this.update(this.asset_id);
+            this.update(this.asset?.id);
         },
-        loadMetaData() {
+        async loadMetaData(id) {
+            if (!id && !this.asset?.id) return;
             this.loading = true;
-            axios
-                .get('/fairu/files/' + this.asset_id)
+            await axios
+                .get('/fairu/files/' + (id ?? this.asset?.id))
                 .then((result) => {
-                    try {
-                        this.asset = result.data.data;
-                        this.folder = result.data.parent_id;
-                        this.loading = false;
-
-                        this.$nextTick(() => {
-                            if (this.$refs.fileImage && this.asset?.mime?.startsWith('image/')) {
-                                this.$refs.fileImage.setAttribute('src', this.$refs.fileImage.getAttribute('data-src'));
-                            }
-                        });
-                    } catch (err) {
-                        this.asset_id = null;
-                        this.$toast.error(err.response.data.message);
-                        this.loading = false;
-                    }
+                    this.asset = result.data.data;
+                    this.folder = result.data.parent_id;
+                    this.loading = false;
                 })
                 .catch((err) => {
-                    this.asset_id = null;
+                    this.asset = null;
                     this.loading = false;
                     this.$toast.error(err.response.data.message);
                 });
-        },
-
-        loadObserver() {
-            const element = document.getElementById(this._uid);
-
-            const options = {
-                root: null,
-                rootMargin: '0px',
-                threshold: 0.1,
-            };
-
-            this.observer = new IntersectionObserver((entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        this.loadMetaData();
-                        this.observer.unobserve(entry.target);
-                    }
-                });
-            }, options);
-
-            if (element) {
-                this.observer.observe(element);
-            }
         },
         canBrowse() {
             const hasPermission =
@@ -252,25 +219,14 @@ export default {
 
     computed: {
         url() {
-            return this.meta.proxy + '/' + this.asset_id + '/thumbnail.webp?width=50&height=50';
+            return this.meta.proxy + '/' + this.asset?.id + '/thumbnail.webp?width=50&height=50';
         },
     },
 
     mounted() {
-        this.asset_id = this.value;
-        if (this.asset_id != null) {
-            setTimeout(() => {
-                this.loadObserver();
-            });
-        } else {
-            this.loading = false;
-        }
+        this.asset = this.loadMetaData(this.value);
+        this.loading = false;
     },
-    beforeDestroy() {
-        // Falls der Observer noch aktiv ist, beim Zerstören der Komponente aufräumen
-        if (this.observer) {
-            this.observer.disconnect();
-        }
-    },
+    beforeDestroy() {},
 };
 </script>
