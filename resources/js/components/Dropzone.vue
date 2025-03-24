@@ -58,9 +58,7 @@ export default {
             this.$emit('updated', uploads);
             this.processUploadQueue();
         },
-        dragging(dragging) {
-            console.log({ dragging });
-        },
+        dragging(dragging) {},
     },
 
     computed: {

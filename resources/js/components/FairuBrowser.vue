@@ -68,8 +68,8 @@
                     </a>
                 </div>
             </section>
-            <drop-zone
-                :enabled="true"
+            <dropzone
+                :enabled="canUpload"
                 @dropped="handleFileDrop"
                 class="overflow-y-auto">
                 <div
@@ -140,7 +140,7 @@
                         </div>
                     </div>
                 </div>
-            </drop-zone>
+            </dropzone>
             <div class="flex flex-wrap justify-between gap-4 px-4 py-2 border-t border-gray-100 dark:border-dark-600">
                 <div class="flex items-center justify-end gap-1 -mt-px">
                     <button
@@ -204,14 +204,12 @@ export default {
 
     data() {
         return {
-            asset_id: null,
             asset: null,
             searchOpen: false,
             loading: false,
             folder: null,
             page: 1,
             lastPage: 1,
-            uploadFolder: false,
             loadingList: false,
             percentUploaded: 0,
             folderParent: null,
@@ -233,8 +231,7 @@ export default {
             }
             return 'n/a';
         },
-        openFile(setFolderTo) {
-            this.uploadFolder = setFolderTo ?? null;
+        openFile() {
             this.$refs.upload.value = null;
             this.$refs.upload.click();
         },
@@ -253,10 +250,8 @@ export default {
         },
         selectItem(asset) {
             this.asset = asset;
-            this.asset_id = asset.id;
             this.$emit('selected', this.asset);
             this.$nextTick(() => {
-                // this.loadMetaData();
                 this.emitClose();
             });
         },
@@ -271,7 +266,7 @@ export default {
             this.handleUpload(file);
         },
         handleUpload(file) {
-            const errorCallback = (error) => {
+            const errorCallback = (err) => {
                 this.loading = false;
                 this.$progress.complete('upload' + this._uid);
                 this.$toast.error(err.response.data.message);
@@ -279,13 +274,14 @@ export default {
             };
 
             const successCallback = (result) => {
-                this.asset = result.data.data;
-                this.searchOpen = false;
                 this.$progress.complete('upload' + this._uid);
                 this.$toast.success('Datei erfolgreich hochgeladen.');
-                this.$nextTick(() => {
-                    this.sendUpdate();
-                    this.loadMetaData(result?.data?.id);
+                this.fetchingMetaData = true;
+                this.$nextTick(async () => {
+                    await this.loadMetaData(result?.data?.id);
+                    this.selectItem(this.asset);
+                    this.fetchingMetaData = false;
+                    this.searchOpen = false;
                 });
             };
             this.$progress.start('upload' + this._uid);
@@ -294,7 +290,7 @@ export default {
 
             fairuUpload({
                 file,
-                folder: this.uploadFolder != null ? this.uploadFolder : null,
+                folder: this.folder != null ? this.folder : null,
                 onUploadProgressCallback: (progressEvent) => {
                     this.percentUploaded = Math.round((progressEvent.loaded * 100) / progressEvent.total);
                 },
@@ -362,23 +358,18 @@ export default {
                 },
             });
         },
-        loadMetaData() {
+        async loadMetaData(id) {
+            if (!id && !this.asset?.id) return;
             this.loading = true;
-            axios
-                .get('/fairu/files/' + this.asset_id)
+            await axios
+                .get('/fairu/files/' + (id ?? this.asset?.id))
                 .then((result) => {
-                    try {
-                        this.asset = result.data.data;
-                        this.folder = result.data.parent_id;
-                        this.$refs.fileImage.setAttribute('src', this.$refs.fileImage.getAttribute('data-src'));
-                    } catch (err) {
-                        this.asset_id = null;
-                        this.$toast.error(err.response.data.message);
-                    }
+                    this.asset = result.data.data;
+                    this.folder = result.data.parent_id;
                     this.loading = false;
                 })
                 .catch((err) => {
-                    this.asset_id = null;
+                    this.asset = null;
                     this.loading = false;
                     this.$toast.error(err.response.data.message);
                 });
@@ -404,7 +395,7 @@ export default {
 
     computed: {
         url() {
-            return this.proxyUrl + '/' + this.asset_id + '/thumbnail.webp?width=50&height=50';
+            return this.proxyUrl + '/' + this.asset?.id + '/thumbnail.webp?width=50&height=50';
         },
     },
 
