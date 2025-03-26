@@ -36,7 +36,6 @@
                 </div>
             </div>
         </dropzone>
-        <div v-if="loading || uploading">UPLOADING</div>
         <div
             :id="_uid"
             class="flex items-center gap-2 p-3 border rounded border-slate-400 fa-bg-slate-100"

@@ -109,4 +109,99 @@ class FairuAssetTags extends Tags
             return "<img src='$url' $attributes >";
         });
     }
+
+    /**
+     * The {{ fairu:sources }} tag.
+     * Usage: {{ fairu:sources id="image_id" sources="1200:1600w,768:1200w,480:800w" sizes="(min-width: 1200px) 1600px, (min-width: 768px) 1200px, 800px" [other params] }}
+     *
+     * @return string
+     */
+    public function sources()
+    {
+        $cacheKey = md5(json_encode($this->params->toArray()));
+
+        return Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () {
+            $file = $this->getFile($this->params->get('id'));
+            $defaultUrl = $this->getUrl($this->params->get('id'), $this->params->get('name') ?? data_get($file, 'name'));
+
+            if ($defaultUrl == null) return null;
+
+            // Parse the sources parameter
+            $sourcesParam = $this->params->get('sources');
+            $srcsetEntries = [];
+            $breakpoints = [];
+
+            if (!empty($sourcesParam)) {
+                // Format: "1200:1600w,768:1200w,480:800w"
+                $sourcesList = explode(',', $sourcesParam);
+
+                foreach ($sourcesList as $sourceItem) {
+                    $parts = explode(':', trim($sourceItem));
+                    if (count($parts) === 2) {
+                        $breakpoint = trim($parts[0]);
+                        $maxWidth = trim($parts[1]);
+
+                        // Extract numeric width from "1200w" format
+                        $widthValue = (int)str_replace('w', '', $maxWidth);
+                        $breakpoints[] = [
+                            'width' => $breakpoint,
+                            'imageWidth' => $widthValue
+                        ];
+
+                        // Generate URL for this width
+                        $baseUrl = $this->getUrl(
+                            $this->params->get('id'),
+                            $this->params->get('name') ?? data_get($file, 'name')
+                        );
+
+                        // Add width parameter to URL
+                        $separator = (strpos($baseUrl, '?') !== false) ? '&' : '?';
+                        $url = $baseUrl . "{$separator}width={$widthValue}";
+
+                        // Add to srcset entries
+                        $srcsetEntries[] = "{$url} {$maxWidth}";
+                    }
+                }
+            }
+
+            // Get sizes attribute if provided, or generate a default one
+            $sizesAttr = $this->params->get('sizes');
+            if (empty($sizesAttr) && !empty($breakpoints)) {
+                // Generate default sizes based on breakpoints if not provided
+                $sizesEntries = [];
+
+                // Sort breakpoints from largest to smallest
+                usort($breakpoints, function ($a, $b) {
+                    return $b['width'] - $a['width'];
+                });
+
+                foreach ($breakpoints as $index => $breakpoint) {
+                    if ($index === count($breakpoints) - 1) {
+                        // Last entry (smallest size, no media query)
+                        $sizesEntries[] = "{$breakpoint['imageWidth']}px";
+                    } else {
+                        // Other entries with media queries
+                        $sizesEntries[] = "(min-width: {$breakpoint['width']}px) {$breakpoint['imageWidth']}px";
+                    }
+                }
+                $sizesAttr = implode(", ", $sizesEntries);
+            }
+
+            // Build common image attributes
+            $image_params = [
+                !empty($this->params->get('width')) ? "width='" . $this->params->get('width') . "'" : null,
+                !empty($this->params->get('height')) ? "height='" . $this->params->get('height') . "'" : null,
+                !empty($this->params->get('class')) ? "class='" . $this->params->get('class') . "'" : null,
+                !empty($this->params->get('alt')) ? "alt='" . $this->params->get('alt') . "'" : data_get($file, 'description'),
+                !empty($srcsetEntries) ? "srcset='" . implode(", ", $srcsetEntries) . "'" : null,
+                !empty($sizesAttr) ? "sizes='" . $sizesAttr . "'" : null,
+            ];
+
+            $image_params = array_filter($image_params);
+            $attributes = implode(' ', $image_params);
+
+            // Build the img tag
+            return "<img src='$defaultUrl' $attributes>";
+        });
+    }
 }
