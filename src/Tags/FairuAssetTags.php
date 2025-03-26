@@ -78,4 +78,35 @@ class FairuAssetTags extends Tags
             return $set;
         });
     }
+
+    /**
+     * The {{ fairu:image }} tag.
+     *
+     * @return string
+     */
+    public function image()
+    {
+
+        $cacheKey = md5(json_encode($this->params->toArray()));
+
+        return Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () {
+
+            $file = $this->getFile($this->params->get('id'));
+            $url = $this->getUrl($this->params->get('id'), $this->params->get('name') ?? data_get($file, 'name'));
+            if ($url == null) return null;
+
+            $image_params = [
+                !empty($this->params->get('width')) ? "width='" . $this->params->get('width') . "'" : null,
+                !empty($this->params->get('height')) ? "height='" . $this->params->get('height') . "'" : null,
+                !empty($this->params->get('class')) ? "class='" . $this->params->get('class') . "'" : null,
+                !empty($this->params->get('alt')) ? "alt='" . $this->params->get('alt') . "'" : data_get($file, 'description'),
+            ];
+
+            $image_params = array_filter($image_params);
+            $attributes = implode(' ', $image_params);
+
+
+            return "<img src='$url' $attributes >";
+        });
+    }
 }
