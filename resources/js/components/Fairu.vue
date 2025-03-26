@@ -9,7 +9,7 @@
             :enabled="canUpload"
             @dropped="handleFileDrop">
             <div
-                v-if="!asset?.id && !loading"
+                v-if="!asset?.id && !loading && !uploading"
                 class="assets-fieldtype">
                 <input
                     class="hidden"
@@ -36,19 +36,20 @@
                 </div>
             </div>
         </dropzone>
+        <div v-if="loading || uploading">UPLOADING</div>
         <div
             :id="_uid"
             class="flex items-center gap-2 p-3 border rounded border-slate-400 fa-bg-slate-100"
-            v-if="asset?.id || loading">
+            v-if="asset?.id || loading || uploading">
             <ring-loader
                 color="#4a4a4a"
                 class="w-5 h-5"
                 size="24"
-                v-if="loading" />
-            <span v-if="loading && !fetchingMetaData">{{ percentUploaded }}%</span>
+                v-if="loading || uploading" />
+            <span v-if="uploading">{{ percentUploaded }}%</span>
             <span v-else-if="loading && fetchingMetaData">Meta-Daten werden ermittelt...</span>
             <div
-                v-if="!loading"
+                v-if="!loading && !uploading"
                 class="grid w-full min-w-0 gap-2"
                 style="grid-template-columns: auto 1fr auto">
                 <img
@@ -109,6 +110,7 @@ export default {
             searchOpen: false,
             loading: true,
             loadingList: false,
+            uploading: false,
             asset: null,
             percentUploaded: null,
             fetchingMetaData: false,
@@ -156,16 +158,14 @@ export default {
             this.handleUpload(file);
         },
         handleUpload(file) {
-            const errorCallback = (error) => {
-                this.loading = false;
-                this.$progress.complete('upload' + this._uid);
-                this.$toast.error(err.response.data.message);
-                this.$refs.upload.value = null;
-            };
+            this.$progress.start('upload' + this._uid);
+            this.percentUploaded = 0;
+            this.uploading = true;
 
             const successCallback = (result) => {
                 this.asset = result.data.data;
                 this.searchOpen = false;
+                this.uploading = false;
                 this.$progress.complete('upload' + this._uid);
                 this.$toast.success('Datei erfolgreich hochgeladen.');
                 this.fetchingMetaData = true;
@@ -175,9 +175,13 @@ export default {
                     this.fetchingMetaData = false;
                 });
             };
-            this.$progress.start('upload' + this._uid);
-            this.percentUploaded = 0;
-            this.loading = true;
+
+            const errorCallback = (err) => {
+                this.uploading = false;
+                this.$progress.complete('upload' + this._uid);
+                this.$toast.error(err.response.data.message);
+                this.$refs.upload.value = null;
+            };
 
             fairuUpload({
                 file,
@@ -232,10 +236,8 @@ export default {
             return this.meta.proxy + '/' + this.asset?.id + '/thumbnail.webp?width=50&height=50';
         },
     },
-
     mounted() {
         this.asset = this.loadMetaData(this.value);
-        this.loading = false;
     },
     beforeDestroy() {},
 };

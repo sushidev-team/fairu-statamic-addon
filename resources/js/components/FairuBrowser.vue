@@ -205,7 +205,6 @@ export default {
     data() {
         return {
             asset: null,
-            searchOpen: false,
             loading: false,
             folder: null,
             page: 1,
@@ -281,7 +280,6 @@ export default {
                     await this.loadMetaData(result?.data?.id);
                     this.selectItem(this.asset);
                     this.fetchingMetaData = false;
-                    this.searchOpen = false;
                 });
             };
             this.$progress.start('upload' + this._uid);
