@@ -21,16 +21,17 @@
                         <button
                             @click="openSearch()"
                             class="btn"
-                            ><i class="inline-block mr-2 material-symbols-outlined">drive_folder_upload</i> Durchsuchen
+                            ><i class="inline-block mr-2 material-symbols-outlined">drive_folder_upload</i>
+                            {{ __('fairu::fieldtype.search') }}
                         </button>
                         <p class="flex-1 asset-upload-control">
                             <button
                                 type="button"
                                 class="upload-text-button"
                                 @click="openFile(null)">
-                                Datei hochladen
+                                {{ __('fairu::fieldtype.upload_file') }}
                             </button>
-                            <span class="drag-drop-text">oder per Drag &amp; Drop hierher ziehen.</span>
+                            <span class="drag-drop-text">{{ __('fairu::fieldtype.or_add_per_drag_and_drop') }}</span>
                         </p>
                     </div>
                 </div>
@@ -38,7 +39,7 @@
         </dropzone>
         <div
             :id="_uid"
-            class="flex items-center gap-2 p-3 border rounded border-slate-400 fa-bg-slate-100"
+            class="flex items-center gap-2 p-3 border rounded border-slate-400 dark:fa-bg-dark-900 fa-bg-slate-100"
             v-if="asset?.id || loading || uploading">
             <ring-loader
                 color="#4a4a4a"
@@ -46,7 +47,7 @@
                 size="24"
                 v-if="loading || uploading" />
             <span v-if="uploading">{{ percentUploaded }}%</span>
-            <span v-else-if="loading && fetchingMetaData">Meta-Daten werden ermittelt...</span>
+            <span v-else-if="loading && fetchingMetaData">{{ __('fairu::fieldtype.meta_data_fetching') }}</span>
             <div
                 v-if="!loading && !uploading"
                 class="grid w-full min-w-0 gap-2"
@@ -68,7 +69,7 @@
                     <div
                         class="min-w-0 text-sm truncate"
                         v-html="asset?.name"></div>
-                    <div class="min-w-0 text-xs font-bold truncate">Ändern</div>
+                    <div class="min-w-0 text-xs font-bold truncate">{{ __('fairu::fieldtype.change') }}</div>
                 </a>
                 <div class="flex gap-1">
                     <a

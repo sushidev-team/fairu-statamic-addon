@@ -20,6 +20,15 @@ class ServiceProvider extends AddonServiceProvider
         \Sushidev\Fairu\Fieldtypes\Fairu::class,
     ];
 
+    protected $translations = [
+        'en' => [
+            'fieldtype' => __DIR__ . '/../resources/lang/en/fieldtype.php',
+        ],
+        'de' => [
+            'fieldtype' => __DIR__ . '/../resources/lang/de/fieldtype.php',
+        ],
+    ];
+
     protected $vite = [
         'input' => [
             'resources/js/cp.js',
@@ -43,7 +52,7 @@ class ServiceProvider extends AddonServiceProvider
         if (config('fairu.deactivate_old') == true) {
             View::addNamespace('fairu-statamic', base_path("resources/views/vendor/{$packageName}"));
         }
-
+        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'fairu');
         $this->bootAddonConfig();
     }
 

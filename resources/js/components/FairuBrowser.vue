@@ -16,7 +16,8 @@
                         class="flex items-center gap-1 text-base btn btn-primary"
                         @click="openFile(folder)"
                         v-if="!createFolderInputVisible">
-                        <i class="text-gray-700 material-symbols-outlined">upload</i> <span>Upload</span>
+                        <i class="text-gray-700 material-symbols-outlined">upload</i>
+                        <span>{{ __('fairu::browser.upload') }}</span>
                     </button>
                     <button
                         href="#"
@@ -24,7 +25,7 @@
                         @click="openCreateFolder"
                         v-if="!createFolderInputVisible">
                         <i class="text-gray-700 material-symbols-outlined">create_new_folder</i>
-                        <span>Neuer Ordner</span>
+                        <span>{{ __('fairu::browser.new_folder') }}</span>
                     </button>
                     <div
                         v-if="createFolderInputVisible"
@@ -33,7 +34,7 @@
                             class="input-text"
                             type="text"
                             ref="newfolder"
-                            placeholder="Neuer Ordnername"
+                            :placeholder="__('fairu::browser.new_folder_name')"
                             v-model="newFolderName" />
                         <button
                             class="flex items-center gap-1 text-base btn btn-primary"
@@ -44,7 +45,8 @@
                         <button
                             class="flex items-center gap-1 text-base btn"
                             @click="closeCreateFolder">
-                            <i class="text-lg text-gray-700 material-symbols-outlined">cancel</i><span>Abbrechen</span>
+                            <i class="text-lg text-gray-700 material-symbols-outlined">cancel</i
+                            ><span>{{ __('fairu::browser.cancel') }}</span>
                         </button>
                     </div>
                     <input
@@ -52,7 +54,7 @@
                         class="input-text"
                         type="text"
                         ref="search"
-                        placeholder="Suche in Ordner"
+                        :placeholder="__('fairu::browser.search_in_folder')"
                         @input="handleSearchInput" />
                     <a
                         :href="`${meta.folder}${folder != null ? '/' + folder : ''}`"
@@ -132,7 +134,7 @@
                                 <a
                                     :href="`${meta.file}${item.id}`"
                                     target="_blank"
-                                    title="In Fairu bearbeiten"
+                                    :title="__('fairu::browser.edit_in_fairu')"
                                     class="flex gap-1 text-xs cursor-pointer"
                                     ><i class="text-xl text-gray-300 material-symbols-outlined">edit</i>
                                 </a>
@@ -153,14 +155,14 @@
                         :disabled="page <= 1"
                         @click.prevent="previousPage"
                         class="flex items-center gap-1 text-base btn btn-sm">
-                        Zurück
+                        {{ __('fairu::browser.previous') }}
                     </button>
                     <div class="px-2">{{ page }} / {{ lastPage || 1 }}</div>
                     <button
                         :disabled="page >= lastPage"
                         @click.prevent="nextPage"
                         class="flex items-center gap-1 text-base btn btn-sm">
-                        Weiter
+                        {{ __('fairu::browser.next') }}
                     </button>
                     <button
                         :disabled="page >= lastPage"
