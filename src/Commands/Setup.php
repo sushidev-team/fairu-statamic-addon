@@ -77,6 +77,11 @@ class Setup extends Command
 
         $containers = FacadesAssetContainer::all()?->pluck('handle')->toArray();
 
+        if ($containers == null){
+            $this->error('Error while loading statamic containers. Please check if there has been a asset container defined.');
+            return;
+        }
+
         $assetContainer = select(
             label: 'What container do you want to import?',
             options: $containers,
