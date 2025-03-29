@@ -2,6 +2,7 @@
 
 namespace Sushidev\Fairu\Commands;
 
+use Error;
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
@@ -39,7 +40,12 @@ class Setup extends Command
 
     public function handle(): void
     {
-        $this->checkConnection();
+        try {
+            $this->checkConnection();
+        } catch (Throwable $ex) {
+            $this->error($ex->getMessage());
+            exit;
+        }
         $this->importFiles();
     }
 
@@ -58,13 +64,11 @@ class Setup extends Command
         $result = (new ServicesFairu($connection))->getScopeFromEndpoint();
 
         if ($result == null) {
-            $this->error('Cannot check the given credentials. Please make sure you have set the environment keys "FAIRU_TENANT" and "FAIRU_TENANT_SECRET" or that you defined your custom connection in the configuration.');
-            return;
+            throw new Error('Cannot check the given credentials. Please make sure you have set the environment keys "FAIRU_TENANT" and "FAIRU_TENANT_SECRET" or that you defined your custom connection in the configuration.');
         }
 
         if (count($result) == 0) {
-            $this->error('Cannot check the given credentials. Please make sure you have set the environment keys "FAIRU_TENANT" and "FAIRU_TENANT_SECRET" or that you defined your custom connection in the configuration.');
-            return;
+            throw new Error('Cannot check the given credentials. Please make sure you have set the environment keys "FAIRU_TENANT" and "FAIRU_TENANT_SECRET" or that you defined your custom connection in the configuration.');
         }
 
         // Output some information about the keys
@@ -83,9 +87,8 @@ class Setup extends Command
 
         $containers = FacadesAssetContainer::all()?->pluck('handle')->toArray();
 
-        if ($containers == null){
-            $this->error('Error while loading statamic containers. Please check if there has been a asset container defined.');
-            return;
+        if ($containers == null) {
+            throw new Error('Error while loading statamic containers. Please check if there has been a asset container defined.');
         }
 
         $assetContainer = select(
