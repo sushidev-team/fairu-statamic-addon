@@ -59,6 +59,12 @@ class Setup extends Command
 
         if ($result == null) {
             $this->error('Cannot check the given credentials. Please make sure you have set the environment keys "FAIRU_TENANT" and "FAIRU_TENANT_SECRET" or that you defined your custom connection in the configuration.');
+            return;
+        }
+
+        if (count($result) == 0) {
+            $this->error('Cannot check the given credentials. Please make sure you have set the environment keys "FAIRU_TENANT" and "FAIRU_TENANT_SECRET" or that you defined your custom connection in the configuration.');
+            return;
         }
 
         // Output some information about the keys
