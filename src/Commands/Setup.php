@@ -26,6 +26,7 @@ use function Laravel\Prompts\spin;
 use Ramsey\Uuid\Uuid;
 use Statamic\Contracts\Assets\Asset as AssetsAsset;
 use Statamic\Facades\Entry;
+use Statamic\Facades\GlobalSet;
 use Throwable;
 
 class Setup extends Command
@@ -155,9 +156,17 @@ class Setup extends Command
         );
 
         // 5) Replace
-        $this->replaceInStatamic($list);
 
-        dd($list);
+        $replace = confirm(
+            label: 'Do you want to replace the files in entries & co. ?',
+            default: false,
+            yes: 'Yes',
+            no: 'No',
+        );
+
+        if ($replace == true) {
+            $this->replaceInStatamic($list);
+        }
 
         $restart = confirm(
             label: 'Do you want to import another container?',
@@ -218,7 +227,6 @@ class Setup extends Command
 
     public function replaceInStatamic(array $list = []): void
     {
-
         progress(
             label: 'Replace file in entries...',
             steps: Entry::query()->get(),
@@ -236,6 +244,39 @@ class Setup extends Command
             },
             hint: 'This may take some time, because we replace and saving all files in entries.'
         );
+
+        progress(
+            label: 'Replace file in globals...',
+            steps: (GlobalSet::all()),
+            callback: function ($set, $progress) use (&$list) {
+                
+                ($set->sites())->each(function($site) use ($set, $list){
+                    $settings = $set->in($site);
+                    $json = json_encode($settings->data()?->toArray());
+
+                    foreach ($list as $index => $item) {
+                        $json = Str::replace('"' . Str::replace('/', '\/', data_get($item, 'path')) . '"', '"' . data_get($item, 'fairu') . '"', $json);
+                    }
+                    
+                    $data = json_decode($json);
+                    $settings->data($data);
+                    $settings->save();
+                });
+            },
+            hint: 'Replace all the files in globals.'
+        );
+
+
+        (GlobalSet::all())->each(function($set){
+            ($set->sites())->each(function($site) use ($set){
+                $settings = $set->in($site);
+                $json = json_encode($settings->data()?->toArray());
+                
+                $data = json_decode($json);
+                $settings->data($data);
+                $settings->save();
+            });
+        });
 
     }
 }
