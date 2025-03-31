@@ -6,7 +6,6 @@ use Error;
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Asset;
 use Statamic\Facades\AssetContainer as FacadesAssetContainer;
@@ -16,7 +15,6 @@ use Statamic\Fieldtypes\Bard as FieldtypesBard;
 use Statamic\Fieldtypes\Bard\Augmentor;
 
 use Illuminate\Support\Str;
-
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\progress;
@@ -158,7 +156,7 @@ class Setup extends Command
         // 5) Replace
 
         $replace = confirm(
-            label: 'Do you want to replace the files in entries & co. ?',
+            label: 'Do you want to replace the files in blueprint, fieldset, entries & co. ?',
             default: false,
             yes: 'Yes',
             no: 'No',
@@ -166,6 +164,7 @@ class Setup extends Command
 
         if ($replace == true) {
             $this->replaceInStatamic($list);
+            $this->replaceFields();
         }
 
         $restart = confirm(
@@ -249,15 +248,15 @@ class Setup extends Command
             label: 'Replace file in globals...',
             steps: (GlobalSet::all()),
             callback: function ($set, $progress) use (&$list) {
-                
-                ($set->sites())->each(function($site) use ($set, $list){
+
+                ($set->sites())->each(function ($site) use ($set, $list) {
                     $settings = $set->in($site);
                     $json = json_encode($settings->data()?->toArray());
 
                     foreach ($list as $index => $item) {
                         $json = Str::replace('"' . Str::replace('/', '\/', data_get($item, 'path')) . '"', '"' . data_get($item, 'fairu') . '"', $json);
                     }
-                    
+
                     $data = json_decode($json);
                     $settings->data($data);
                     $settings->save();
@@ -267,16 +266,41 @@ class Setup extends Command
         );
 
 
-        (GlobalSet::all())->each(function($set){
-            ($set->sites())->each(function($site) use ($set){
+        (GlobalSet::all())->each(function ($set) {
+            ($set->sites())->each(function ($site) use ($set) {
                 $settings = $set->in($site);
                 $json = json_encode($settings->data()?->toArray());
-                
+
                 $data = json_decode($json);
                 $settings->data($data);
                 $settings->save();
             });
         });
+    }
 
+    public function replaceFields()
+    {
+
+        $directories = [
+            base_path('resources/blueprints'),
+            base_path('resources/fieldsets')
+        ];
+
+        $oldType = 'type: assets';
+        $newType = 'type: fairu';
+
+        foreach ($directories as $dir) {
+            $files = glob($dir . '/*.yaml');
+
+            foreach ($files as $file) {
+                $content = file_get_contents($file);
+
+                if (strpos($content, $oldType) !== false) {
+                    $updatedContent = str_replace($oldType, $newType, $content);
+                    $this->info("Replace file name $file");
+                    file_put_contents($file, $updatedContent);
+                }
+            }
+        }
     }
 }
