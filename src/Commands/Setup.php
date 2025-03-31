@@ -25,6 +25,7 @@ use function Laravel\Prompts\spin;
 
 use Ramsey\Uuid\Uuid;
 use Statamic\Contracts\Assets\Asset as AssetsAsset;
+use Statamic\Facades\Entry;
 use Throwable;
 
 class Setup extends Command
@@ -136,15 +137,27 @@ class Setup extends Command
         }
 
         // 4) Upload files
+        $list = [];
         progress(
             label: 'Upload files to fairu...',
             steps: $assets,
-            callback: function ($asset, $progress) use ($folders) {
+            callback: function ($asset, $progress) use ($folders, &$list) {
                 $uuid = (new ServicesFairu($this->connection))->convertToUuid($asset->id);
                 $this->importAssetToFairu($asset, $uuid, $folders, $progress);
+
+                $list[] = [
+                    'id' => $asset->id,
+                    'path' => $asset->path,
+                    'fairu' => $uuid,
+                ];
             },
             hint: 'This may take some time, because we are uploading the files to fairu.'
         );
+
+        // 5) Replace
+        $this->replaceInStatamic($list);
+
+        dd($list);
 
         $restart = confirm(
             label: 'Do you want to import another container?',
@@ -201,5 +214,28 @@ class Setup extends Command
         if ($response->status() == 200) {
             Http::get(data_get($result, 'sync_url'));
         }
+    }
+
+    public function replaceInStatamic(array $list = []): void
+    {
+
+        progress(
+            label: 'Replace file in entries...',
+            steps: Entry::query()->get(),
+            callback: function ($entry, $progress) use (&$list) {
+                $json = json_encode($entry->data());
+
+                foreach ($list as $index => $item) {
+                    $json = Str::replace('"' . data_get($item, 'path') . '"', '"' . data_get($item, 'fairu') . '"', $json);
+                }
+
+                $data = json_decode($json);
+
+                $entry->data($data);
+                $entry->save();
+            },
+            hint: 'This may take some time, because we replace and saving all files in entries.'
+        );
+
     }
 }
