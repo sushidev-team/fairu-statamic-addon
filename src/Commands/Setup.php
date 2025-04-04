@@ -23,8 +23,6 @@ use function Laravel\Prompts\spin;
 
 use Ramsey\Uuid\Uuid;
 use Statamic\Contracts\Assets\Asset as AssetsAsset;
-use Statamic\Facades\Entry;
-use Statamic\Facades\GlobalSet;
 use Throwable;
 
 class Setup extends Command
@@ -141,13 +139,14 @@ class Setup extends Command
             label: 'Upload files to fairu...',
             steps: $assets,
             callback: function ($asset, $progress) use ($folders, &$list) {
-                $uuid = (new ServicesFairu($this->connection))->convertToUuid($asset->id);
+                $uuid = (new ServicesFairu($this->connection))->convertToUuid($asset->url());
                 $this->importAssetToFairu($asset, $uuid, $folders, $progress);
 
                 $list[] = [
                     'id' => $asset->id,
                     'path' => $asset->path,
                     'fairu' => $uuid,
+                    'url' => $asset->url(),
                 ];
             },
             hint: 'This may take some time, because we are uploading the files to fairu.'
@@ -163,7 +162,6 @@ class Setup extends Command
         );
 
         if ($replace == true) {
-            $this->replaceInStatamic($list);
             $this->replaceFields();
         }
 
@@ -224,60 +222,6 @@ class Setup extends Command
         }
     }
 
-    public function replaceInStatamic(array $list = []): void
-    {
-        progress(
-            label: 'Replace file in entries...',
-            steps: Entry::query()->get(),
-            callback: function ($entry, $progress) use (&$list) {
-                $json = json_encode($entry->data());
-
-                foreach ($list as $index => $item) {
-                    $json = Str::replace('"' . data_get($item, 'path') . '"', '"' . data_get($item, 'fairu') . '"', $json);
-                }
-
-                $data = json_decode($json);
-
-                $entry->data($data);
-                $entry->save();
-            },
-            hint: 'This may take some time, because we replace and saving all files in entries.'
-        );
-
-        progress(
-            label: 'Replace file in globals...',
-            steps: (GlobalSet::all()),
-            callback: function ($set, $progress) use (&$list) {
-
-                ($set->sites())->each(function ($site) use ($set, $list) {
-                    $settings = $set->in($site);
-                    $json = json_encode($settings->data()?->toArray());
-
-                    foreach ($list as $index => $item) {
-                        $json = Str::replace('"' . Str::replace('/', '\/', data_get($item, 'path')) . '"', '"' . data_get($item, 'fairu') . '"', $json);
-                    }
-
-                    $data = json_decode($json);
-                    $settings->data($data);
-                    $settings->save();
-                });
-            },
-            hint: 'Replace all the files in globals.'
-        );
-
-
-        (GlobalSet::all())->each(function ($set) {
-            ($set->sites())->each(function ($site) use ($set) {
-                $settings = $set->in($site);
-                $json = json_encode($settings->data()?->toArray());
-
-                $data = json_decode($json);
-                $settings->data($data);
-                $settings->save();
-            });
-        });
-    }
-
     public function replaceFields()
     {
 
@@ -303,4 +247,5 @@ class Setup extends Command
             }
         }
     }
+
 }

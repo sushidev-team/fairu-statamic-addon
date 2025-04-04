@@ -4,6 +4,7 @@ namespace Sushidev\Fairu\Services;
 
 use Exception;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 
 class Fairu
@@ -81,5 +82,14 @@ class Fairu
     public function convertToUuid(string $str): string
     {
         return Uuid::uuid5(Uuid::NAMESPACE_DNS, data_get($this->credentials, 'tenant') . $str)->toString();
+    }
+
+    public function parse(string $str): string 
+    {
+        if (Str::isUuid($str)){
+            return $str;
+        }        
+
+        return $this->convertToUuid($str);
     }
 }

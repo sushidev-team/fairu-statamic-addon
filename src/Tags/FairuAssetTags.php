@@ -18,11 +18,19 @@ class FairuAssetTags extends Tags
 
     protected static $handle = 'fairu';
 
+    public Fairu $fairu;
+
+    public function __construct()
+    {
+        $this->fairu = (new Fairu());
+    }
+
     protected function getFile(string $id)
     {
-        return Cache::flexible('file-' . $id, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () {
+        $id = $this->fairu->parse($id);
+        return Cache::flexible('file-' . $id, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($id) {
             try {
-                return data_get((new Fairu($this->params->get('connection', 'default')))->getFile($this->params->get('id')), 'data');
+                return data_get((new Fairu($this->params->get('connection', 'default')))->getFile($id), 'data');
             } catch (Throwable $ex) {
                 Log::error($ex->getMessage());
                 return null;
@@ -42,6 +50,8 @@ class FairuAssetTags extends Tags
 
         $queryString = http_build_query($params);
 
+        $id = $this->fairu->parse($id);
+
         return (Str::endsWith(config('fairu.url_proxy'), "/") ? config('fairu.url_proxy') : config('fairu.url_proxy') . "/") . $id . "/" . ($filename ?? 'file') . '?' . $queryString;
     }
 
@@ -52,7 +62,8 @@ class FairuAssetTags extends Tags
      */
     public function url()
     {
-        return $this->getUrl($this->params->get('id'), $this->params->get('name', 'file'));
+        $id = $this->fairu->parse($this->params->get('id'));
+        return $this->getUrl($id, $this->params->get('name', 'file'));
     }
 
     /**
@@ -67,8 +78,9 @@ class FairuAssetTags extends Tags
 
         return Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () {
 
-            $file = $this->getFile($this->params->get('id'));
-            $url = $this->getUrl($this->params->get('id'), $this->params->get('name') ?? data_get($file, 'name'));
+            $id = $this->fairu->parse($this->params->get('id'));
+            $file = $this->getFile($id);
+            $url = $this->getUrl($id, $this->params->get('name') ?? data_get($file, 'name'));
 
             $set = data_get($file, 'data');
             data_set($set, 'url', $url,);
@@ -91,8 +103,9 @@ class FairuAssetTags extends Tags
 
         return Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () {
 
-            $file = $this->getFile($this->params->get('id'));
-            $url = $this->getUrl($this->params->get('id'), $this->params->get('name') ?? data_get($file, 'name'));
+            $id = $this->fairu->parse($this->params->get('id'));
+            $file = $this->getFile($id);
+            $url = $this->getUrl($id, $this->params->get('name') ?? data_get($file, 'name'));
             if ($url == null) return null;
 
             $image_params = [
@@ -121,8 +134,10 @@ class FairuAssetTags extends Tags
         $cacheKey = md5(json_encode($this->params->toArray()));
 
         return Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () {
-            $file = $this->getFile($this->params->get('id'));
-            $defaultUrl = $this->getUrl($this->params->get('id'), $this->params->get('name') ?? data_get($file, 'name'));
+            
+            $id = $this->fairu->parse($this->params->get('id'));
+            $file = $this->getFile($id);
+            $defaultUrl = $this->getUrl($id, $this->params->get('name') ?? data_get($file, 'name'));
 
             if ($defaultUrl == null) return null;
 
@@ -150,7 +165,7 @@ class FairuAssetTags extends Tags
 
                         // Generate URL for this width
                         $baseUrl = $this->getUrl(
-                            $this->params->get('id'),
+                            $id,
                             $this->params->get('name') ?? data_get($file, 'name')
                         );
 
