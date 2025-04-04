@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.1.3...v1.1.4) (2025-04-04)
+
+
+### Bug Fixes
+
+* make param arrayable ([89d73c1](https://github.com/sushidev-team/fairu-statamic-addon/commit/89d73c1ae01d9eb0c188f364024947bdca67f0d6))
+
 ## [1.1.3](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.1.2...v1.1.3) (2025-04-04)
 
 
