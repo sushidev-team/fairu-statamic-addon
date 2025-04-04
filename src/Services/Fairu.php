@@ -86,7 +86,7 @@ class Fairu
         return Uuid::uuid5(Uuid::NAMESPACE_DNS, data_get($this->credentials, 'tenant') . $str)->toString();
     }
 
-    public function parse(string $str): string 
+    public function parse(string $str): ?string 
     {
         if (Str::isUuid($str)){
             return $str;
