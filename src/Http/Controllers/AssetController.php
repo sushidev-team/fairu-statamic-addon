@@ -102,7 +102,6 @@ class AssetController extends Controller
 
     public function getFile(Request $request, String $id)
     {
-        ray($id);
         $connection = config('fairu.connections.default');
 
         $result = Http::withHeaders([

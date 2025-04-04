@@ -4,6 +4,7 @@ namespace Sushidev\Fairu\Services;
 
 use Exception;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use Statamic\Assets\AssetContainer;
@@ -33,9 +34,13 @@ class Fairu
         return config('fairu.url') . "/$path";
     }
 
-    public function getFile(string $id): ?array
+    public function getFile(?string $id = null): ?array
     {
+        if ($id == null) {
+            return null;
+        }
 
+        Log::info("Request Fairu asset: $id");
         $result = $this->client->get($this->endpoint('api/files/' . $id));
 
         if ($result->status() != 200) {
@@ -86,29 +91,33 @@ class Fairu
         return Uuid::uuid5(Uuid::NAMESPACE_DNS, data_get($this->credentials, 'tenant') . $str)->toString();
     }
 
-    public function parse(string $str): ?string 
+    public function parse(string $str): ?string
     {
-        if (Str::isUuid($str)){
+        if (Str::isUuid($str)) {
             return $str;
-        }        
+        }
 
         return $this->resolveOldAssetPath($str);
     }
 
-    protected function resolveOldAssetPath(string $value): ?string {
+    protected function resolveOldAssetPath(?string $value = null): ?string
+    {
+
+        if ($value == null) {
+            return null;
+        }
 
         $containers = AssetContainer::all()?->pluck('handle')->toArray();
         $id = null;
 
-        foreach($containers as $container){
-            $asset = Asset::whereContainer($container)->where('path',$value)?->first();
-            if ($asset != null){
+        foreach ($containers as $container) {
+            $asset = Asset::whereContainer($container)->where('path', $value)?->first();
+            if ($asset != null) {
                 $id = $this->convertToUuid($asset->url());
                 break;
             }
         }
 
         return $id;
-        
     }
 }
