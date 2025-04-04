@@ -31,7 +31,9 @@ class Fairu
 
     protected function endpoint(string $path)
     {
-        return config('fairu.url') . "/$path";
+        $url = config('fairu.url') . "/$path";
+        Log::debug($url);
+        return $url;
     }
 
     public function getFile(?string $id = null): ?array
@@ -40,7 +42,7 @@ class Fairu
             return null;
         }
 
-        Log::info("Request Fairu asset: $id");
+        Log::debug("Request Fairu asset: $id");
         $result = $this->client->get($this->endpoint('api/files/' . $id));
 
         if ($result->status() != 200) {
@@ -91,8 +93,18 @@ class Fairu
         return Uuid::uuid5(Uuid::NAMESPACE_DNS, data_get($this->credentials, 'tenant') . $str)->toString();
     }
 
-    public function parse(string $str): ?string
+    public function parse(string|array $str)
     {
+        if (is_array($str)) {
+            return array_map(function ($strItem) {
+                if (Str::isUuid($strItem)) {
+                    return $strItem;
+                }
+
+                return $this->resolveOldAssetPath($strItem);
+            }, $str);
+        }
+
         if (Str::isUuid($str)) {
             return $str;
         }
