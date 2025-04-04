@@ -15,6 +15,8 @@ class Fairu extends Fieldtype
         return file_get_contents(__DIR__ . '/../../resources/svg/fairu-favicon.svg');
     }
 
+    protected $keywords = ['file', 'files', 'image', 'images', 'video', 'videos', 'audio', 'upload', 'fairu'];
+
     /**
      * The blank/default value.
      *
@@ -73,6 +75,23 @@ class Fairu extends Fieldtype
 
     protected function configFieldItems(): array
     {
-        return [];
+        return [
+            'max_files' => [
+                'display' => 'Max Files',
+                'instructions' => 'Set a maximum number of selectable assets.',
+                'type' => 'integer',
+            ],
+            'min_files' => [
+                'display' => 'Min Files',
+                'instructions' => '',
+                'type' => 'integer',
+            ],
+            'allow_uploads' => [
+                'display' => 'Allow uploads',
+                'instructions' => '',
+                'type' => 'toggle',
+                'default' => true
+            ],
+        ];
     }
 }
