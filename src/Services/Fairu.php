@@ -6,6 +6,8 @@ use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
+use Statamic\Assets\AssetContainer;
+use Statamic\Facades\Asset;
 
 class Fairu
 {
@@ -90,6 +92,23 @@ class Fairu
             return $str;
         }        
 
-        return $this->convertToUuid($str);
+        return $this->resolveOldAssetPath($str);
+    }
+
+    protected function resolveOldAssetPath(string $value): ?string {
+
+        $containers = AssetContainer::all()?->pluck('handle')->toArray();
+        $id = null;
+
+        foreach($containers as $container){
+            $asset = Asset::whereContainer($container)->where('path',$value)?->first();
+            if ($asset != null){
+                $id = $this->convertToUuid($asset->url());
+                break;
+            }
+        }
+
+        return $id;
+        
     }
 }

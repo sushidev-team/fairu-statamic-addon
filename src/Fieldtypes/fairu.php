@@ -49,7 +49,7 @@ class Fairu extends Fieldtype
                     return $item;
                 }
 
-                return $this->resolveOldAssetPath($item);
+                return (new ServicesFairu)->parse($item);
             })->toArray();
 
         }
@@ -58,23 +58,8 @@ class Fairu extends Fieldtype
             return $data;
         }
 
-        return $this->resolveOldAssetPath($data);
+        return (new ServicesFairu)->parse($data);
 
-    }
-
-    protected function resolveOldAssetPath(string $value): ?string {
-        $containers = AssetContainer::all()?->pluck('handle')->toArray();
-        $url = null;
-
-        foreach($containers as $container){
-            $asset = Asset::whereContainer($container)->where('path',$value)?->first();
-            if ($asset != null){
-                $url = (new ServicesFairu)->parse($asset->url());
-                break;
-            }
-        }
-
-        return $url;
     }
 
     public function preload()
