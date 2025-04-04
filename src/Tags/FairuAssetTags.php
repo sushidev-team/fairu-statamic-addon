@@ -25,8 +25,13 @@ class FairuAssetTags extends Tags
         $this->fairu = (new Fairu());
     }
 
-    protected function getFile(string $id)
+    protected function getFile(?string $id = null)
     {
+
+        if ($id == null){
+            return null;
+        }
+
         $id = $this->fairu->parse($id);
         return Cache::flexible('file-' . $id, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($id) {
             try {
@@ -38,8 +43,13 @@ class FairuAssetTags extends Tags
         });
     }
 
-    protected function getUrl(string $id, ?string $filename)
+    protected function getUrl(?string $id = null, ?string $filename = null)
     {
+
+        if ($id == null){
+            return null;
+        }
+
         $params = [
             'width' => $this->params->get('width'),
             'height' => $this->params->get('height'),
