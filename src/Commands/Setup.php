@@ -6,7 +6,6 @@ use Error;
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Asset;
 use Statamic\Facades\AssetContainer as FacadesAssetContainer;
@@ -16,7 +15,6 @@ use Statamic\Fieldtypes\Bard as FieldtypesBard;
 use Statamic\Fieldtypes\Bard\Augmentor;
 
 use Illuminate\Support\Str;
-
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\progress;
@@ -136,15 +134,36 @@ class Setup extends Command
         }
 
         // 4) Upload files
+        $list = [];
         progress(
             label: 'Upload files to fairu...',
             steps: $assets,
-            callback: function ($asset, $progress) use ($folders) {
-                $uuid = (new ServicesFairu($this->connection))->convertToUuid($asset->id);
+            callback: function ($asset, $progress) use ($folders, &$list) {
+                $uuid = (new ServicesFairu($this->connection))->convertToUuid($asset->url());
                 $this->importAssetToFairu($asset, $uuid, $folders, $progress);
+
+                $list[] = [
+                    'id' => $asset->id,
+                    'path' => $asset->path,
+                    'fairu' => $uuid,
+                    'url' => $asset->url(),
+                ];
             },
             hint: 'This may take some time, because we are uploading the files to fairu.'
         );
+
+        // 5) Replace
+
+        $replace = confirm(
+            label: 'Do you want to replace the files in blueprint, fieldset, entries & co. ?',
+            default: false,
+            yes: 'Yes',
+            no: 'No',
+        );
+
+        if ($replace == true) {
+            $this->replaceFields();
+        }
 
         $restart = confirm(
             label: 'Do you want to import another container?',
@@ -202,4 +221,31 @@ class Setup extends Command
             Http::get(data_get($result, 'sync_url'));
         }
     }
+
+    public function replaceFields()
+    {
+
+        $directories = [
+            base_path('resources/blueprints'),
+            base_path('resources/fieldsets')
+        ];
+
+        $oldType = 'type: assets';
+        $newType = 'type: fairu';
+
+        foreach ($directories as $dir) {
+            $files = glob($dir . '/*.yaml');
+
+            foreach ($files as $file) {
+                $content = file_get_contents($file);
+
+                if (strpos($content, $oldType) !== false) {
+                    $updatedContent = str_replace($oldType, $newType, $content);
+                    $this->info("Replace file name $file");
+                    file_put_contents($file, $updatedContent);
+                }
+            }
+        }
+    }
+
 }

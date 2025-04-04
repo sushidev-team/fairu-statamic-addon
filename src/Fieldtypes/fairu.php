@@ -4,9 +4,13 @@ namespace Sushidev\Fairu\Fieldtypes;
 
 use Statamic\Fields\Fieldtype;
 use Statamic\Exceptions\AssetContainerNotFoundException;
+use Statamic\Facades\Asset;
 use Statamic\Facades\AssetContainer;
 use Statamic\Fieldtypes\Assets\UndefinedContainerException;
 use Statamic\Statamic;
+use Sushidev\Fairu\Services\Fairu as ServicesFairu;
+use Illuminate\Support\Str;
+use Statamic\Assets\Asset as AssetsAsset;
 
 class Fairu extends Fieldtype
 {
@@ -35,7 +39,29 @@ class Fairu extends Fieldtype
      */
     public function preProcess($data)
     {
-        return $data;
+        if ($data == null){
+            return $data;
+        }
+
+        if (is_array($data)){
+
+            return collect($data)->map(function($item){
+
+                if (Str::isUuid($item)){
+                    return $item;
+                }
+
+                return (new ServicesFairu)->parse($item);
+            })->toArray();
+
+        }
+
+        if (Str::isUuid($data)){
+            return $data;
+        }
+
+        return (new ServicesFairu)->parse($data);
+
     }
 
     public function preload()

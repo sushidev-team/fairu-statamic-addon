@@ -39,7 +39,7 @@ return [
     |
     */
 
-    'deactivate_old' => env('FAIRU_DEACTIVATE_OLD', true),
+    'deactivate_old' => env('FAIRU_DEACTIVATE_OLD', false),
 
     /*
     |--------------------------------------------------------------------------
