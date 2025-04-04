@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.1.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.0.1...v1.1.0) (2025-04-04)
+
+
+### Features
+
+* field config, base for multiple files ([fd42b0e](https://github.com/sushidev-team/fairu-statamic-addon/commit/fd42b0ee707ed5052224c0f09d61a497abd392d1))
+* replace files within the structure ([d3ff5e3](https://github.com/sushidev-team/fairu-statamic-addon/commit/d3ff5e3ecaa800b3bc2ace40a0647ddc73f0ab4d))
+* replace old asset strings on the fly ([6068b62](https://github.com/sushidev-team/fairu-statamic-addon/commit/6068b626aaa182a8f306540d6fd58d7cc90e0179))
+* support to replace field type blueprint/fieldsets ([f792ee8](https://github.com/sushidev-team/fairu-statamic-addon/commit/f792ee82860f3cd2f5b5dd5952d6d578551e1287))
+* work on the replacement logic in statamic entries ([746bff4](https://github.com/sushidev-team/fairu-statamic-addon/commit/746bff4870290022b8e5445b3bf480e536645803))
+
+
+### Bug Fixes
+
+* logic of resolving ([1975cfe](https://github.com/sushidev-team/fairu-statamic-addon/commit/1975cfe0b6a003d97861aa74803d308082e071ac))
+* switch to exception pattern within the setup command ([1b03f85](https://github.com/sushidev-team/fairu-statamic-addon/commit/1b03f85f91eda0cf2fca88393d81cea13a2a6cd0))
+
 ## [1.0.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.0.0...v1.0.1) (2025-03-29)
 
 
