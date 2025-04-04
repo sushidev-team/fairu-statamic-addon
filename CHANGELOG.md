@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.1.2...v1.1.3) (2025-04-04)
+
+
+### Bug Fixes
+
+* make params nullable + remove ray ([3337ff3](https://github.com/sushidev-team/fairu-statamic-addon/commit/3337ff3194ffaf7b099f930dfc3efa811398c2d0))
+
 ## [1.1.2](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.1.1...v1.1.2) (2025-04-04)
 
 
