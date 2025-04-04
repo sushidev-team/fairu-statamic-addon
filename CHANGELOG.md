@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.1.0...v1.1.1) (2025-04-04)
+
+
+### Bug Fixes
+
+* parse method allows nullable ([7d54ba2](https://github.com/sushidev-team/fairu-statamic-addon/commit/7d54ba2e5f1ff75c4351bde8dcd03a489f8efb36))
+
 ## [1.1.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.0.1...v1.1.0) (2025-04-04)
 
 
