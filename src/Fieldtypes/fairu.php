@@ -39,34 +39,32 @@ class Fairu extends Fieldtype
      */
     public function preProcess($data)
     {
-        if ($data == null){
+        if ($data == null) {
             return $data;
         }
 
-        if (is_array($data)){
+        if (is_array($data)) {
 
-            return collect($data)->map(function($item){
+            return collect($data)->map(function ($item) {
 
-                if (Str::isUuid($item)){
+                if (Str::isUuid($item)) {
                     return $item;
                 }
 
                 return (new ServicesFairu)->parse($item);
             })->toArray();
-
         }
 
-        if (Str::isUuid($data)){
+        if (Str::isUuid($data)) {
             return $data;
         }
 
         return (new ServicesFairu)->parse($data);
-
     }
 
     public function preload()
     {
-        return ['proxy' => config('fairu.url_proxy')];
+        return ['proxy' => config('fairu.url_proxy'), 'file' => config('fairu.url') . '/files'];
     }
 
     public function getItemData($items)

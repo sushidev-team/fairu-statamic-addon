@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-export const fairuLoadFolder = ({ page, folder, search = null, successCallback, errorCallback }) => {
-    axios
+export const fairuLoadFolder = async ({ page, folder, search = null, successCallback, errorCallback }) => {
+    await axios
         .post('/fairu/folders', {
             page,
             folder,
