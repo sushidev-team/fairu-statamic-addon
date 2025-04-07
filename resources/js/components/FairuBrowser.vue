@@ -41,7 +41,7 @@
                         type="button"
                         class="flex items-center gap-1 btn btn-sm"
                         @click="openFile(folder)"
-                        v-if="!createFolderInputVisible">
+                        v-if="!createFolderInputVisible && selectionType !== 'folder' && canUpload">
                         <i class="text-gray-700 material-symbols-outlined">upload</i>
                         <span>{{ __('fairu::browser.upload') }}</span>
                     </button>
@@ -55,30 +55,33 @@
                     </button>
                 </div>
             </section>
-            <section
-                class="flex items-center w-full gap-2 fa-border-y fa-border-gray-200 fa-bg-gray-50 fa-px-3 fa-py-2 fa-text-gray-600 dark:fa-border-zinc-700 dark:fa-bg-zinc-800 dark:fa-text-zinc-400"
-                v-if="multiselect && assets?.length > 0">
-                <input-checkbox
-                    @change="toggleCurrentSelection"
-                    :checked="
-                        showSelection ||
-                        folderContent?.data.every((file) => assets.map((e) => e.id).includes(file.id)) ||
-                        (config.max_files && assets?.length >= config.max_files)
-                    "
-                    :disabled="assets.length < 1" />
-                <button
-                    class="px-2 py-1 text-xs border rounded fa-border-gray-200 dark:fa-border-gray-700"
-                    :class="showSelection ? 'text-white fa-bg-blue-500' : 'fa-bg-white dark:fa-bg-zinc-900'"
-                    @click="toggleShowSelection"
-                    v-if="assets?.length > 0"
-                    >Only selection&nbsp;<span>({{ assets?.length }})</span></button
-                >
-                <button
-                    class="flex items-center px-2 py-1 text-xs border rounded fa-border-gray-200 dark:fa-border-gray-700"
-                    @click="clearSelection"
-                    v-if="assets?.length > 0"
-                    ><i class="mr-1 text-sm text-gray-700 material-symbols-outlined">clear</i>Clear selection</button
-                >
+            <section>
+                <div
+                    class="flex items-center w-full gap-2 fa-border-y fa-border-gray-200 fa-bg-gray-50 fa-px-3 fa-py-2 fa-text-gray-600 dark:fa-border-zinc-700 dark:fa-bg-zinc-800 dark:fa-text-zinc-400"
+                    v-if="multiselect && assets?.length > 0">
+                    <input-checkbox
+                        @change="toggleCurrentSelection"
+                        :checked="
+                            showSelection ||
+                            folderContent?.data.every((file) => assets.map((e) => e.id).includes(file.id)) ||
+                            (config.max_files && assets?.length >= config.max_files)
+                        "
+                        :disabled="assets.length < 1" />
+                    <button
+                        class="px-2 py-1 text-xs border rounded fa-border-gray-200 dark:fa-border-gray-700"
+                        :class="showSelection ? 'text-white fa-bg-blue-500' : 'fa-bg-white dark:fa-bg-zinc-900'"
+                        @click="toggleShowSelection"
+                        v-if="assets?.length > 0"
+                        >Only selection&nbsp;<span>({{ assets?.length }})</span></button
+                    >
+                    <button
+                        class="flex items-center px-2 py-1 text-xs border rounded fa-border-gray-200 dark:fa-border-gray-700"
+                        @click="clearSelection"
+                        v-if="assets?.length > 0"
+                        ><i class="mr-1 text-sm text-gray-700 material-symbols-outlined">clear</i>Clear
+                        selection</button
+                    >
+                </div>
             </section>
             <dropzone
                 :enabled="canUpload"
@@ -95,19 +98,19 @@
                 </div>
                 <div v-show="!loadingList">
                     <div
-                        class="px-2 group last:fa-border-b-none fa-border-b fa-border-slate-100 hover:fa-bg-gray-50 dark:fa-border-zinc-700 dark:hover:fa-bg-zinc-700"
-                        v-if="folder">
+                        v-if="folder"
+                        class="px-2 group last:fa-border-b-none fa-border-b fa-border-slate-100 hover:fa-bg-gray-50 dark:fa-border-zinc-700 dark:hover:fa-bg-zinc-700">
                         <a
                             href="#"
                             class="flex items-center gap-1 px-2 py-1 fa-min-h-12"
-                            @click="selectFolder(folderParent)">
+                            @click="selectFolder(folder?.parent_id)">
                             <i class="text-gray-700 material-symbols-outlined fa-px-1 fa-text-2xl">folder</i> ...
                         </a>
                     </div>
                     <div
+                        class="px-2 group last:fa-border-b-none fa-border-b fa-border-slate-100 hover:fa-bg-gray-50 dark:fa-border-zinc-700 dark:hover:fa-bg-zinc-700"
                         v-for="(item, index) in showSelection ? assets : folderContent?.data"
-                        v-key="item.id + index"
-                        class="px-2 group last:fa-border-b-none fa-border-b fa-border-slate-100 hover:fa-bg-gray-50 dark:fa-border-zinc-700 dark:hover:fa-bg-zinc-700">
+                        v-key="item.id + index">
                         <button
                             v-if="item.type === 'folder'"
                             class="flex items-center w-full gap-1 px-2 py-1 text-sm fa-min-h-12"
@@ -119,15 +122,15 @@
                             :asset="item"
                             :meta="meta"
                             :disabled="
-                                config.max_files &&
-                                config.max_files > 0 &&
-                                assets?.length >= config.max_files &&
-                                !isSelected(item)
+                                (config.max_files &&
+                                    config.max_files > 0 &&
+                                    assets?.length >= config.max_files &&
+                                    !isSelected(item)) ||
+                                (selectionType === 'folder' && item?.type !== 'folder')
                             "
                             :selected="isSelected(item)"
                             :multiselect="multiselect"
-                            @change="multiselect ? toggleItemSelection(item) : selectItem(item)"
-                            v-if="item.type !== 'folder'" />
+                            @change="multiselect ? toggleItemSelection(item) : selectItem(item)" />
                     </div>
                 </div>
             </dropzone>
@@ -226,7 +229,6 @@ export default {
             loadingList: false,
             showSelection: false,
             percentUploaded: 0,
-            folderParent: null,
             folderContent: null,
             createFolderInputVisible: false,
         };
@@ -235,6 +237,10 @@ export default {
         meta: null,
         config: null,
         initialAssets: [],
+        selectionType: {
+            type: 'folder' | 'files',
+            default: 'files',
+        },
         multiselect: Boolean,
     },
     methods: {
@@ -253,9 +259,8 @@ export default {
             this.newFolderName = null;
         },
         selectFolder(folderId) {
-            this.folder = folderId;
             this.page = 1;
-            this.loadFolder();
+            this.loadFolder(null, folderId);
             this.$refs.search.value = null;
         },
         selectItem(asset) {
@@ -265,7 +270,7 @@ export default {
             });
         },
         sendSelection() {
-            this.$emit('selected', this.assets);
+            this.$emit('selected', this.selectionType === 'folder' ? this.folder : this.assets);
             this.$nextTick(() => {
                 this.emitClose();
             });
@@ -307,7 +312,7 @@ export default {
             }
         },
         isSelected(asset) {
-            return this.assets.findIndex((e) => e?.id === asset.id) > -1;
+            return this.assets?.findIndex((e) => e?.id === asset.id) > -1;
         },
         handleFileChange(evt) {
             const file = evt.target.files[0];
@@ -332,10 +337,10 @@ export default {
                 this.$toast.success('Datei erfolgreich hochgeladen.');
                 this.fetchingMetaData = true;
                 setTimeout(async () => {
-                    const fetchedAsset = await this.loadMetaData(result?.data?.id);
+                    const fetchedAssets = await this.loadMetaData(result?.data?.id);
                     if (this.multiselect) {
                         await this.loadFolder();
-                        this.assets.push(fetchedAsset);
+                        this.assets.push(fetchedAssets);
                     } else {
                         this.selectItem(this.asset);
                     }
@@ -348,7 +353,7 @@ export default {
 
             fairuUpload({
                 file,
-                folder: this.folder != null ? this.folder : null,
+                folder: this.folder?.id ?? null,
                 onUploadProgressCallback: (progressEvent) => {
                     this.percentUploaded = Math.round((progressEvent.loaded * 100) / progressEvent.total);
                 },
@@ -361,7 +366,7 @@ export default {
             axios
                 .post('/fairu/folders/create', {
                     name: this.newFolderName,
-                    folder: this.folder,
+                    folder: this.folder?.id ?? null,
                 })
                 .then(async (result) => {
                     this.$nextTick(() => {
@@ -394,24 +399,25 @@ export default {
             this.page = page;
             this.loadFolder(this.$refs.search.value);
         },
-        async loadFolder(search, folder = null) {
-            this.folder = folder ?? this.folder;
+        async loadFolder(search, folderId) {
             this.loadingList = true;
 
-            await fairuLoadFolder({
+            return await fairuLoadFolder({
                 page: this.page,
-                folder: this.folder,
+                folder: folderId !== undefined ? folderId : this.folder?.id,
                 search: search ?? null,
                 successCallback: (result) => {
-                    this.folderParent = result.data.entry?.parent_id;
+                    console.log({ result });
+                    this.folder = result.data.entry;
                     this.folderContent = result.data.entries;
                     this.lastPage = result.data.entries?.last_page;
 
                     this.loadingList = false;
+                    return result.data.entry;
                 },
                 errorCallback: () => {
                     this.folderContent = null;
-                    this.folderParent = null;
+                    this.folder = null;
                     this.loadingList = false;
                 },
             });
@@ -430,22 +436,9 @@ export default {
                     this.$toast.error(err.response.data.message);
                 });
         },
-        canBrowse() {
-            const hasPermission =
-                this.can('configure asset containers') || this.can('view ' + this.container + ' assets');
-
-            if (!hasPermission) return false;
-
-            return !this.hasPendingDynamicFolder;
-        },
 
         canUpload() {
-            const hasPermission =
-                this.can('configure asset containers') || this.can('upload ' + this.container + ' assets');
-
-            if (!hasPermission) return false;
-
-            return !this.hasPendingDynamicFolder;
+            return this.config.allow_uploads;
         },
     },
 
@@ -455,9 +448,9 @@ export default {
         },
     },
 
-    mounted() {
-        this.assets = this.initialAssets;
-        this.loadFolder();
+    async mounted() {
+        this.assets = this.config.max_files === 1 ? [] : this.initialAssets;
+        await this.loadFolder(null, this.config.folder);
     },
     beforeDestroy() {
         if (this.searchTimer) {
