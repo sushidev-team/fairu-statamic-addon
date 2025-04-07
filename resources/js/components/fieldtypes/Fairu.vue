@@ -30,7 +30,7 @@
                             <button
                                 type="button"
                                 class="underline text-blue"
-                                @click="openFile(null)">
+                                @click="openFile">
                                 {{ __('fairu::fieldtype.upload_file') }}
                             </button>
                             <span class="fa-ml-1.5 fa-text-gray-500">{{
@@ -118,9 +118,9 @@
 <script>
 import axios from 'axios';
 import { RingLoader } from 'vue-spinners-css';
-import FairuBrowser from './FairuBrowser.vue';
-import Dropzone from './Dropzone.vue';
-import { fairuUpload } from '../utils/fetches';
+import FairuBrowser from '../FairuBrowser.vue';
+import Dropzone from '../Dropzone.vue';
+import { fairuUpload } from '../../utils/fetches';
 
 export default {
     mixins: [Fieldtype],
@@ -155,8 +155,7 @@ export default {
             }
             return 'n/a';
         },
-        openFile(setFolderTo) {
-            this.uploadFolder = setFolderTo ?? null;
+        openFile() {
             this.$refs.upload.value = null;
             this.$refs.upload.click();
         },
@@ -214,7 +213,7 @@ export default {
 
             fairuUpload({
                 file,
-                folder: this.uploadFolder != null ? this.uploadFolder : null,
+                folder: this.config.folder ?? null,
                 onUploadProgressCallback: (progressEvent) => {
                     this.percentUploaded = Math.round((progressEvent.loaded * 100) / progressEvent.total);
                 },
@@ -223,7 +222,7 @@ export default {
             });
         },
         sendUpdate() {
-            this.update(this.multiselect ? this.assets?.map((e) => e.id) : this.assets[0]?.id);
+            this.update(this.assets?.map((e) => e.id));
         },
         async loadMetaData(ids) {
             let assetIds = [];

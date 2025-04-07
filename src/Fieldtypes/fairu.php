@@ -14,6 +14,18 @@ use Statamic\Assets\Asset as AssetsAsset;
 
 class Fairu extends Fieldtype
 {
+    protected $icon = 'addons';
+
+    public $categories = ['media'];
+
+
+    public static $title = 'Fairu Assets';
+
+    public static function handle(): string
+    {
+        return 'fairu';
+    }
+
     public function icon()
     {
         return file_get_contents(__DIR__ . '/../../resources/svg/fairu-favicon.svg');
@@ -43,14 +55,14 @@ class Fairu extends Fieldtype
             return $data;
         }
 
+        if (!is_array($data)) {
+            $data = [$data];
+        }
         if (is_array($data)) {
-
             return collect($data)->map(function ($item) {
-
                 if (Str::isUuid($item)) {
                     return $item;
                 }
-
                 return (new ServicesFairu)->parse($item);
             })->toArray();
         }
@@ -61,6 +73,9 @@ class Fairu extends Fieldtype
 
         return (new ServicesFairu)->parse($data);
     }
+
+
+
 
     public function preload()
     {
@@ -80,19 +95,26 @@ class Fairu extends Fieldtype
      */
     public function process($data)
     {
-        return $data;
+        if (!$data) {
+            return null;
+        }
+
+        return $this->config('max_files') === 1 ? $data[0] : $data;
     }
 
-    protected $icon = 'addons';
-
-    public $categories = ['media'];
-
-
-    public static $title = 'Fairu Assets';
-
-    public static function handle(): string
+    public function rules(): array
     {
-        return 'fairu';
+        $rules = ['array'];
+
+        if ($max = $this->config('max_files')) {
+            $rules[] = 'max:' . $max;
+        }
+
+        if ($min = $this->config('min_files')) {
+            $rules[] = 'min:' . $min;
+        }
+
+        return $rules;
     }
 
     protected function container() {}
@@ -100,6 +122,10 @@ class Fairu extends Fieldtype
     protected function configFieldItems(): array
     {
         return [
+            'section_fairu' => [
+                'display' => 'Fairu',
+                'type' => 'section',
+            ],
             'max_files' => [
                 'display' => 'Max Files',
                 'instructions' => 'Set a maximum number of selectable assets.',
@@ -115,6 +141,11 @@ class Fairu extends Fieldtype
                 'instructions' => '',
                 'type' => 'toggle',
                 'default' => true
+            ],
+            'folder' => [
+                'display' => 'Folder',
+                'instructions' => 'The folder to begin browsing in.',
+                'type' => 'folder_selector',
             ],
         ];
     }

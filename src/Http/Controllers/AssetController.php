@@ -119,4 +119,23 @@ class AssetController extends Controller
 
         return $result->json();
     }
+    public function getFolder(Request $request, String $id)
+    {
+        $connection = config('fairu.connections.default');
+
+        $result = Http::withHeaders([
+            'Tenant' => data_get($connection, 'tenant'),
+            'Authorization' => 'Bearer ' . data_get($connection, 'tenant_secret'),
+        ])->get(config('fairu.url') . '/api/folders/' . $id);
+
+        if ($result->status() == 403) {
+            return abort(403, 'FAIRU: Derzeit exisitert zu diesem Tenant kein Abo. Bitte wende dich an den Support.');
+        }
+
+        if ($result->status() != 200) {
+            return abort(400, 'Fehler bei der Kommunikation mit Fairu.');
+        }
+
+        return $result->json();
+    }
 }

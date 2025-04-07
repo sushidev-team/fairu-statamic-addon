@@ -1,5 +1,17 @@
 import axios from 'axios';
 
+export const fairuGetFolder = async ({ folder, successCallback, errorCallback }) => {
+    await axios
+        .get(`/fairu/folders/${folder}`)
+        .then((result) => {
+            !!successCallback && successCallback(result);
+        })
+        .catch((err) => {
+            console.error(err);
+            !!errorCallback && errorCallback(err);
+        });
+};
+
 export const fairuLoadFolder = async ({ page, folder, search = null, successCallback, errorCallback }) => {
     await axios
         .post('/fairu/folders', {
