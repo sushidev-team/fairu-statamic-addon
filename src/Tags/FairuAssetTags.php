@@ -25,28 +25,51 @@ class FairuAssetTags extends Tags
         $this->fairu = (new Fairu());
     }
 
-    protected function getFile(?string $id = null)
+    protected function resolveIds()
     {
+        $ids = $this->params->get('id');
 
-        if ($id == null){
+        if ($ids == null) {
             return null;
         }
 
-        $id = $this->fairu->parse($id);
-        return Cache::flexible('file-' . $id, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($id) {
-            try {
-                return data_get((new Fairu($this->params->get('connection', 'default')))->getFile($id), 'data');
-            } catch (Throwable $ex) {
-                Log::error($ex->getMessage());
-                return null;
+        if (!is_array($ids)) {
+            $ids = [$ids];
+        } else {
+            sort($ids);
+        }
+
+        $ids = array_map(function ($id) {
+
+            if (Str::isUuid($id)) {
+                return $id;
             }
+
+            return (new Fairu())->resolveOldAssetPath($id);
+        }, $ids);
+
+        return $ids;
+    }
+
+    protected function getFiles(?array $ids = [])
+    {
+        if (empty($ids)) {
+            return null;
+        }
+
+        sort($ids);
+
+        $fingerprint = md5(json_encode($ids));
+
+        return Cache::flexible('file-' . $fingerprint, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($ids) {
+            return (new Fairu($this->params->get('connection', 'default')))->getFiles($ids);
         });
     }
 
     protected function getUrl(?string $id = null, ?string $filename = null)
     {
 
-        if ($id == null){
+        if ($id == null) {
             return null;
         }
 
@@ -68,12 +91,16 @@ class FairuAssetTags extends Tags
     /**
      * The {{ fairu:url }} tag.
      *
-     * @return string
+     * @return array
      */
     public function url()
     {
-        $id = $this->fairu->parse($this->params->get('id'));
-        return $this->getUrl($id, $this->params->get('name', 'file'));
+        $ids = $this->resolveIds();
+
+        return array_map(function ($id) {
+            $id = $this->fairu->parse($id);
+            return $this->getUrl($id, $this->params->get('name', 'file'));
+        }, $ids);
     }
 
     /**
@@ -86,19 +113,20 @@ class FairuAssetTags extends Tags
 
         $cacheKey = md5(json_encode($this->params->toArray()));
 
-        return Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () {
+        $ids = $this->resolveIds();
 
-            $id = $this->fairu->parse($this->params->get('id'));
-            $file = $this->getFile($id);
-            $url = $this->getUrl($id, $this->params->get('name') ?? data_get($file, 'name'));
+        $files = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($ids) {
+            return collect($this->getFiles($ids))->map(function ($asset) {
 
-            $set = data_get($file, 'data');
-            data_set($set, 'url', $url,);
+                $url = $this->getUrl(data_get($asset, 'id'), $this->params->get('name') ?? data_get($asset, 'name'));
+                data_set($asset, 'url', $url);
+                data_set($asset, 'fields', array_keys($asset));
 
-            data_set($set, 'fields', array_keys($set));
-
-            return $set;
+                return $asset;
+            });
         });
+
+        return $files;
     }
 
     /**
@@ -109,27 +137,29 @@ class FairuAssetTags extends Tags
     public function image()
     {
 
-        $cacheKey = md5(json_encode($this->params->toArray()));
+        $cacheKey = 'images-' . md5(json_encode($this->params->toArray()));
 
-        return Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () {
+        $ids = $this->resolveIds();
 
-            $id = $this->fairu->parse($this->params->get('id'));
-            $file = $this->getFile($id);
-            $url = $this->getUrl($id, $this->params->get('name') ?? data_get($file, 'name'));
-            if ($url == null) return null;
+        return Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($ids) {
+            return collect($this->getFiles($ids))->map(function ($asset) {
 
-            $image_params = [
-                !empty($this->params->get('width')) ? "width='" . $this->params->get('width') . "'" : null,
-                !empty($this->params->get('height')) ? "height='" . $this->params->get('height') . "'" : null,
-                !empty($this->params->get('class')) ? "class='" . $this->params->get('class') . "'" : null,
-                !empty($this->params->get('alt')) ? "alt='" . $this->params->get('alt') . "'" : data_get($file, 'description'),
-            ];
+                $url = $this->getUrl(data_get($asset, 'id'), $this->params->get('name') ?? data_get($asset, 'name'));
+                data_set($asset, 'url', $url);
+                data_set($asset, 'fields', array_keys($asset));
 
-            $image_params = array_filter($image_params);
-            $attributes = implode(' ', $image_params);
+                $image_params = [
+                    !empty($this->params->get('width')) ? "width='" . $this->params->get('width') . "'" : null,
+                    !empty($this->params->get('height')) ? "height='" . $this->params->get('height') . "'" : null,
+                    !empty($this->params->get('class')) ? "class='" . $this->params->get('class') . "'" : null,
+                    !empty($this->params->get('alt')) ? "alt='" . $this->params->get('alt') . "'" : data_get($asset, 'description'),
+                ];
 
+                $image_params = array_filter($image_params);
+                $attributes = implode(' ', $image_params);
 
-            return "<img src='$url' $attributes >";
+                return "<img src='$url' $attributes>";
+            });
         });
     }
 
@@ -141,92 +171,95 @@ class FairuAssetTags extends Tags
      */
     public function sources()
     {
-        $cacheKey = md5(json_encode($this->params->toArray()));
+        $cacheKey = 'sources-' . md5(json_encode($this->params->toArray()));
 
-        return Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () {
-            
-            $id = $this->fairu->parse($this->params->get('id'));
-            $file = $this->getFile($id);
-            $defaultUrl = $this->getUrl($id, $this->params->get('name') ?? data_get($file, 'name'));
+        $ids = $this->resolveIds();
 
-            if ($defaultUrl == null) return null;
+        return Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($ids) {
 
-            // Parse the sources parameter
-            $sourcesParam = $this->params->get('sources');
-            $srcsetEntries = [];
-            $breakpoints = [];
+            $files = collect($this->getFiles($ids))->map(function ($asset) {
 
-            if (!empty($sourcesParam)) {
-                // Format: "1200:1600w,768:1200w,480:800w"
-                $sourcesList = explode(',', $sourcesParam);
+                $defaultUrl = data_get($asset, 'url');
 
-                foreach ($sourcesList as $sourceItem) {
-                    $parts = explode(':', trim($sourceItem));
-                    if (count($parts) === 2) {
-                        $breakpoint = trim($parts[0]);
-                        $maxWidth = trim($parts[1]);
+                // Parse the sources parameter
+                $sourcesParam = $this->params->get('sources');
+                $srcsetEntries = [];
+                $breakpoints = [];
 
-                        // Extract numeric width from "1200w" format
-                        $widthValue = (int)str_replace('w', '', $maxWidth);
-                        $breakpoints[] = [
-                            'width' => $breakpoint,
-                            'imageWidth' => $widthValue
-                        ];
+                if (!empty($sourcesParam)) {
+                    // Format: "1200:1600w,768:1200w,480:800w"
+                    $sourcesList = explode(',', $sourcesParam);
 
-                        // Generate URL for this width
-                        $baseUrl = $this->getUrl(
-                            $id,
-                            $this->params->get('name') ?? data_get($file, 'name')
-                        );
+                    foreach ($sourcesList as $sourceItem) {
+                        $parts = explode(':', trim($sourceItem));
+                        if (count($parts) === 2) {
+                            $breakpoint = trim($parts[0]);
+                            $maxWidth = trim($parts[1]);
 
-                        // Add width parameter to URL
-                        $separator = (strpos($baseUrl, '?') !== false) ? '&' : '?';
-                        $url = $baseUrl . "{$separator}width={$widthValue}";
+                            // Extract numeric width from "1200w" format
+                            $widthValue = (int)str_replace('w', '', $maxWidth);
+                            $breakpoints[] = [
+                                'width' => $breakpoint,
+                                'imageWidth' => $widthValue
+                            ];
 
-                        // Add to srcset entries
-                        $srcsetEntries[] = "{$url} {$maxWidth}";
+                            // Generate URL for this width
+                            $baseUrl = $this->getUrl(
+                                data_get($asset, 'id'),
+                                $this->params->get('name') ?? data_get($asset, 'name')
+                            );
+
+                            // Add width parameter to URL
+                            $separator = (strpos($baseUrl, '?') !== false) ? '&' : '?';
+                            $url = $baseUrl . "{$separator}width={$widthValue}";
+
+                            // Add to srcset entries
+                            $srcsetEntries[] = "{$url} {$maxWidth}";
+                        }
                     }
                 }
-            }
 
-            // Get sizes attribute if provided, or generate a default one
-            $sizesAttr = $this->params->get('sizes');
-            if (empty($sizesAttr) && !empty($breakpoints)) {
-                // Generate default sizes based on breakpoints if not provided
-                $sizesEntries = [];
+                // Get sizes attribute if provided, or generate a default one
+                $sizesAttr = $this->params->get('sizes');
+                if (empty($sizesAttr) && !empty($breakpoints)) {
+                    // Generate default sizes based on breakpoints if not provided
+                    $sizesEntries = [];
 
-                // Sort breakpoints from largest to smallest
-                usort($breakpoints, function ($a, $b) {
-                    return $b['width'] - $a['width'];
-                });
+                    // Sort breakpoints from largest to smallest
+                    usort($breakpoints, function ($a, $b) {
+                        return $b['width'] - $a['width'];
+                    });
 
-                foreach ($breakpoints as $index => $breakpoint) {
-                    if ($index === count($breakpoints) - 1) {
-                        // Last entry (smallest size, no media query)
-                        $sizesEntries[] = "{$breakpoint['imageWidth']}px";
-                    } else {
-                        // Other entries with media queries
-                        $sizesEntries[] = "(min-width: {$breakpoint['width']}px) {$breakpoint['imageWidth']}px";
+                    foreach ($breakpoints as $index => $breakpoint) {
+                        if ($index === count($breakpoints) - 1) {
+                            // Last entry (smallest size, no media query)
+                            $sizesEntries[] = "{$breakpoint['imageWidth']}px";
+                        } else {
+                            // Other entries with media queries
+                            $sizesEntries[] = "(min-width: {$breakpoint['width']}px) {$breakpoint['imageWidth']}px";
+                        }
                     }
+                    $sizesAttr = implode(", ", $sizesEntries);
                 }
-                $sizesAttr = implode(", ", $sizesEntries);
-            }
 
-            // Build common image attributes
-            $image_params = [
-                !empty($this->params->get('width')) ? "width='" . $this->params->get('width') . "'" : null,
-                !empty($this->params->get('height')) ? "height='" . $this->params->get('height') . "'" : null,
-                !empty($this->params->get('class')) ? "class='" . $this->params->get('class') . "'" : null,
-                !empty($this->params->get('alt')) ? "alt='" . $this->params->get('alt') . "'" : data_get($file, 'description'),
-                !empty($srcsetEntries) ? "srcset='" . implode(", ", $srcsetEntries) . "'" : null,
-                !empty($sizesAttr) ? "sizes='" . $sizesAttr . "'" : null,
-            ];
+                // Build common image attributes
+                $image_params = [
+                    !empty($this->params->get('width')) ? "width='" . $this->params->get('width') . "'" : null,
+                    !empty($this->params->get('height')) ? "height='" . $this->params->get('height') . "'" : null,
+                    !empty($this->params->get('class')) ? "class='" . $this->params->get('class') . "'" : null,
+                    !empty($this->params->get('alt')) ? "alt='" . $this->params->get('alt') . "'" : data_get($asset, 'description'),
+                    !empty($srcsetEntries) ? "srcset='" . implode(", ", $srcsetEntries) . "'" : null,
+                    !empty($sizesAttr) ? "sizes='" . $sizesAttr . "'" : null,
+                ];
 
-            $image_params = array_filter($image_params);
-            $attributes = implode(' ', $image_params);
+                $image_params = array_filter($image_params);
+                $attributes = implode(' ', $image_params);
 
-            // Build the img tag
-            return "<img src='$defaultUrl' $attributes>";
+                // Build the img tag
+                return "<img src='$defaultUrl' $attributes>";
+            });
+
+            return $files;
         });
     }
 }
