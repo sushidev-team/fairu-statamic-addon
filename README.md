@@ -20,7 +20,7 @@ composer require sushidev/fairu-statamic
 
 ## How to Use
 
-Follow the instructions at https://docs.fairu.app/docs/statamic/get-started to get started.
+Follow the instructions at https://docs.fairu.app/docs/addons/statamic to get started.
 
 ### Add env variables
 
