@@ -6,7 +6,8 @@
             @selected="handleSelected"
             :multiselect="multiselect"
             :initialAssets="assets"
-            :meta="meta" />
+            :meta="meta"
+            :config="config" />
         <dropzone
             :enabled="canUpload"
             class="border rounded border-slate-400 dark:fa-bg-dark-900 fa-overflow-hidden fa-bg-slate-100 dark:fa-border-zinc-900 dark:fa-bg-zinc-800"
@@ -17,14 +18,14 @@
                     type="file"
                     ref="upload"
                     @change="handleUpload" />
-                <div>
-                    <div class="flex flex-wrap items-center p-3 gap-x-4">
-                        <button
-                            @click="openSearch()"
-                            class="btn"
-                            ><i class="inline-block mr-2 material-symbols-outlined">drive_folder_upload</i>
-                            {{ __('fairu::fieldtype.search') }}
-                        </button>
+                <div class="flex flex-wrap items-center p-3 gap-x-4">
+                    <button
+                        @click="openSearch()"
+                        class="btn"
+                        ><i class="inline-block mr-2 material-symbols-outlined">drive_folder_upload</i>
+                        {{ __('fairu::fieldtype.search') }}
+                    </button>
+                    <div>
                         <p class="flex-1 text-xs">
                             <button
                                 type="button"
@@ -55,11 +56,26 @@
                     size="24"
                     v-if="loading || uploading" />
                 <span v-if="uploading">{{ percentUploaded }}%</span>
-                <div class="w-full">
+                <div
+                    class="w-full"
+                    v-if="!loading && !uploading">
                     <div
-                        v-if="!loading && !uploading"
+                        class="text-xs fa-divide-x fa-divide-gray-200 fa-text-gray-400 dark:fa-divide-zinc-700 dark:fa-text-zinc-500"
+                        v-if="(config.max_files && config.max_files !== 1) || config.min_files"
+                        ><span
+                            class="fa-pr-2"
+                            v-if="config.min_files"
+                            >Min: {{ config.min_files }}</span
+                        ><span
+                            class="fa-pl-2 first:fa-pl-0"
+                            v-if="config.max_files"
+                            >Max: {{ config.max_files }}</span
+                        ></div
+                    >
+                    <div
                         class="grid w-full min-w-0 gap-2 items-center fa-mt-2 fa-grid-cols-[auto,1fr,auto] fa-border-t fa-border-zinc-200 fa-pt-2 first:fa-mt-0 first:fa-border-none first:fa-pt-0 dark:fa-border-zinc-700"
-                        v-for="(item, index) in assets">
+                        v-for="(item, index) in assets"
+                        v-key="item.id + index">
                         <img
                             ref="fileImage"
                             v-if="loading == false && !fetchingMetaData && item?.mime.startsWith('image/')"
@@ -79,7 +95,7 @@
                         <div class="flex items-center gap-1">
                             <a
                                 @click.stop
-                                :href="item?.edit_url"
+                                :href="meta.file + '/' + item?.id"
                                 target="_blank"
                                 title="Open in Fairu"
                                 class="flex items-center text-xs cursor-pointer hover:text-blue !fa-text-gray-300 dark:!fa-text-zinc-500"

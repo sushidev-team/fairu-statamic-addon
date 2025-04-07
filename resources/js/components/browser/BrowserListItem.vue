@@ -1,6 +1,7 @@
 <template>
     <div
-        class="grid items-center gap-2 px-2 py-1 fa-min-h-12 fa-grid-cols-[1fr,auto]"
+        class="grid items-center gap-2 px-2 py-1 fa-min-h-12 fa-select-none fa-grid-cols-[1fr,auto]"
+        :class="disabled ? 'fa-opacity-50' : ''"
         @click="toggleSelection"
         v-if="asset.type !== 'folder'">
         <div class="flex items-center w-full gap-1 cursor-pointer grow">
@@ -26,12 +27,12 @@
         <div class="flex gap-1">
             <a
                 @click.stop
-                :href="asset.edit_url"
+                :href="meta.file + '/' + asset.id"
                 target="_blank"
                 :title="__('fairu::browser.edit_in_fairu')"
                 class="flex gap-1 text-xs cursor-pointer"
                 ><i
-                    class="text-lg text-gray-300 material-symbols-outlined dark:!fa-text-gray-600 dark:hover:!fa-text-blue-500"
+                    class="text-lg text-gray-300 material-symbols-outlined fa-pointer-events-none dark:!fa-text-gray-600 dark:hover:!fa-text-blue-500"
                     >open_in_new</i
                 >
             </a>
@@ -51,9 +52,11 @@ export default {
         meta: null,
         selected: Boolean,
         multiselect: Boolean,
+        disabled: Boolean,
     },
     methods: {
         toggleSelection() {
+            if (this.disabled) return;
             this.$emit('change', { asset: this.asset, selected: !this.selected });
         },
         getExtension(mime) {

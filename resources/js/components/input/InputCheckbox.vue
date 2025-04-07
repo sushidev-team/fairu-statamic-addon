@@ -6,6 +6,7 @@
                 :name="id"
                 type="checkbox"
                 :checked="checked"
+                @change="emitChange"
                 :disabled="disabled"
                 class="fa-col-start-1 fa-row-start-1 fa-appearance-none fa-rounded fa-border fa-border-gray-300 fa-bg-white checked:fa-border-blue-600 checked:fa-bg-blue-600 indeterminate:fa-border-blue-600 indeterminate:fa-bg-blue-600 focus-visible:fa-outline focus-visible:fa-outline-2 focus-visible:fa-outline-offset-2 focus-visible:fa-outline-blue-600 disabled:fa-border-gray-300 disabled:fa-bg-gray-100 disabled:checked:fa-bg-gray-100 dark:fa-border-zinc-600 dark:fa-bg-zinc-700 forced-colors:fa-appearance-auto" />
             <svg

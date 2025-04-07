@@ -2,7 +2,7 @@
     <stack @closed="emitClose">
         <div
             slot-scope="{ close }"
-            class="grid h-full bg-white dark:bg-dark-800 fa-grid-rows-[auto,auto,1fr,auto]">
+            class="grid h-full bg-white dark:bg-dark-800 fa-grid-rows-[auto,auto,1fr,auto,auto]">
             <section>
                 <input
                     class="hidden"
@@ -56,9 +56,29 @@
                 </div>
             </section>
             <section
-                class="grid items-center w-full fa-border-y fa-border-gray-200 fa-bg-gray-50 fa-px-3 fa-py-2 fa-text-gray-600 dark:fa-border-zinc-700 dark:fa-bg-zinc-800 dark:fa-text-zinc-400"
-                v-if="multiselect">
-                <div class="text-xs">{{ assets?.length + ' ' + __('fairu::browser.entries_selected') }}</div>
+                class="flex items-center w-full gap-2 fa-border-y fa-border-gray-200 fa-bg-gray-50 fa-px-3 fa-py-2 fa-text-gray-600 dark:fa-border-zinc-700 dark:fa-bg-zinc-800 dark:fa-text-zinc-400"
+                v-if="multiselect && assets?.length > 0">
+                <input-checkbox
+                    @change="toggleCurrentSelection"
+                    :checked="
+                        showSelection ||
+                        folderContent?.data.every((file) => assets.map((e) => e.id).includes(file.id)) ||
+                        (config.max_files && assets?.length >= config.max_files)
+                    "
+                    :disabled="assets.length < 1" />
+                <button
+                    class="px-2 py-1 text-xs border rounded fa-border-gray-200 dark:fa-border-gray-700"
+                    :class="showSelection ? 'text-white fa-bg-blue-500' : 'fa-bg-white dark:fa-bg-zinc-900'"
+                    @click="toggleShowSelection"
+                    v-if="assets?.length > 0"
+                    >Only selection&nbsp;<span>({{ assets?.length }})</span></button
+                >
+                <button
+                    class="flex items-center px-2 py-1 text-xs border rounded fa-border-gray-200 dark:fa-border-gray-700"
+                    @click="clearSelection"
+                    v-if="assets?.length > 0"
+                    ><i class="mr-1 text-sm text-gray-700 material-symbols-outlined">clear</i>Clear selection</button
+                >
             </section>
             <dropzone
                 :enabled="canUpload"
@@ -85,8 +105,8 @@
                         </a>
                     </div>
                     <div
-                        v-for="(item, index) in folderContent?.data"
-                        v-key="item?.id"
+                        v-for="(item, index) in showSelection ? assets : folderContent?.data"
+                        v-key="item.id + index"
                         class="px-2 group last:fa-border-b-none fa-border-b fa-border-slate-100 hover:fa-bg-gray-50 dark:fa-border-zinc-700 dark:hover:fa-bg-zinc-700">
                         <button
                             v-if="item.type === 'folder'"
@@ -98,14 +118,22 @@
                         <browser-list-item
                             :asset="item"
                             :meta="meta"
+                            :disabled="
+                                config.max_files &&
+                                config.max_files > 0 &&
+                                assets?.length >= config.max_files &&
+                                !isSelected(item)
+                            "
                             :selected="isSelected(item)"
                             :multiselect="multiselect"
                             @change="multiselect ? toggleItemSelection(item) : selectItem(item)"
                             v-if="item.type !== 'folder'" />
                     </div>
                 </div>
+            </dropzone>
+            <div>
                 <a
-                    class="absolute bottom-0 left-0 flex items-center gap-1 p-3 text-2xs"
+                    class="flex items-center gap-1 px-3 py-1.5 text-2xs"
                     href="https://fairu.app"
                     style="color: #666">
                     <span
@@ -116,37 +144,40 @@
                     <img
                         class="w-12 h-auto ml-1"
                         src="../../svg/fairu-logo.svg"
-                        alt="Fairu Asset Service" />
-                </a>
-            </dropzone>
+                        alt="Fairu Asset Service" /> </a
+            ></div>
             <div
                 class="flex flex-wrap justify-between gap-4 px-3 py-3 border-t border-gray-100 dark:border-dark-600 dark:bg-dark-900 fa-bg-slate-50">
-                <div class="flex items-center justify-end gap-1 -mt-px">
-                    <button
-                        :disabled="page <= 1"
-                        @click.prevent="goToPage(1)"
-                        class="flex items-center gap-1 btn btn-sm">
-                        <i class="dark:text-gray-300 material-symbols-outlined">first_page</i>
-                    </button>
-                    <button
-                        :disabled="page <= 1"
-                        @click.prevent="previousPage"
-                        class="flex items-center gap-1 btn btn-sm">
-                        {{ __('fairu::browser.previous') }}
-                    </button>
-                    <div class="px-2 text-sm">{{ page }} / {{ lastPage || 1 }}</div>
-                    <button
-                        :disabled="page >= lastPage"
-                        @click.prevent="nextPage"
-                        class="flex items-center gap-1 btn btn-sm">
-                        {{ __('fairu::browser.next') }}
-                    </button>
-                    <button
-                        :disabled="page >= lastPage"
-                        @click.prevent="goToPage(lastPage)"
-                        class="flex items-center gap-1 btn btn-sm">
-                        <i class="text-gray-300 material-symbols-outlined">last_page</i>
-                    </button>
+                <div>
+                    <div
+                        class="flex items-center justify-end gap-1 -mt-px"
+                        v-if="!showSelection">
+                        <button
+                            :disabled="page <= 1"
+                            @click.prevent="goToPage(1)"
+                            class="flex items-center gap-1 btn btn-sm">
+                            <i class="dark:text-gray-300 material-symbols-outlined">first_page</i>
+                        </button>
+                        <button
+                            :disabled="page <= 1"
+                            @click.prevent="previousPage"
+                            class="flex items-center gap-1 btn btn-sm">
+                            {{ __('fairu::browser.previous') }}
+                        </button>
+                        <div class="px-2 text-sm">{{ page }} / {{ lastPage || 1 }}</div>
+                        <button
+                            :disabled="page >= lastPage"
+                            @click.prevent="nextPage"
+                            class="flex items-center gap-1 btn btn-sm">
+                            {{ __('fairu::browser.next') }}
+                        </button>
+                        <button
+                            :disabled="page >= lastPage"
+                            @click.prevent="goToPage(lastPage)"
+                            class="flex items-center gap-1 btn btn-sm">
+                            <i class="dark:text-gray-300 material-symbols-outlined">last_page</i>
+                        </button>
+                    </div>
                 </div>
                 <div class="flex gap-3">
                     <button
@@ -171,6 +202,7 @@
 import { RingLoader } from 'vue-spinners-css';
 import Dropzone from './Dropzone.vue';
 import BrowserListItem from './browser/BrowserListItem.vue';
+import InputCheckbox from './input/InputCheckbox.vue';
 import { fairuLoadFolder, fairuUpload } from '../utils/fetches';
 import axios from 'axios';
 
@@ -181,6 +213,7 @@ export default {
         RingLoader,
         Dropzone,
         BrowserListItem,
+        InputCheckbox,
     },
 
     data() {
@@ -191,6 +224,7 @@ export default {
             page: 1,
             lastPage: 1,
             loadingList: false,
+            showSelection: false,
             percentUploaded: 0,
             folderParent: null,
             folderContent: null,
@@ -199,6 +233,7 @@ export default {
     },
     props: {
         meta: null,
+        config: null,
         initialAssets: [],
         multiselect: Boolean,
     },
@@ -236,12 +271,39 @@ export default {
             });
         },
         toggleItemSelection(asset) {
-            console.log({ asset });
-            console.log({ assets: this.assets });
             if (this.assets.find((e) => e?.id === asset.id)) {
                 this.assets = this.assets.filter((e) => e?.id !== asset.id);
             } else {
                 this.assets.push(asset);
+            }
+            if (this.assets.length < 1) this.showSelection = false;
+        },
+        toggleShowSelection() {
+            this.showSelection = !this.showSelection;
+        },
+        clearSelection() {
+            this.assets = [];
+            this.showSelection = false;
+        },
+        toggleCurrentSelection() {
+            if (this.showSelection) {
+                this.clearSelection();
+                return;
+            }
+
+            const folderFiles = this.folderContent?.data.filter((e) => e.type !== 'folder');
+            if (
+                folderFiles.every((file) => this.assets.map((e) => e.id).includes(file.id)) ||
+                (this.config.max_files && this.assets?.length >= this.config.max_files)
+            ) {
+                this.assets = this.assets.filter((asset) => !folderFiles.map((file) => file.id).includes(asset.id));
+            } else {
+                const newItems = folderFiles.filter((file) => !this.assets.map((e) => e.id).includes(file.id));
+                if (!newItems) return;
+
+                const remainingSlots = Math.max(0, this.config.max_files - this.assets.length);
+
+                this.assets.push(...newItems.slice(0, remainingSlots));
             }
         },
         isSelected(asset) {
@@ -271,9 +333,7 @@ export default {
                 this.fetchingMetaData = true;
                 setTimeout(async () => {
                     const fetchedAsset = await this.loadMetaData(result?.data?.id);
-                    console.log({ fetchedAsset });
                     if (this.multiselect) {
-                        // this.folderContent?.unshift(fetchedAsset);
                         await this.loadFolder();
                         this.assets.push(fetchedAsset);
                     } else {
@@ -359,7 +419,7 @@ export default {
         async loadMetaData(id) {
             if (!id && !this.assets) return;
             this.loading = true;
-            await axios
+            return await axios
                 .get('/fairu/files/' + id)
                 .then((result) => {
                     this.loading = false;
