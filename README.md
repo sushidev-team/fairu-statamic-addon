@@ -160,4 +160,4 @@ This powerful combination of ⁠srcset and ⁠sizes ensures optimal image loadin
 
 ### Detailed
 
-Follow the instructions at https://docs.fairu.app/docs/statamic/get-started to find out what you can do.
+Follow the instructions at https://docs.fairu.app/docs/addons/statamic to find out what you can do.
