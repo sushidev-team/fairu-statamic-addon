@@ -36,14 +36,15 @@ class Fairu
         return $url;
     }
 
-    public function getFile(?string $id = null): ?array
+    public function getFiles(?array $ids = []): ?array
     {
-        if ($id == null) {
+        if (empty($ids)) {
             return null;
         }
 
-        Log::debug("Request Fairu asset: $id");
-        $result = $this->client->get($this->endpoint('api/files/' . $id));
+        $result = $this->client->post($this->endpoint('api/files/list'), [
+            'ids' => $ids,
+        ]);
 
         if ($result->status() != 200) {
             throw new Exception(json_encode($result?->json()));
@@ -95,6 +96,7 @@ class Fairu
 
     public function parse(string|array $str)
     {
+        ray($str);
         if (is_array($str)) {
             return array_map(function ($strItem) {
                 if (Str::isUuid($strItem)) {
@@ -112,7 +114,7 @@ class Fairu
         return $this->resolveOldAssetPath($str);
     }
 
-    protected function resolveOldAssetPath(?string $value = null): ?string
+    public function resolveOldAssetPath(?string $value = null): ?string
     {
 
         if ($value == null) {

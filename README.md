@@ -20,7 +20,7 @@ composer require sushidev/fairu-statamic
 
 ## How to Use
 
-Follow the instructions at https://docs.fairu.app/docs/statamic/get-started to get started.
+Follow the instructions at https://docs.fairu.app/docs/addons/statamic to get started.
 
 ### Add env variables
 
@@ -30,6 +30,8 @@ FAIRU_TENANT_SECRET=[YOUR_API_KEY_SECRET]
 ```
 
 ### Import
+
+If you already have some assets you can run the following command. It will automatically import all the connected assets into your fairu account. Depending on on the amount of files it might take some time.
 
 ```
 php please fairu:setup
@@ -61,13 +63,16 @@ Get just the URL of a file.
 
 **Parameters**
 
-- `id` - The file ID (required)
+- `id` - The file ID (required) 
 - `⁠name` - Custom filename (optional)
 - `⁠width` - Resize image width (optional)
 - `⁠height` - Resize image height (optional)
 - `⁠quality` - Image quality (default: 90)
 - `⁠format` - Convert image format (optional)
 - `⁠focal_point` - Focal point for cropping (optional)
+
+Note that we accept for ID a string or array string.
+Preferable it should be the id of the image. But if you import your files we also accept the previous path which will be transformed into the id.
 
 ### Image Tag
 
@@ -86,6 +91,9 @@ Generate a complete HTML image tag.
 - `⁠class` - CSS class(es) (optional)
 - `⁠alt` - Alt text (optional, falls back to file description)
 
+Note that we accept for ID a string or array string.
+Preferable it should be the id of the image. But if you import your files we also accept the previous path which will be transformed into the id.
+
 ### Responsive Images
 
 Generate a responsive image with srcset and sizes attributes.
@@ -93,6 +101,9 @@ Generate a responsive image with srcset and sizes attributes.
 ```antlers
 {{ fairu:sources id="ID" sources="320:320w,480:800w,768:1200w,1200:1600w,1920:2400w" sizes="100vw" class="responsive-image" alt="Responsive image" }}
 ```
+
+Note that we accept for ID a string or array string.
+Preferable it should be the id of the image. But if you import your files we also accept the previous path which will be transformed into the id.
 
 **Parameters**
 
@@ -104,6 +115,9 @@ Generate a responsive image with srcset and sizes attributes.
 - `⁠height` - Image height attribute (optional)
 - `⁠class` - CSS class(es) (optional)
 - ⁠`alt` - Alt text (optional, falls back to file description)
+
+Note that we accept for ID a string or array string.
+Preferable it should be the id of the image. But if you import your files we also accept the previous path which will be transformed into the id.
 
 ### How the sources parameter works
 
@@ -146,4 +160,4 @@ This powerful combination of ⁠srcset and ⁠sizes ensures optimal image loadin
 
 ### Detailed
 
-Follow the instructions at https://docs.fairu.app/docs/statamic/get-started to find out what you can do.
+Follow the instructions at https://docs.fairu.app/docs/addons/statamic to find out what you can do.
