@@ -60,6 +60,58 @@ class AssetController extends Controller
         return $result->json();
     }
 
+    public function uploadMultiple(Request $request)
+    {
+        $connection = config('fairu.connections.default');
+
+        // Validate the request
+        $request->validate([
+            'files' => 'required|array',
+            'folder' => 'nullable|string',
+        ]);
+
+        try {
+            $result = Http::withHeaders([
+                'Tenant' => data_get($connection, 'tenant'),
+                'Authorization' => 'Bearer ' . data_get($connection, 'tenant_secret'),
+            ])->post(config('fairu.url') . '/api/upload', [
+                'files' => $request->input('files'),
+                'folder' => $request->input('folder'),
+            ]);
+
+            ray($result);
+
+            if (!$result->successful()) {
+                return response()->json(['error' => 'Fehler bei der Kommunikation mit Fairu: ' . $result->body()], $result->status());
+            }
+
+            return response()->json($result->json());
+        } catch (\Exception $e) {
+            \Log::error('Fairu upload error: ' . $e->getMessage());
+            return response()->json(['error' => 'Ein unerwarteter Fehler ist aufgetreten: ' . $e->getMessage()], 500);
+        }
+    }
+
+
+    public function uploadMetaBulk(Request $request)
+    {
+
+        $connection = config('fairu.connections.default');
+
+        $result = Http::withHeaders([
+            'Tenant' => data_get($connection, 'tenant'),
+            'Authorization' => 'Bearer ' . data_get($connection, 'tenant_secret'),
+        ])->post(config('fairu.url') . '/api/upload/meta/bulk', [
+            'files' => $request->input('files'),
+        ]);
+
+        if ($result->status() != 200) {
+            return abort(400, 'Fehler bei der Kommunikation mit Fairu.');
+        }
+
+        return $result->json();
+    }
+
     public function createFolder(Request $request)
     {
 
@@ -119,6 +171,29 @@ class AssetController extends Controller
 
         return $result->json();
     }
+
+    public function getFilesList(Request $request)
+    {
+        $connection = config('fairu.connections.default');
+
+        $result = Http::withHeaders([
+            'Tenant' => data_get($connection, 'tenant'),
+            'Authorization' => 'Bearer ' . data_get($connection, 'tenant_secret'),
+        ])->post(config('fairu.url') . '/api/files/list', [
+            'ids' => $request->input('ids'),
+        ]);
+
+        if ($result->status() == 403) {
+            return abort(403, 'FAIRU: Derzeit exisitert zu diesem Tenant kein Abo. Bitte wende dich an den Support.');
+        }
+
+        if ($result->status() != 200) {
+            return abort(400, 'Fehler bei der Kommunikation mit Fairu.');
+        }
+
+        return $result->json();
+    }
+
     public function getFolder(Request $request, String $id)
     {
         $connection = config('fairu.connections.default');

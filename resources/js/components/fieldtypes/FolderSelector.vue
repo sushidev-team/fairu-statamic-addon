@@ -14,7 +14,9 @@
             <button
                 class="text-sm text-blue"
                 @click="searchOpen = true"
-                v-text="!!folder ? 'Change folder' : 'Select folder'"></button>
+                v-text="
+                    !!folder ? __('fairu::folderselect.change_folder') : __('fairu::folderselect.select_folder')
+                "></button>
         </div>
         <div>
             <button @click="handleSelected(null)"
@@ -61,7 +63,6 @@ export default {
     methods: {
         handleSelected(folder) {
             this.folder = folder;
-            console.log(folder);
             this.update(folder?.id);
         },
     },

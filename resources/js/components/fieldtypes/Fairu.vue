@@ -12,7 +12,7 @@
             :enabled="canUpload"
             class="border rounded border-slate-400 dark:fa-bg-dark-900 fa-overflow-hidden fa-bg-slate-100 dark:fa-border-zinc-900 dark:fa-bg-zinc-800"
             @dropped="handleFileDrop">
-            <div v-if="(multiselect || assets?.length < 1) && !loading && !uploading">
+            <div v-if="(multiselect || assets?.length < 1) && !uploading">
                 <input
                     class="hidden"
                     type="file"
@@ -65,20 +65,23 @@
                         ><span
                             class="fa-pr-2"
                             v-if="config.min_files"
-                            >Min: {{ config.min_files }}</span
+                            >{{ __('fairu::fieldtype.rules.min') }}: {{ config.min_files }}</span
                         ><span
                             class="fa-pl-2 first:fa-pl-0"
                             v-if="config.max_files"
-                            >Max: {{ config.max_files }}</span
+                            >{{ __('fairu::fieldtype.rules.max') }}: {{ config.max_files }}</span
                         ></div
                     >
                     <div
                         class="grid w-full min-w-0 gap-2 items-center fa-mt-2 fa-grid-cols-[auto,1fr,auto] fa-border-t fa-border-zinc-200 fa-pt-2 first:fa-mt-0 first:fa-border-none first:fa-pt-0 dark:fa-border-zinc-700"
                         v-for="(item, index) in assets"
-                        v-key="item.id + index">
+                        :key="item.id + index">
                         <img
                             ref="fileImage"
-                            v-if="loading == false && !fetchingMetaData && item?.mime.startsWith('image/')"
+                            v-if="
+                                loading == false && !metaItemsFetching.has(item.id) && item?.mime?.startsWith('image/')
+                            "
+                            :key="item.id + index + 'image'"
                             class="flex-none overflow-hidden rounded-md"
                             :class="multiselect ? 'fa-size-8' : 'fa-size-10'"
                             :src="meta.proxy + '/' + item?.id + '/thumbnail.webp?width=50&height=50'" />
@@ -86,7 +89,7 @@
                             color="#4a4a4a"
                             class="w-5 h-5"
                             size="24"
-                            v-if="fetchingMetaData" />
+                            v-if="metaItemsFetching.has(item.id)" />
                         <div class="w-full min-w-0 fa-content-center fa-items-center">
                             <div
                                 class="min-w-0 text-xs truncate"
@@ -97,13 +100,13 @@
                                 @click.stop
                                 :href="meta.file + '/' + item?.id"
                                 target="_blank"
-                                title="Open in Fairu"
+                                :title="__('fairu::fieldtype.open_in_fairu')"
                                 class="flex items-center text-xs cursor-pointer hover:text-blue !fa-text-gray-300 dark:!fa-text-zinc-500"
                                 ><i class="text-lg material-symbols-outlined">open_in_new</i></a
                             >
                             <button
                                 class="flex items-center text-xs cursor-pointer !fa-text-gray-300 hover:!fa-text-gray-800 dark:!fa-text-zinc-500 dark:hover:!fa-text-zinc-100"
-                                title="Remove"
+                                title="__('fairu::fieldtype.delete')"
                                 @click.prevent.stop="clearAsset(item)"
                                 ><i class="text-lg material-symbols-outlined">delete</i></button
                             >
@@ -140,7 +143,7 @@ export default {
             loadingList: false,
             uploading: false,
             percentUploaded: null,
-            fetchingMetaData: false,
+            metaItemsFetching: new Set(),
         };
     },
 
@@ -172,16 +175,15 @@ export default {
             });
         },
         handleFileChange(evt) {
-            const file = evt.target.files[0];
-            this.handleUpload(file);
+            const files = evt.target.files;
+            this.handleUpload(files);
         },
         handleFileDrop(files) {
-            const file = files?.[0];
-            if (!file) return;
+            if (!files) return;
 
-            this.handleUpload(file);
+            this.handleUpload(files);
         },
-        handleUpload(file) {
+        handleUpload(files) {
             this.$progress.start('upload' + this._uid);
             this.percentUploaded = 0;
             this.uploading = true;
@@ -191,16 +193,20 @@ export default {
                 this.uploading = false;
                 this.$progress.complete('upload' + this._uid);
                 this.$toast.success('Datei erfolgreich hochgeladen.');
-                this.fetchingMetaData = true;
+                this.metaItemsFetching.add(result?.data?.map((e) => e.id));
                 this.$nextTick(async () => {
-                    const fetchedAssets = await this.loadMetaData(result?.data?.id);
+                    const fetchedAssets = await this.loadMetaData(result?.data?.map((e) => e.id));
                     if (this.multiselect) {
-                        this.assets.push(...fetchedAssets);
+                        if (fetchedAssets?.length > 0) {
+                            const remainingSlots = Math.max(0, this.config.max_files - this.assets.length);
+
+                            this.assets.push(...fetchedAssets.slice(0, remainingSlots));
+                        }
                     } else {
-                        this.assets = [fetchedAssets?.[0]];
+                        this.assets = fetchedAssets.slice(0, 1);
+                        this.sendUpdate();
                     }
-                    this.sendUpdate();
-                    this.fetchingMetaData = false;
+                    this.metaItemsFetching.difference(result?.data?.map((e) => e.id));
                 });
             };
 
@@ -212,7 +218,7 @@ export default {
             };
 
             fairuUpload({
-                file,
+                files,
                 folder: this.config.folder ?? null,
                 onUploadProgressCallback: (progressEvent) => {
                     this.percentUploaded = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -225,52 +231,31 @@ export default {
             this.update(this.assets?.map((e) => e.id));
         },
         async loadMetaData(ids) {
-            let assetIds = [];
-            if (!ids && !this.assets) {
-                this.loading = false;
-                return []; // Return empty array instead of undefined
-            }
+            if (!ids && !this.assets) return [];
 
-            // If ids is a single value (not array) or an array
-            if (Array.isArray(ids)) {
-                assetIds = ids;
-            } else if (ids) {
-                assetIds = [ids];
-            } else {
-                // If this.assets exists but ids doesn't
-                assetIds = this.multiselect ? this.assets.map((a) => a.id) : [this.assets[0]?.id];
-            }
+            // Ensure ids is always an array
+            const assetIds = Array.isArray(ids) ? ids : [ids].filter(Boolean);
+
+            if (assetIds.length === 0) return [];
 
             this.loading = true;
-            let fetchedAssets = [];
 
             try {
-                await Promise.all(
-                    assetIds.map((id) =>
-                        axios
-                            .get('/fairu/files/' + id)
-                            .then((result) => {
-                                fetchedAssets.push(result.data.data);
-                            })
-                            .catch((err) => {
-                                console.error(`Error fetching asset ${id}:`, err);
-                                this.$toast.error(err.response?.data?.message || 'Failed to load file');
-                                return Promise.resolve();
-                            }),
-                    ),
-                );
-
-                if (fetchedAssets.length > 0) {
-                    this.folder = fetchedAssets[0]?.parent_id;
-                }
+                return axios
+                    .post('/fairu/files/list', { ids: assetIds })
+                    .then((result) => result.data)
+                    .catch((err) => {
+                        console.error(`Error fetching files:`, err);
+                        return null;
+                    });
             } catch (error) {
                 console.error('Error in loadMetaData:', error);
+                return [];
             } finally {
                 this.loading = false;
             }
-
-            return fetchedAssets;
         },
+
         canBrowse() {
             const hasPermission =
                 this.can('configure asset containers') || this.can('view ' + this.container + ' assets');

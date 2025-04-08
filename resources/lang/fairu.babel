@@ -38,6 +38,36 @@
 								</translations>
 							</concept_node>
 							<concept_node>
+								<name>clear_selection</name>
+								<description/>
+								<comment/>
+								<translations>
+									<translation>
+										<language>de-DE</language>
+										<approved>false</approved>
+									</translation>
+									<translation>
+										<language>en-US</language>
+										<approved>false</approved>
+									</translation>
+								</translations>
+							</concept_node>
+							<concept_node>
+								<name>create</name>
+								<description/>
+								<comment/>
+								<translations>
+									<translation>
+										<language>de-DE</language>
+										<approved>false</approved>
+									</translation>
+									<translation>
+										<language>en-US</language>
+										<approved>false</approved>
+									</translation>
+								</translations>
+							</concept_node>
+							<concept_node>
 								<name>edit_in_fairu</name>
 								<description/>
 								<comment/>
@@ -54,6 +84,41 @@
 							</concept_node>
 							<concept_node>
 								<name>entries_selected</name>
+								<description/>
+								<comment/>
+								<translations>
+									<translation>
+										<language>de-DE</language>
+										<approved>false</approved>
+									</translation>
+									<translation>
+										<language>en-US</language>
+										<approved>false</approved>
+									</translation>
+								</translations>
+							</concept_node>
+							<folder_node>
+								<name>errors</name>
+								<children>
+									<concept_node>
+										<name>error_fetching_files</name>
+										<description/>
+										<comment/>
+										<translations>
+											<translation>
+												<language>de-DE</language>
+												<approved>false</approved>
+											</translation>
+											<translation>
+												<language>en-US</language>
+												<approved>false</approved>
+											</translation>
+										</translations>
+									</concept_node>
+								</children>
+							</folder_node>
+							<concept_node>
+								<name>files_uploaded_successfully</name>
 								<description/>
 								<comment/>
 								<translations>
@@ -99,6 +164,21 @@
 							</concept_node>
 							<concept_node>
 								<name>next</name>
+								<description/>
+								<comment/>
+								<translations>
+									<translation>
+										<language>de-DE</language>
+										<approved>false</approved>
+									</translation>
+									<translation>
+										<language>en-US</language>
+										<approved>false</approved>
+									</translation>
+								</translations>
+							</concept_node>
+							<concept_node>
+								<name>only_selection</name>
 								<description/>
 								<comment/>
 								<translations>
@@ -213,7 +293,37 @@
 								</translations>
 							</concept_node>
 							<concept_node>
+								<name>delete</name>
+								<description/>
+								<comment/>
+								<translations>
+									<translation>
+										<language>de-DE</language>
+										<approved>false</approved>
+									</translation>
+									<translation>
+										<language>en-US</language>
+										<approved>false</approved>
+									</translation>
+								</translations>
+							</concept_node>
+							<concept_node>
 								<name>meta_data_fetching</name>
+								<description/>
+								<comment/>
+								<translations>
+									<translation>
+										<language>de-DE</language>
+										<approved>false</approved>
+									</translation>
+									<translation>
+										<language>en-US</language>
+										<approved>false</approved>
+									</translation>
+								</translations>
+							</concept_node>
+							<concept_node>
+								<name>open_in_fairu</name>
 								<description/>
 								<comment/>
 								<translations>
@@ -242,6 +352,41 @@
 									</translation>
 								</translations>
 							</concept_node>
+							<folder_node>
+								<name>rules</name>
+								<children>
+									<concept_node>
+										<name>max</name>
+										<description/>
+										<comment/>
+										<translations>
+											<translation>
+												<language>de-DE</language>
+												<approved>false</approved>
+											</translation>
+											<translation>
+												<language>en-US</language>
+												<approved>false</approved>
+											</translation>
+										</translations>
+									</concept_node>
+									<concept_node>
+										<name>min</name>
+										<description/>
+										<comment/>
+										<translations>
+											<translation>
+												<language>de-DE</language>
+												<approved>false</approved>
+											</translation>
+											<translation>
+												<language>en-US</language>
+												<approved>false</approved>
+											</translation>
+										</translations>
+									</concept_node>
+								</children>
+							</folder_node>
 							<concept_node>
 								<name>search</name>
 								<description/>
@@ -259,6 +404,41 @@
 							</concept_node>
 							<concept_node>
 								<name>upload_file</name>
+								<description/>
+								<comment/>
+								<translations>
+									<translation>
+										<language>de-DE</language>
+										<approved>false</approved>
+									</translation>
+									<translation>
+										<language>en-US</language>
+										<approved>false</approved>
+									</translation>
+								</translations>
+							</concept_node>
+						</children>
+					</file_node>
+					<file_node>
+						<name>folderselect</name>
+						<children>
+							<concept_node>
+								<name>change_folder</name>
+								<description/>
+								<comment/>
+								<translations>
+									<translation>
+										<language>de-DE</language>
+										<approved>false</approved>
+									</translation>
+									<translation>
+										<language>en-US</language>
+										<approved>false</approved>
+									</translation>
+								</translations>
+							</concept_node>
+							<concept_node>
+								<name>select_folder</name>
 								<description/>
 								<comment/>
 								<translations>
@@ -307,7 +487,7 @@
 		<save_empty_translations>true</save_empty_translations>
 		<translation_order>alphabetically</translation_order>
 		<copy_templates>
-			<copy_template>__('cookienator::%1')</copy_template>
+			<copy_template>__('fairu::%1')</copy_template>
 			<copy_template>{{ __('%1') }}</copy_template>
 			<copy_template>@lang('%1')</copy_template>
 			<copy_template>trans_choice('%1', n)</copy_template>
