@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.2.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.1.4...v1.2.0) (2025-04-11)
+
+
+### Features
+
+* added multiselect, max_files, checkbox.. ([0b7097a](https://github.com/sushidev-team/fairu-statamic-addon/commit/0b7097ae7b8a86bea9c5d4372effdf3b0574e9b8))
+* **config:** folder selection, rules, fixes ([c4ba32e](https://github.com/sushidev-team/fairu-statamic-addon/commit/c4ba32e92053fbce60db7de67c0480b93eb65c5c))
+* max_items restriction, multiselect fixes.. ([440b4eb](https://github.com/sushidev-team/fairu-statamic-addon/commit/440b4eb844f7456b24a2729df40d03f6e6090333))
+* multi-upload, translations ([f0cdd56](https://github.com/sushidev-team/fairu-statamic-addon/commit/f0cdd563492701e43de52be6a9da2996f30d2dbf))
+* **Tags:** restructured tags to be simpler ([52ce0d9](https://github.com/sushidev-team/fairu-statamic-addon/commit/52ce0d9f186920269fe09aba431713aaa78915c1))
+
+
+### Bug Fixes
+
+* allow array resolving in assets ([9ba828f](https://github.com/sushidev-team/fairu-statamic-addon/commit/9ba828f39e3435ebd53fe9d0bb6075ba4c59e358))
+* cleanup ([528256d](https://github.com/sushidev-team/fairu-statamic-addon/commit/528256d6b62e573183468d6056760c193ef894e6))
+* readme ([d297f78](https://github.com/sushidev-team/fairu-statamic-addon/commit/d297f78345e3f4d2867ef43471a2337cb38a1a6a))
+* readme ([eaaf125](https://github.com/sushidev-team/fairu-statamic-addon/commit/eaaf125665654474a80b0b4582a8fb6409a6ca73))
+* update the documentation ([327a2e2](https://github.com/sushidev-team/fairu-statamic-addon/commit/327a2e23ad00cb1d333621d9f976bcedb9b56528))
+
 ## [1.1.4](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.1.3...v1.1.4) (2025-04-04)
 
 
