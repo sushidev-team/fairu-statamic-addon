@@ -96,7 +96,6 @@ class Fairu
 
     public function parse(string|array $str)
     {
-        ray($str);
         if (is_array($str)) {
             return array_map(function ($strItem) {
                 if (Str::isUuid($strItem)) {

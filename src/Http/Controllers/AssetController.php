@@ -79,8 +79,6 @@ class AssetController extends Controller
                 'folder' => $request->input('folder'),
             ]);
 
-            ray($result);
-
             if (!$result->successful()) {
                 return response()->json(['error' => 'Fehler bei der Kommunikation mit Fairu: ' . $result->body()], $result->status());
             }
