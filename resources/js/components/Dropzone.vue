@@ -5,7 +5,7 @@
         @dragleave="dragleave"
         @drop="drop">
         <div
-            class="relative"
+            class="relative fa-size-full"
             :class="{ 'pointer-events-none': dragging }">
             <input
                 type="file"
@@ -18,7 +18,7 @@
                 ><i class="inline-block mr-2 material-symbols-outlined">drive_folder_upload</i>
                 <span>Drop files here</span>
             </div>
-            <div class="relative">
+            <div class="relative fa-size-full">
                 <slot></slot>
             </div>
         </div>
