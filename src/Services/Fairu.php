@@ -3,12 +3,15 @@
 namespace Sushidev\Fairu\Services;
 
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use Statamic\Assets\AssetContainer;
 use Statamic\Facades\Asset;
+use Statamic\Facades\AssetContainer as FacadesAssetContainer;
 
 class Fairu
 {
@@ -38,6 +41,8 @@ class Fairu
 
     public function getFiles(?array $ids = []): ?array
     {
+        $ids = array_filter($ids);
+
         if (empty($ids)) {
             return null;
         }
@@ -94,15 +99,15 @@ class Fairu
         return Uuid::uuid5(Uuid::NAMESPACE_DNS, data_get($this->credentials, 'tenant') . $str)->toString();
     }
 
-    public function parse(string|array $str)
+    public function parse(string|array $str, ?string $container = null)
     {
         if (is_array($str)) {
-            return array_map(function ($strItem) {
+            return array_map(function ($strItem) use ($container) {
                 if (Str::isUuid($strItem)) {
                     return $strItem;
                 }
 
-                return $this->resolveOldAssetPath($strItem);
+                return $this->resolveOldAssetPath($strItem, $container);
             }, $str);
         }
 
@@ -110,25 +115,37 @@ class Fairu
             return $str;
         }
 
-        return $this->resolveOldAssetPath($str);
+        return $this->resolveOldAssetPath($str, $container);
     }
 
-    public function resolveOldAssetPath(?string $value = null): ?string
+    public function resolveOldAssetPath(?string $value = null, ?string $container = null): ?string
     {
-
-        if ($value == null) {
-            return null;
-        }
-
-        $containers = AssetContainer::all()?->pluck('handle')->toArray();
         $id = null;
 
-        foreach ($containers as $container) {
-            $asset = Asset::whereContainer($container)->where('path', $value)?->first();
-            if ($asset != null) {
-                $id = $this->convertToUuid($asset->url());
-                break;
+        if ($value == null) {
+            return $id;
+        }
+
+        if ($container == null) {
+
+            $containers = (array) Cache::flexible('asset-containers', [120, 240], function () {
+                return AssetContainer::all()?->pluck('handle')->toArray();
+            });
+
+            if (count($containers) == 1) {
+                $disk = Cache::remember('asset-container-' . $containers[0], now()->addMinutes(15), function () use ($containers) {
+                    $container = FacadesAssetContainer::findByHandle($containers[0]);
+                    return $container->disk;
+                });
+                $id = $this->convertToUuid(Storage::disk($disk)->url($value));
             }
+        } else {
+
+            $disk = Cache::remember('asset-container-' . $container, now()->addMinutes(60), function () use ($container) {
+                $container = FacadesAssetContainer::findByHandle($container);
+                return $container->disk;
+            });
+            $id = $this->convertToUuid(Storage::disk($disk)->url($value));
         }
 
         return $id;
