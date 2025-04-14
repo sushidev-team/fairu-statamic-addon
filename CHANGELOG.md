@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.2.2...v1.2.3) (2025-04-14)
+
+
+### Bug Fixes
+
+* handle if no assets could be found ([9ee6a4c](https://github.com/sushidev-team/fairu-statamic-addon/commit/9ee6a4c547804e097282efb834ec28f70af87d16))
+
 ## [1.2.2](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.2.1...v1.2.2) (2025-04-14)
 
 
