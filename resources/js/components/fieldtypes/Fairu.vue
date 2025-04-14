@@ -231,9 +231,11 @@ export default {
             this.update(this.assets?.map((e) => e.id));
         },
         async loadMetaData(ids) {
-            if (!ids && !this.assets) return [];
+            if (!ids && !this.assets) {
+                this.loading = false;
+                return [];
+            }
 
-            // Ensure ids is always an array
             const assetIds = Array.isArray(ids) ? ids : [ids].filter(Boolean);
 
             if (assetIds.length === 0) return [];
