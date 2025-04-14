@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.2.3...v1.3.0) (2025-04-14)
+
+
+### Features
+
+* added focal points ([e904bd3](https://github.com/sushidev-team/fairu-statamic-addon/commit/e904bd35bd9d19de7288977a24b9227bfab1f1ec))
+
 ## [1.2.3](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.2.2...v1.2.3) (2025-04-14)
 
 
