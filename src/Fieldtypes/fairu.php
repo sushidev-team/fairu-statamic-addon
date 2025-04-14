@@ -2,6 +2,7 @@
 
 namespace Sushidev\Fairu\Fieldtypes;
 
+use Illuminate\Support\Facades\Cache;
 use Statamic\Fields\Fieldtype;
 use Statamic\Exceptions\AssetContainerNotFoundException;
 use Statamic\Facades\Asset;
@@ -63,7 +64,9 @@ class Fairu extends Fieldtype
                 if (Str::isUuid($item)) {
                     return $item;
                 }
-                return (new ServicesFairu)->parse($item);
+                return Cache::flexible('asset-container-item-'.sha1($item), [120,240], function() use ($item){
+                    return (new ServicesFairu)->parse($item, data_get($this->config(), 'container'));
+                });
             })->toArray();
         }
 
@@ -71,7 +74,9 @@ class Fairu extends Fieldtype
             return $data;
         }
 
-        return (new ServicesFairu)->parse($data);
+        return Cache::flexible('asset-container-item-'.sha1($data), [120,240], function() use ($data){
+            return (new ServicesFairu)->parse($data);
+        });
     }
 
 
