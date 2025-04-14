@@ -35,7 +35,6 @@ class Fairu
     protected function endpoint(string $path)
     {
         $url = config('fairu.url') . "/$path";
-        Log::debug($url);
         return $url;
     }
 
