@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.2.0...v1.2.1) (2025-04-14)
+
+
+### Bug Fixes
+
+* resolve images in a different way ([17d988e](https://github.com/sushidev-team/fairu-statamic-addon/commit/17d988ec53fe857473b5e85825482c27f24c2e7f))
+
 ## [1.2.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.1.4...v1.2.0) (2025-04-11)
 
 
