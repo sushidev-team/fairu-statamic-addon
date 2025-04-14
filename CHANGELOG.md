@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.2.1...v1.2.2) (2025-04-14)
+
+
+### Bug Fixes
+
+* infinite loading if assets is empty ([1eed22a](https://github.com/sushidev-team/fairu-statamic-addon/commit/1eed22a7cb2fc99ca178ca20359985c918aa4526))
+
 ## [1.2.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.2.0...v1.2.1) (2025-04-14)
 
 
