@@ -98,6 +98,11 @@ class Setup extends Command
         $assets = Asset::whereContainer($assetContainer);
         $folderList = FacadesAssetContainer::find($assetContainer)?->folders();
 
+        if ($assets?->count() == 0){
+            $this->error('No assets found.');
+            return;
+        }
+
         $paths = collect([]);
 
         // 1) Create the list of files 
@@ -105,7 +110,7 @@ class Setup extends Command
         //    able to push the file into correct fairu folder.
         progress(
             label: 'Prepare list of files...',
-            steps: $assets,
+            steps: $assets?->count() > 0 ? $assets : [],
             callback: function ($asset, $progress) use (&$paths) {
                 $paths->push($asset->path);
             },
