@@ -41,11 +41,7 @@ class Fairu
 
     public function getFiles(?array $ids = []): ?array
     {
-        $ids = array_filter($ids, function($id){
-            if ($id != null){
-                return $id;
-            }
-        });
+        $ids = array_filter($ids);
 
         if (empty($ids)) {
             return null;
@@ -130,31 +126,28 @@ class Fairu
             return $id;
         }
 
-        if ($container == null){
+        if ($container == null) {
 
-            $containers = (array) Cache::flexible('asset-containers', [120,240], function(){
+            $containers = (array) Cache::flexible('asset-containers', [120, 240], function () {
                 return AssetContainer::all()?->pluck('handle')->toArray();
             });
 
-            if (count($containers) == 1){
-                $disk = Cache::remember('asset-container-'.$containers[0], now()->addMinutes(15), function() use ($containers){
+            if (count($containers) == 1) {
+                $disk = Cache::remember('asset-container-' . $containers[0], now()->addMinutes(15), function () use ($containers) {
                     $container = FacadesAssetContainer::findByHandle($containers[0]);
                     return $container->disk;
                 });
                 $id = $this->convertToUuid(Storage::disk($disk)->url($value));
             }
+        } else {
 
-        }
-        else {
-
-            $disk = Cache::remember('asset-container-'.$container, now()->addMinutes(60), function() use ($container){
+            $disk = Cache::remember('asset-container-' . $container, now()->addMinutes(60), function () use ($container) {
                 $container = FacadesAssetContainer::findByHandle($container);
                 return $container->disk;
             });
             $id = $this->convertToUuid(Storage::disk($disk)->url($value));
-
         }
-    
+
         return $id;
     }
 }
