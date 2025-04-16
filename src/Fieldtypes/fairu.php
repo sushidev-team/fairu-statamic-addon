@@ -12,9 +12,12 @@ use Statamic\Statamic;
 use Sushidev\Fairu\Services\Fairu as ServicesFairu;
 use Illuminate\Support\Str;
 use Statamic\Assets\Asset as AssetsAsset;
+use Sushidev\Fairu\Traits\TransformAssets;
 
 class Fairu extends Fieldtype
 {
+    use TransformAssets;
+
     protected $icon = 'addons';
 
     public $categories = ['media'];
@@ -64,7 +67,7 @@ class Fairu extends Fieldtype
                 if (Str::isUuid($item)) {
                     return $item;
                 }
-                return Cache::flexible('asset-container-item-'.sha1($item), [120,240], function() use ($item){
+                return Cache::flexible('asset-container-item-' . sha1($item), [120, 240], function () use ($item) {
                     return (new ServicesFairu)->parse($item, data_get($this->config(), 'container'));
                 });
             })->toArray();
@@ -74,7 +77,7 @@ class Fairu extends Fieldtype
             return $data;
         }
 
-        return Cache::flexible('asset-container-item-'.sha1($data), [120,240], function() use ($data){
+        return Cache::flexible('asset-container-item-' . sha1($data), [120, 240], function () use ($data) {
             return (new ServicesFairu)->parse($data);
         });
     }
@@ -153,5 +156,37 @@ class Fairu extends Fieldtype
                 'type' => 'folder_selector',
             ],
         ];
+    }
+
+    public function augment($value)
+    {
+        return $value;
+    }
+
+    public function shallowAugment($value)
+    {
+        $is_array = is_array($value);
+        $cacheKey = md5(json_encode($value));
+        $ids = $this->resolveIds($value);
+
+        $files = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($ids) {
+            return collect($this->getFiles($ids))->map(function ($asset) {
+
+                $url = $this->getUrl(
+                    id: data_get($asset, 'id'),
+                    filename: data_get($asset, 'name'),
+                    focalPoint: data_get($asset, 'focal_point')
+                );
+                data_set($asset, 'url', $url);
+                data_set($asset, 'focus_css', $this->formatFocalPoint(data_get($asset, 'focal_point')));
+                data_set($asset, 'fields', array_keys($asset));
+
+                return $asset;
+            });
+        });
+
+        if (!is_array($files)) return $files;
+
+        return $is_array ? $files : $files[0];
     }
 }

@@ -7,116 +7,13 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
 use Statamic\Tags\Tags;
 use Sushidev\Fairu\Services\Fairu;
+use Sushidev\Fairu\Traits\TransformAssets;
 
 class FairuAssetTags extends Tags
 {
+    use TransformAssets;
 
     protected static $handle = 'fairu';
-
-    public Fairu $fairu;
-
-    public function __construct()
-    {
-        $this->fairu = (new Fairu());
-    }
-
-    protected function resolveIds(array|string|null $ids = null)
-    {
-
-        if ($ids == null) {
-            return null;
-        }
-
-        if (!is_array($ids)) {
-            $ids = [$ids];
-        } else {
-            sort($ids);
-        }
-
-        $ids = array_map(function ($id) {
-
-            if (Str::isUuid($id)) {
-                return $id;
-            }
-
-            return (new Fairu())->resolveOldAssetPath($id);
-        }, $ids);
-
-        return $ids;
-    }
-
-    protected function buildFileUrl(string $id, ?string $filename = null)
-    {
-        $baseUrl = Str::endsWith(config('fairu.url_proxy'), "/")
-            ? config('fairu.url_proxy')
-            : config('fairu.url_proxy') . "/";
-
-        return $baseUrl . $id . "/" . ($filename ?? 'file');
-    }
-
-    protected function getFiles(?array $ids = [], ?bool $skipMeta = false)
-    {
-        if (empty($ids)) {
-            return null;
-        }
-
-        sort($ids);
-
-
-        if ($skipMeta === true) {
-            $result = [];
-            foreach ($ids as $id) {
-                $result[] = [
-                    'id' => $id,
-                    'url' => $this->buildFileUrl($id)
-                ];
-            }
-            return $result;
-        }
-
-
-        $fingerprint = md5(json_encode($ids));
-
-        return Cache::flexible('file-' . $fingerprint, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($ids) {
-            $files = (new Fairu($this->params->get('connection', 'default')))->getFiles($ids);
-            return $files;
-        });
-    }
-
-    protected function getFile(?string $id = null, ?bool $skipMeta = false)
-    {
-        if (!$id) {
-            return;
-        }
-        return Arr::get($this->getFiles([$id], $skipMeta), 0);
-    }
-
-    protected function getUrl(
-        ?string $id = null,
-        ?string $filename = null,
-        ?int $width = null,
-        ?int $height = null,
-        ?string $focalPoint = "50-50-1"
-    ): string | null {
-
-        if ($id == null) {
-            return null;
-        }
-
-        $params = [
-            'width' => $width ?? $this->params->get('width'),
-            'height' => $height ?? $this->params->get('height'),
-            'quality' => $this->params->get('quality', 90),
-            'format' => $this->params->get('format'),
-            'focal' => $focalPoint,
-        ];
-
-        $queryString = http_build_query($params);
-
-        $id = $this->fairu->parse($id);
-
-        return $this->buildFileUrl($id, $filename) . '?' . $queryString;
-    }
 
     protected function getSources($asset, ?string $sourcesParam = null, ?string $name = null, ?string $ratio = null)
     {
@@ -189,22 +86,6 @@ class FairuAssetTags extends Tags
         return $srcset_entries;
     }
 
-    function formatFocalPoint($focalPoint)
-    {
-        if (!$focalPoint) {
-            return '50% 50%';
-        }
-
-        $parts = explode('-', $focalPoint);
-
-        if (count($parts) >= 2) {
-            return $parts[0] . '% ' . $parts[1] . '%';
-        }
-
-        return '50% 50%';
-    }
-
-
     /**
      * The {{ fairu:url }} tag.
      *
@@ -236,9 +117,10 @@ class FairuAssetTags extends Tags
         $ids = $this->params->get('id') ?? $this->params->get('ids');
         $ids = $this->resolveIds($ids);
 
+
         $files = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($ids) {
             return collect($this->getFiles($ids, $this->params->get('skipMeta')))->map(function ($asset) {
-
+                ray($asset)->blue();
                 $url = $this->getUrl(
                     id: data_get($asset, 'id'),
                     filename: $this->params->get('name') ?? data_get($asset, 'name'),

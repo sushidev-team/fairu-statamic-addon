@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use Statamic\Assets\AssetContainer;
-use Statamic\Facades\Asset;
 use Statamic\Facades\AssetContainer as FacadesAssetContainer;
 
 class Fairu

@@ -4,7 +4,6 @@ namespace Sushidev\Fairu;
 
 use Illuminate\Support\Facades\View;
 use Statamic\Providers\AddonServiceProvider;
-use Statamic\Facades\Utility;
 
 class ServiceProvider extends AddonServiceProvider
 {
