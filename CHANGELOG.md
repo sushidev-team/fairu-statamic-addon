@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.3.0...v1.4.0) (2025-04-16)
+
+
+### Features
+
+* REST api augmentation ([9c67061](https://github.com/sushidev-team/fairu-statamic-addon/commit/9c67061f1e839d4a8f7653ae868747b3b21f490a))
+
 ## [1.3.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.2.3...v1.3.0) (2025-04-14)
 
 
