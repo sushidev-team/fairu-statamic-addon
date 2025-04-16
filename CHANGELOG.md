@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.4.1...v1.5.0) (2025-04-16)
+
+
+### Features
+
+* video thumbnails, size, availability ([74ff112](https://github.com/sushidev-team/fairu-statamic-addon/commit/74ff1120dbb8fa7706978c53ef8452c528a9c95e))
+
+
+### Bug Fixes
+
+* only append query strings to images ([62da4ce](https://github.com/sushidev-team/fairu-statamic-addon/commit/62da4cebcc0e7d4d4d0bd9599ef907273e9e5c3f))
+
 ## [1.4.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.4.0...v1.4.1) (2025-04-16)
 
 
