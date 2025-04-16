@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.4.0...v1.4.1) (2025-04-16)
+
+
+### Bug Fixes
+
+* **REST:** augment asset as object if max_files is 1 ([66ab340](https://github.com/sushidev-team/fairu-statamic-addon/commit/66ab340546ed12b1680bf079fdb0627cb9607f9f))
+
 ## [1.4.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.3.0...v1.4.0) (2025-04-16)
 
 
