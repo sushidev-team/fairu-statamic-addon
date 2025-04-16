@@ -165,7 +165,6 @@ class Fairu extends Fieldtype
 
     public function shallowAugment($value)
     {
-        $is_array = is_array($value);
         $cacheKey = md5(json_encode($value));
         $ids = $this->resolveIds($value);
 
@@ -179,14 +178,13 @@ class Fairu extends Fieldtype
                 );
                 data_set($asset, 'url', $url);
                 data_set($asset, 'focus_css', $this->formatFocalPoint(data_get($asset, 'focal_point')));
-                data_set($asset, 'fields', array_keys($asset));
 
                 return $asset;
             });
-        });
+        })?->toArray();
 
         if (!is_array($files)) return $files;
 
-        return $is_array ? $files : $files[0];
+        return $this->config('max_files') === 1 ? data_get($files, 0) : $files;
     }
 }

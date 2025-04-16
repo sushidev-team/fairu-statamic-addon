@@ -120,7 +120,6 @@ class FairuAssetTags extends Tags
 
         $files = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($ids) {
             return collect($this->getFiles($ids, $this->params->get('skipMeta')))->map(function ($asset) {
-                ray($asset)->blue();
                 $url = $this->getUrl(
                     id: data_get($asset, 'id'),
                     filename: $this->params->get('name') ?? data_get($asset, 'name'),
@@ -132,7 +131,6 @@ class FairuAssetTags extends Tags
                 }
                 data_set($asset, 'url', $url);
                 data_set($asset, 'focus_css', $this->formatFocalPoint($this->params->get('focal_point') ?? data_get($asset, 'focal_point')));
-                data_set($asset, 'fields', array_keys($asset));
 
                 return $asset;
             });
@@ -164,7 +162,6 @@ class FairuAssetTags extends Tags
                 focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point')
             );
             data_set($asset, 'url', $url);
-            data_set($asset, 'fields', array_keys($asset));
 
             $srcset_entries = $this->getSources($asset, $this->params->get('sources'), $this->params->get('name'), $this->params->get('ratio'));
 
@@ -209,7 +206,6 @@ class FairuAssetTags extends Tags
                     focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point')
                 );
                 data_set($asset, 'url', $url);
-                data_set($asset, 'fields', array_keys($asset));
 
                 $srcset_entries = $this->getSources($asset, $this->params->get('sources'), $this->params->get('name'), $this->params->get('ratio'));
 

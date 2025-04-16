@@ -146,11 +146,10 @@ trait TransformAssets
 
         $fingerprint = md5(json_encode($ids));
 
-        // return Cache::flexible('file-' . $fingerprint, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($ids) {
-        $files = (new Fairu($this->getConnectionName()))->getFiles($ids);
-        ray($files)->red();
-        return $files;
-        // });
+        return Cache::flexible('file-' . $fingerprint, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($ids) {
+            $files = (new Fairu($this->getConnectionName()))->getFiles($ids);
+            return $files;
+        });
     }
 
     protected function getFile(?string $id = null, ?bool $skipMeta = false)
