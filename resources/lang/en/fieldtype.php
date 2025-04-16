@@ -1,5 +1,10 @@
 <?php
 return [
+    "asset" => [
+        "availability" => "Asset availability",
+        "item_available" => "Item available",
+        "item_unavailable" => "Item blocked or missing"
+    ],
     "change" => "Change",
     "delete" => "Delete",
     "meta_data_fetching" => "Meta data is being fetched",

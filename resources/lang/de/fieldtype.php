@@ -1,5 +1,10 @@
 <?php
 return [
+    "asset" => [
+        "availability" => "Verfügbarkeit",
+        "item_available" => "Verfügbar",
+        "item_unavailable" => "Geblockt oder nicht verfügbar"
+    ],
     "change" => "Ändern",
     "delete" => "Löschen",
     "meta_data_fetching" => "Metadaten werden ermittelt",

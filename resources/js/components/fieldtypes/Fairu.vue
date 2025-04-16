@@ -73,13 +73,24 @@
                         ></div
                     >
                     <div
-                        class="grid w-full min-w-0 gap-2 items-center fa-mt-2 fa-grid-cols-[auto,1fr,auto] fa-border-t fa-border-zinc-200 fa-pt-2 first:fa-mt-0 first:fa-border-none first:fa-pt-0 dark:fa-border-zinc-700"
+                        class="grid w-full min-w-0 gap-2 items-center fa-mt-2 fa-grid-cols-[auto,auto,1fr,auto] fa-border-t fa-border-zinc-200 fa-pt-2 first:fa-mt-0 first:fa-border-none first:fa-pt-0 dark:fa-border-zinc-700"
                         v-for="(item, index) in assets"
                         :key="item.id + index">
+                        <div
+                            :aria-label="__('fairu::fieldtype.asset.availability')"
+                            class="mx-2 fa-size-2 fa-rounded-full"
+                            :title="
+                                isAvailable(item)
+                                    ? __('fairu::fieldtype.asset.item_available')
+                                    : __('fairu::fieldtype.asset.item_unavailable')
+                            "
+                            :class="isAvailable(item) ? 'fa-bg-green-500' : 'bg-red-500'"></div>
                         <img
                             ref="fileImage"
                             v-if="
-                                loading == false && !metaItemsFetching.has(item.id) && item?.mime?.startsWith('image/')
+                                loading == false &&
+                                !metaItemsFetching.has(item.id) &&
+                                item?.mime?.match(/^(image|video)\//)
                             "
                             :key="item.id + index + 'image'"
                             class="flex-none overflow-hidden rounded-md"
@@ -90,10 +101,13 @@
                             class="w-5 h-5"
                             size="24"
                             v-if="metaItemsFetching.has(item.id)" />
-                        <div class="w-full min-w-0 fa-content-center fa-items-center">
+                        <div class="flex w-full min-w-0 fa-content-center fa-items-center fa-justify-between">
                             <div
                                 class="min-w-0 text-xs truncate"
                                 v-html="item?.name"></div>
+                            <div
+                                class="min-w-0 text-xs truncate fa-opacity-30"
+                                v-html="getSize(item)"></div>
                         </div>
                         <div class="flex items-center gap-1">
                             <a
@@ -157,6 +171,13 @@ export default {
                 return parts[1];
             }
             return 'n/a';
+        },
+        getSize(item) {
+            if (!item?.size) return null;
+            return (item.size / 1024 / 1024).toFixed(2) + ' MB';
+        },
+        isAvailable(item) {
+            return item?.exists && !item?.locked;
         },
         openFile() {
             this.$refs.upload.value = null;

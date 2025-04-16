@@ -13,7 +13,7 @@
                 class="hidden"
                 ref="nativeFileField" />
             <div
-                class="absolute inset-0 z-10 rounded pointer-events-none dark:fa-bg-dark-900 fa-flex fa-place-items-center fa-justify-center fa-bg-gray-100 fa-transition-opacity fa-duration-150"
+                class="absolute inset-0 z-10 rounded pointer-events-none fa-flex fa-place-items-center fa-justify-center fa-bg-zinc-100 fa-transition-opacity fa-duration-150 dark:fa-bg-zinc-900"
                 :class="dragging ? 'fa-opacity-90' : 'fa-opacity-0'"
                 ><i class="inline-block mr-2 material-symbols-outlined">drive_folder_upload</i>
                 <span>Drop files here</span>
