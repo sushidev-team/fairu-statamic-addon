@@ -171,11 +171,11 @@ class Fairu extends Fieldtype
         $files = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($ids) {
             return collect($this->getFiles($ids))->map(function ($asset) {
 
-                $url = $this->getUrl(
+                $url = $this->buildFileUrl(
                     id: data_get($asset, 'id'),
                     filename: data_get($asset, 'name'),
-                    focalPoint: data_get($asset, 'focal_point')
                 );
+
                 data_set($asset, 'url', $url);
                 data_set($asset, 'focus_css', $this->formatFocalPoint(data_get($asset, 'focal_point')));
 

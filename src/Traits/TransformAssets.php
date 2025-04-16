@@ -100,27 +100,32 @@ trait TransformAssets
         ?string $filename = null,
         ?int $width = null,
         ?int $height = null,
-        ?string $focalPoint = "50-50-1"
+        ?string $focalPoint = "50-50-1",
+        ?bool $isImage = false
     ): string | null {
 
         if ($id == null) {
             return null;
         }
 
+        if ($isImage) {
+            $params = [
+                'width' => $this->getParam('width', $width),
+                'height' => $this->getParam('height', $height),
+                'quality' => $this->getParam('quality', null, 90),
+                'format' => $this->getParam('format'),
+                'focal' => $focalPoint,
+            ];
 
-        $params = [
-            'width' => $this->getParam('width', $width),
-            'height' => $this->getParam('height', $height),
-            'quality' => $this->getParam('quality', null, 90),
-            'format' => $this->getParam('format'),
-            'focal' => $focalPoint,
-        ];
+            $queryString = http_build_query($params);
+        }
 
-        $queryString = http_build_query($params);
 
         $id = $this->fairu->parse($id);
 
-        return $this->buildFileUrl($id, $filename) . '?' . $queryString;
+        $url = $this->buildFileUrl($id, $filename);
+        $url .= $isImage ? '?' .  $queryString : '';
+        return $url;
     }
 
     protected function getFiles(?array $ids = [], ?bool $skipMeta = false)

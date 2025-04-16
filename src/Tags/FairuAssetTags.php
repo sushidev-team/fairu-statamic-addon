@@ -74,7 +74,8 @@ class FairuAssetTags extends Tags
                         filename: $name ?? data_get($asset, 'name'),
                         width: $width,
                         height: $height,
-                        focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point')
+                        focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point'),
+                        isImage: true
                     );
 
                     // Add to srcset entries
@@ -123,7 +124,8 @@ class FairuAssetTags extends Tags
                 $url = $this->getUrl(
                     id: data_get($asset, 'id'),
                     filename: $this->params->get('name') ?? data_get($asset, 'name'),
-                    focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point')
+                    focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point'),
+                    isImage: data_get($asset, 'is_image'),
                 );
                 $srcset_entries = $this->getSources($asset, $this->params->get('sources'), $this->params->get('name'), $this->params->get('ratio'));
                 if (!empty($srcset_entries)) {
@@ -159,7 +161,8 @@ class FairuAssetTags extends Tags
             $url = $this->getUrl(
                 id: data_get($asset, 'id'),
                 filename: $this->params->get('name') ?? data_get($asset, 'name'),
-                focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point')
+                focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point'),
+                isImage: data_get($asset, 'is_image')
             );
             data_set($asset, 'url', $url);
 
@@ -203,7 +206,8 @@ class FairuAssetTags extends Tags
                 $url = $this->getUrl(
                     id: data_get($asset, 'id'),
                     filename: $this->params->get('name') ?? data_get($asset, 'name'),
-                    focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point')
+                    focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point'),
+                    isImage: data_get($asset, 'is_image')
                 );
                 data_set($asset, 'url', $url);
 
