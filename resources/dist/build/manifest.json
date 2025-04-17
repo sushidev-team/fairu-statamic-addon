@@ -1,12 +1,24 @@
 {
   "resources/css/cp.css": {
-    "file": "assets/cp-4ed993c7.js",
-    "isEntry": true,
-    "src": "resources/css/cp.css"
+    "file": "assets/cp-BFyKlScm.css",
+    "src": "resources/css/cp.css",
+    "isEntry": true
+  },
+  "resources/fonts/MaterialSymbolsOutlined-Regular.ttf": {
+    "file": "assets/MaterialSymbolsOutlined-Regular-DQJClE0Y.ttf",
+    "src": "resources/fonts/MaterialSymbolsOutlined-Regular.ttf"
   },
   "resources/js/cp.js": {
-    "file": "assets/cp-fcb519b5.js",
+    "file": "assets/cp-1Yj4p5Ei.js",
+    "name": "cp",
+    "src": "resources/js/cp.js",
     "isEntry": true,
-    "src": "resources/js/cp.js"
+    "assets": [
+      "assets/fairu-logo-C5d5urL9.svg"
+    ]
+  },
+  "resources/svg/fairu-logo.svg": {
+    "file": "assets/fairu-logo-C5d5urL9.svg",
+    "src": "resources/svg/fairu-logo.svg"
   }
 }

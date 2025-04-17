@@ -75,7 +75,7 @@ class FairuAssetTags extends Tags
                         width: $width,
                         height: $height,
                         focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point'),
-                        isImage: true
+                        appendQuery: true
                     );
 
                     // Add to srcset entries
@@ -94,16 +94,14 @@ class FairuAssetTags extends Tags
      */
     public function url()
     {
-        $ids = $this->resolveIds();
+        $id = Arr::get($this->resolveIds($this->params->get('id')), 0);
 
-        return array_map(function ($id) {
-            $id = $this->fairu->parse($id);
-            return $this->getUrl(
-                id: $id,
-                filename: $this->params->get('name') ?? 'file',
-                focalPoint: $this->params->get('focal_point')
-            );
-        }, $ids);
+        $id = $this->fairu->parse($id);
+        return $this->getUrl(
+            id: $id,
+            filename: $this->params->get('name') ?? 'file',
+            appendQuery: false
+        );
     }
 
     /**
@@ -125,7 +123,7 @@ class FairuAssetTags extends Tags
                     id: data_get($asset, 'id'),
                     filename: $this->params->get('name') ?? data_get($asset, 'name'),
                     focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point'),
-                    isImage: data_get($asset, 'is_image'),
+                    appendQuery: data_get($asset, 'is_image'),
                 );
                 $srcset_entries = $this->getSources($asset, $this->params->get('sources'), $this->params->get('name'), $this->params->get('ratio'));
                 if (!empty($srcset_entries)) {
@@ -162,7 +160,7 @@ class FairuAssetTags extends Tags
                 id: data_get($asset, 'id'),
                 filename: $this->params->get('name') ?? data_get($asset, 'name'),
                 focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point'),
-                isImage: data_get($asset, 'is_image')
+                appendQuery: data_get($asset, 'is_image')
             );
             data_set($asset, 'url', $url);
 
@@ -207,7 +205,7 @@ class FairuAssetTags extends Tags
                     id: data_get($asset, 'id'),
                     filename: $this->params->get('name') ?? data_get($asset, 'name'),
                     focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point'),
-                    isImage: data_get($asset, 'is_image')
+                    appendQuery: data_get($asset, 'is_image')
                 );
                 data_set($asset, 'url', $url);
 

@@ -101,14 +101,14 @@ trait TransformAssets
         ?int $width = null,
         ?int $height = null,
         ?string $focalPoint = "50-50-1",
-        ?bool $isImage = false
+        ?bool $appendQuery = false
     ): string | null {
 
         if ($id == null) {
             return null;
         }
 
-        if ($isImage) {
+        if ($appendQuery) {
             $params = [
                 'width' => $this->getParam('width', $width),
                 'height' => $this->getParam('height', $height),
@@ -124,7 +124,7 @@ trait TransformAssets
         $id = $this->fairu->parse($id);
 
         $url = $this->buildFileUrl($id, $filename);
-        $url .= $isImage ? '?' .  $queryString : '';
+        $url .= ($appendQuery) ? '?' .  $queryString : '';
         return $url;
     }
 
