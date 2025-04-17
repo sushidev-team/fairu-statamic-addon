@@ -118,12 +118,12 @@ class FairuAssetTags extends Tags
 
 
         $files = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($ids) {
-            return collect($this->getFiles($ids, $this->params->get('skipMeta')))->map(function ($asset) {
+            return collect($this->getFiles($ids, $this->params->get('fetchMeta')))->map(function ($asset) {
                 $url = $this->getUrl(
                     id: data_get($asset, 'id'),
                     filename: $this->params->get('name') ?? data_get($asset, 'name'),
                     focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point'),
-                    appendQuery: data_get($asset, 'is_image'),
+                    appendQuery: data_get($asset, 'is_image') || $this->params->get('width') || $this->params->get('height') || $this->params->get('sources'),
                 );
                 $srcset_entries = $this->getSources($asset, $this->params->get('sources'), $this->params->get('name'), $this->params->get('ratio'));
                 if (!empty($srcset_entries)) {
@@ -155,12 +155,12 @@ class FairuAssetTags extends Tags
         }
 
         return Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($id) {
-            $asset = $this->getFile($id, $this->params->get('skipMeta'));
+            $asset = $this->getFile($id, $this->params->get('fetchMeta'));
             $url = $this->getUrl(
                 id: data_get($asset, 'id'),
                 filename: $this->params->get('name') ?? data_get($asset, 'name'),
                 focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point'),
-                appendQuery: data_get($asset, 'is_image')
+                appendQuery: data_get($asset, 'is_image') || $this->params->get('width') || $this->params->get('height') || $this->params->get('sources')
             );
             data_set($asset, 'url', $url);
 
@@ -205,7 +205,7 @@ class FairuAssetTags extends Tags
                     id: data_get($asset, 'id'),
                     filename: $this->params->get('name') ?? data_get($asset, 'name'),
                     focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point'),
-                    appendQuery: data_get($asset, 'is_image')
+                    appendQuery: data_get($asset, 'is_image') || $this->params->get('width') || $this->params->get('height') || $this->params->get('sources')
                 );
                 data_set($asset, 'url', $url);
 

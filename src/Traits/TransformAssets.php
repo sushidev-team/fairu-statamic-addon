@@ -101,6 +101,7 @@ trait TransformAssets
         ?int $width = null,
         ?int $height = null,
         ?string $focalPoint = "50-50-1",
+        ?string $timestamp = null,
         ?bool $appendQuery = false
     ): string | null {
 
@@ -113,6 +114,7 @@ trait TransformAssets
                 'width' => $this->getParam('width', $width),
                 'height' => $this->getParam('height', $height),
                 'quality' => $this->getParam('quality', null, 90),
+                'timestamp' => $this->getParam('timestamp'),
                 'format' => $this->getParam('format'),
                 'focal' => $focalPoint,
             ];
@@ -128,7 +130,7 @@ trait TransformAssets
         return $url;
     }
 
-    protected function getFiles(?array $ids = [], ?bool $skipMeta = false)
+    protected function getFiles(?array $ids = [], ?bool $fetchMeta = false)
     {
         if (empty($ids)) {
             return null;
@@ -137,7 +139,7 @@ trait TransformAssets
         sort($ids);
 
 
-        if ($skipMeta === true) {
+        if ($fetchMeta !== true) {
             $result = [];
             foreach ($ids as $id) {
                 $result[] = [
@@ -157,12 +159,12 @@ trait TransformAssets
         });
     }
 
-    protected function getFile(?string $id = null, ?bool $skipMeta = false)
+    protected function getFile(?string $id = null, ?bool $fetchMeta = false)
     {
         if (!$id) {
             return;
         }
-        return Arr::get($this->getFiles([$id], $skipMeta), 0);
+        return Arr::get($this->getFiles([$id], $fetchMeta), 0);
     }
 
     function formatFocalPoint($focalPoint)
