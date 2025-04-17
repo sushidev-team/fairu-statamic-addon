@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.5.1...v1.6.0) (2025-04-17)
+
+
+### Features
+
+* prefetch all assets and cache them ([97b867f](https://github.com/sushidev-team/fairu-statamic-addon/commit/97b867fe75ff99251a8640ae0d7da04d91564e14))
+* reversed logic to fetchMeta, timestamp param ([143399c](https://github.com/sushidev-team/fairu-statamic-addon/commit/143399cf9d711597dc6b4d59789f47c3981da362))
+
+
+### Bug Fixes
+
+* remove hook - because it won't work somewhere else ([b8e304b](https://github.com/sushidev-team/fairu-statamic-addon/commit/b8e304b7f8dd5ff9d22827cf3dc2d34ab433f3ce))
+
 ## [1.5.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.5.0...v1.5.1) (2025-04-17)
 
 
