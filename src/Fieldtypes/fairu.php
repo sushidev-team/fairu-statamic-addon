@@ -169,7 +169,7 @@ class Fairu extends Fieldtype
         $ids = $this->resolveIds($value);
 
         $files = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($ids) {
-            return collect($this->getFiles($ids))->map(function ($asset) {
+            return collect($this->getFiles($ids, true))->map(function ($asset) {
 
                 $url = $this->buildFileUrl(
                     id: data_get($asset, 'id'),
