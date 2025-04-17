@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.5.0...v1.5.1) (2025-04-17)
+
+
+### Bug Fixes
+
+* fairu:url tag ([dc39d03](https://github.com/sushidev-team/fairu-statamic-addon/commit/dc39d033bb62a0c1032f24283f9b28de36803de9))
+
 ## [1.5.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.4.1...v1.5.0) (2025-04-16)
 
 
