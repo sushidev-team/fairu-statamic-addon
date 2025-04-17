@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.0...v1.6.1) (2025-04-17)
+
+
+### Bug Fixes
+
+* fetchMeta for rest query / shallowAugmentation ([4c1769b](https://github.com/sushidev-team/fairu-statamic-addon/commit/4c1769bf986b6c300220990af6589b40e027a666))
+
 ## [1.6.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.5.1...v1.6.0) (2025-04-17)
 
 
