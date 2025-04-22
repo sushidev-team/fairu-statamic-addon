@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.5](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.4...v1.6.5) (2025-04-22)
+
+
+### Bug Fixes
+
+* imported css file for font file resolution ([7ea148d](https://github.com/sushidev-team/fairu-statamic-addon/commit/7ea148dd05367daa0e0cab972e35c144c9243189))
+
 ## [1.6.4](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.3...v1.6.4) (2025-04-22)
 
 
