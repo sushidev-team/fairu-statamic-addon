@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.10](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.9...v1.6.10) (2025-04-22)
+
+
+### Bug Fixes
+
+* added new build ([2314851](https://github.com/sushidev-team/fairu-statamic-addon/commit/2314851e2793909687e3ef7f42c1bcc312e6054d))
+
 ## [1.6.9](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.8...v1.6.9) (2025-04-22)
 
 
