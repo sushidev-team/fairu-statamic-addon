@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.4](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.3...v1.6.4) (2025-04-22)
+
+
+### Bug Fixes
+
+* switched to alias resolving of paths in vite ([8836b2c](https://github.com/sushidev-team/fairu-statamic-addon/commit/8836b2c892f317aaa03d58cb5814f6c85cd91c92))
+
 ## [1.6.3](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.2...v1.6.3) (2025-04-22)
 
 
