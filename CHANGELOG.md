@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.2](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.1...v1.6.2) (2025-04-22)
+
+
+### Bug Fixes
+
+* add  parent::bootAddon(); again ([d8af370](https://github.com/sushidev-team/fairu-statamic-addon/commit/d8af37078564a820787b67561aed9c518e8ac1b0))
+* changed case of fieldtype file ([e8decc1](https://github.com/sushidev-team/fairu-statamic-addon/commit/e8decc1389dbb807b1187df809f4254e58fe6e98))
+
 ## [1.6.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.0...v1.6.1) (2025-04-17)
 
 
