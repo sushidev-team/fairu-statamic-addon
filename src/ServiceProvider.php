@@ -39,11 +39,11 @@ class ServiceProvider extends AddonServiceProvider
         'input' => [
             'resources/js/cp.js',
             'resources/css/cp.css',
-            'resources/fonts/MaterialSymbolsOutlined-Regular.ttf',
         ],
         'publicDirectory' => 'resources/dist',
         'hotFile' => __DIR__ . '/../resources/dist/hot',
     ];
+
 
     protected $routes = [
         'cp' => __DIR__ . '/../routes/cp.php',

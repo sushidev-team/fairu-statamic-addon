@@ -1,7 +1,8 @@
 @font-face {
     font-family: 'Material Symbols Outlined';
     font-style: normal;
-    src: url(../fonts/MaterialSymbolsOutlined-Regular.ttf) format('woff');
+    font-weight: 400;
+    src: url('@/fonts/MaterialSymbolsOutlined-Regular.ttf') format('truetype');
 }
 
 .material-symbols-outlined {
