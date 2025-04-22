@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.7](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.6...v1.6.7) (2025-04-22)
+
+
+### Bug Fixes
+
+* switched to prev implementation with imported css ([b3a4eb7](https://github.com/sushidev-team/fairu-statamic-addon/commit/b3a4eb759abb8b84fae326a5777d1bec91f65611))
+
 ## [1.6.6](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.5...v1.6.6) (2025-04-22)
 
 
