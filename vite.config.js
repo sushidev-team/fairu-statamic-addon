@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
   const { host, protocol } = new URL(env.APP_URL ?? 'http://localhost');
 
   return {
-    base: mode === 'production' ? '/vendor/fairu-statamic/' : '/',
+    base: mode === 'production' ? '/vendor/fairu-statamic/build/' : '/',
     plugins: [
       laravel({
         input: ['resources/js/cp.js', 'resources/css/cp.css'],
