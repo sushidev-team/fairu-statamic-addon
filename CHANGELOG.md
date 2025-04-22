@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.8](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.7...v1.6.8) (2025-04-22)
+
+
+### Bug Fixes
+
+* prefix vite assets ([2f07b0b](https://github.com/sushidev-team/fairu-statamic-addon/commit/2f07b0bf87da5578d5249dce5f45a0f164b8486d))
+
 ## [1.6.7](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.6...v1.6.7) (2025-04-22)
 
 
