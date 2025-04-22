@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.3](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.2...v1.6.3) (2025-04-22)
+
+
+### Bug Fixes
+
+* added font to vite config ([7714563](https://github.com/sushidev-team/fairu-statamic-addon/commit/771456383dcf1da9790a2661dfacc8e469fc253e))
+* removed timestamp param from getUrl ([bf9c039](https://github.com/sushidev-team/fairu-statamic-addon/commit/bf9c0394fc8ba9e200fc1b710ef1c29a2dd7bebc))
+
 ## [1.6.2](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.1...v1.6.2) (2025-04-22)
 
 
