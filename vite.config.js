@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       laravel({
-        input: ['resources/js/cp.js', 'resources/css/cp.css'],
+        input: ['resources/js/cp.js', 'resources/css/cp.css', 'resources/fonts/MaterialSymbolsOutlined-Regular.ttf'],
         refresh: true,
         detectTls: protocol.startsWith('https') ? host : null,
         publicDirectory: 'resources/dist',
