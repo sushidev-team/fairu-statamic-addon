@@ -76,6 +76,22 @@ class ServiceProvider extends AddonServiceProvider
         return $this;
     }
 
+    /**
+     * Registers all publishables available through Artisan's vendor:publish.
+     *
+     * @return $this
+     */
+    protected function bootPublishables(): ServiceProvider
+    {
+        parent::bootPublishables();
+
+        $this->publishes([
+            __DIR__ . '/../resources/fonts' => public_path('vendor/fairu-statamic/fonts'),
+        ], 'fairu-web-resources');
+
+        return $this;
+    }
+
 
     public function register()
     {
