@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.6](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.5...v1.6.6) (2025-04-22)
+
+
+### Bug Fixes
+
+* switched to absolute path resolving ([3795985](https://github.com/sushidev-team/fairu-statamic-addon/commit/3795985d4e101497113fa80128264e04d76404a2))
+
 ## [1.6.5](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.4...v1.6.5) (2025-04-22)
 
 
