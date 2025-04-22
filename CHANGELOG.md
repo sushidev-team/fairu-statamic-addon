@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.9](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.8...v1.6.9) (2025-04-22)
+
+
+### Bug Fixes
+
+* correct base path for vite ([a0aa6fd](https://github.com/sushidev-team/fairu-statamic-addon/commit/a0aa6fdb596d57666548977e366d9c325a929549))
+
 ## [1.6.8](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.7...v1.6.8) (2025-04-22)
 
 
