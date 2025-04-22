@@ -4,6 +4,7 @@ import BrowserListItem from './components/browser/BrowserListItem.vue';
 import Dropzone from './components/Dropzone.vue';
 import InputCheckbox from './components/input/InputCheckbox.vue';
 import FolderSelector from './components/fieldtypes/FolderSelector.vue';
+import '../css/cp.css';
 
 Statamic.$components.register('fairu-fieldtype', FairuFieldtype);
 Statamic.$components.register('fairu-browser', FairuBrowser);
