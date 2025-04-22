@@ -101,7 +101,6 @@ trait TransformAssets
         ?int $width = null,
         ?int $height = null,
         ?string $focalPoint = "50-50-1",
-        ?string $timestamp = null,
         ?bool $appendQuery = false
     ): string | null {
 
