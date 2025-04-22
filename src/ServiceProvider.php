@@ -60,6 +60,8 @@ class ServiceProvider extends AddonServiceProvider
         }
         $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'fairu');
         $this->bootAddonConfig();
+
+        parent::bootAddon();
     }
 
     protected function bootAddonConfig()
