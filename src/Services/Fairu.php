@@ -21,7 +21,7 @@ class Fairu
 
     public function __construct(?string $connection = 'default')
     {
-        $credentials = config('fairu.connections.' . $connection);
+        $credentials = config('statamic.fairu.connections.' . $connection);
 
         $this->credentials = $credentials;
 
@@ -33,7 +33,7 @@ class Fairu
 
     protected function endpoint(string $path)
     {
-        $url = config('fairu.url') . "/$path";
+        $url = config('statamic.fairu.url') . "/$path";
         return $url;
     }
 

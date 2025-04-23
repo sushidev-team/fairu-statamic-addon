@@ -11,18 +11,18 @@ class AssetController extends Controller
 
     public function index()
     {
-        return redirect(config('fairu.url') . "/folders");
+        return redirect(config('statamic.fairu.url') . "/folders");
     }
 
     public function folderContent(Request $request)
     {
 
-        $connection = config('fairu.connections.default');
+        $connection = config('statamic.fairu.connections.default');
 
         $result = Http::withHeaders([
             'Tenant' => data_get($connection, 'tenant'),
             'Authorization' => 'Bearer ' . data_get($connection, 'tenant_secret'),
-        ])->get(config('fairu.url') . '/api/folders/' . $request->input('folder'), [
+        ])->get(config('statamic.fairu.url') . '/api/folders/' . $request->input('folder'), [
             'page' => $request->input('page', 1),
             'per_page' => $request->input('per_page', 25),
             'q' => $request->input('search'),
@@ -42,12 +42,12 @@ class AssetController extends Controller
     public function upload(Request $request)
     {
 
-        $connection = config('fairu.connections.default');
+        $connection = config('statamic.fairu.connections.default');
 
         $result = Http::withHeaders([
             'Tenant' => data_get($connection, 'tenant'),
             'Authorization' => 'Bearer ' . data_get($connection, 'tenant_secret'),
-        ])->post(config('fairu.url') . '/api/files', [
+        ])->post(config('statamic.fairu.url') . '/api/files', [
             'type' => 'standard',
             'filename' => $request->input('filename'),
             'folder' => $request->input('folder'),
@@ -62,7 +62,7 @@ class AssetController extends Controller
 
     public function uploadMultiple(Request $request)
     {
-        $connection = config('fairu.connections.default');
+        $connection = config('statamic.fairu.connections.default');
 
         // Validate the request
         $request->validate([
@@ -74,7 +74,7 @@ class AssetController extends Controller
             $result = Http::withHeaders([
                 'Tenant' => data_get($connection, 'tenant'),
                 'Authorization' => 'Bearer ' . data_get($connection, 'tenant_secret'),
-            ])->post(config('fairu.url') . '/api/upload', [
+            ])->post(config('statamic.fairu.url') . '/api/upload', [
                 'files' => $request->input('files'),
                 'folder' => $request->input('folder'),
             ]);
@@ -94,12 +94,12 @@ class AssetController extends Controller
     public function uploadMetaBulk(Request $request)
     {
 
-        $connection = config('fairu.connections.default');
+        $connection = config('statamic.fairu.connections.default');
 
         $result = Http::withHeaders([
             'Tenant' => data_get($connection, 'tenant'),
             'Authorization' => 'Bearer ' . data_get($connection, 'tenant_secret'),
-        ])->post(config('fairu.url') . '/api/upload/meta/bulk', [
+        ])->post(config('statamic.fairu.url') . '/api/upload/meta/bulk', [
             'files' => $request->input('files'),
         ]);
 
@@ -113,12 +113,12 @@ class AssetController extends Controller
     public function createFolder(Request $request)
     {
 
-        $connection = config('fairu.connections.default');
+        $connection = config('statamic.fairu.connections.default');
 
         $result = Http::withHeaders([
             'Tenant' => data_get($connection, 'tenant'),
             'Authorization' => 'Bearer ' . data_get($connection, 'tenant_secret'),
-        ])->post(config('fairu.url') . '/api/folders', [
+        ])->post(config('statamic.fairu.url') . '/api/folders', [
             'name' => $request->input('name'),
             'parent_id' => $request->input('folder'),
         ]);
@@ -133,12 +133,12 @@ class AssetController extends Controller
     public function updateFolder(Request $request, $id)
     {
 
-        $connection = config('fairu.connections.default');
+        $connection = config('statamic.fairu.connections.default');
 
         $result = Http::withHeaders([
             'Tenant' => data_get($connection, 'tenant'),
             'Authorization' => 'Bearer ' . data_get($connection, 'tenant_secret'),
-        ])->put(config('fairu.url') . '/api/folders/' . $id, [
+        ])->put(config('statamic.fairu.url') . '/api/folders/' . $id, [
             'name' => $request->input('name'),
             'parent_id' => $request->input('folder'),
         ]);
@@ -152,12 +152,12 @@ class AssetController extends Controller
 
     public function getFile(Request $request, String $id)
     {
-        $connection = config('fairu.connections.default');
+        $connection = config('statamic.fairu.connections.default');
 
         $result = Http::withHeaders([
             'Tenant' => data_get($connection, 'tenant'),
             'Authorization' => 'Bearer ' . data_get($connection, 'tenant_secret'),
-        ])->get(config('fairu.url') . '/api/files/' . $id);
+        ])->get(config('statamic.fairu.url') . '/api/files/' . $id);
 
         if ($result->status() == 403) {
             return abort(403, 'FAIRU: Derzeit exisitert zu diesem Tenant kein Abo. Bitte wende dich an den Support.');
@@ -172,12 +172,12 @@ class AssetController extends Controller
 
     public function getFilesList(Request $request)
     {
-        $connection = config('fairu.connections.default');
+        $connection = config('statamic.fairu.connections.default');
 
         $result = Http::withHeaders([
             'Tenant' => data_get($connection, 'tenant'),
             'Authorization' => 'Bearer ' . data_get($connection, 'tenant_secret'),
-        ])->post(config('fairu.url') . '/api/files/list', [
+        ])->post(config('statamic.fairu.url') . '/api/files/list', [
             'ids' => $request->input('ids'),
         ]);
 
@@ -194,12 +194,12 @@ class AssetController extends Controller
 
     public function getFolder(Request $request, String $id)
     {
-        $connection = config('fairu.connections.default');
+        $connection = config('statamic.fairu.connections.default');
 
         $result = Http::withHeaders([
             'Tenant' => data_get($connection, 'tenant'),
             'Authorization' => 'Bearer ' . data_get($connection, 'tenant_secret'),
-        ])->get(config('fairu.url') . '/api/folders/' . $id);
+        ])->get(config('statamic.fairu.url') . '/api/folders/' . $id);
 
         if ($result->status() == 403) {
             return abort(403, 'FAIRU: Derzeit exisitert zu diesem Tenant kein Abo. Bitte wende dich an den Support.');

@@ -88,9 +88,9 @@ trait TransformAssets
 
     protected function buildFileUrl(string $id, ?string $filename = null)
     {
-        $baseUrl = Str::endsWith(config('fairu.url_proxy'), "/")
-            ? config('fairu.url_proxy')
-            : config('fairu.url_proxy') . "/";
+        $baseUrl = Str::endsWith(config('statamic.fairu.url_proxy'), "/")
+            ? config('statamic.fairu.url_proxy')
+            : config('statamic.fairu.url_proxy') . "/";
 
         return $baseUrl . $id . "/" . ($filename ?? 'file');
     }
@@ -152,7 +152,7 @@ trait TransformAssets
 
         $fingerprint = md5(json_encode($ids));
 
-        return Cache::flexible('file-' . $fingerprint, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($ids) {
+        return Cache::flexible('file-' . $fingerprint, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids) {
             $files = (new Fairu($this->getConnectionName()))->getFiles($ids);
             return $files;
         });

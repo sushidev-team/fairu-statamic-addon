@@ -117,7 +117,7 @@ class FairuAssetTags extends Tags
         $ids = $this->resolveIds($ids);
 
 
-        $files = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($ids) {
+        $files = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids) {
             return collect($this->getFiles($ids, $this->params->get('fetchMeta')))->map(function ($asset) {
                 $url = $this->getUrl(
                     id: data_get($asset, 'id'),
@@ -154,7 +154,7 @@ class FairuAssetTags extends Tags
             return;
         }
 
-        return Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($id) {
+        return Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($id) {
             $asset = $this->getFile($id, $this->params->get('fetchMeta'));
             $url = $this->getUrl(
                 id: data_get($asset, 'id'),
@@ -199,7 +199,7 @@ class FairuAssetTags extends Tags
             return;
         }
 
-        $imgStrings = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($ids) {
+        $imgStrings = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids) {
             return collect($this->getFiles($ids))->map(function ($asset) {
                 $url = $this->getUrl(
                     id: data_get($asset, 'id'),

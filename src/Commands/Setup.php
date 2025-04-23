@@ -52,11 +52,11 @@ class Setup extends Command
 
         $connection = select(
             label: 'What connection do you want to use?',
-            options: array_keys(config('fairu.connections')),
+            options: array_keys(config('statamic.fairu.connections')),
             default: 'default'
         );
 
-        $this->credentials = config('fairu.connections.' . $connection);
+        $this->credentials = config('statamic.fairu.connections.' . $connection);
         $this->connection = $connection;
 
         $result = (new ServicesFairu($connection))->getScopeFromEndpoint();
@@ -200,11 +200,11 @@ class Setup extends Command
             'filename' => $asset->basename(),
             'alt' => data_get($asset->data(), 'alt'),
             'focal_point' => data_get($asset->data(), 'focus'),
-            'copyright' => data_get($asset->data(), config('fairu.migration.copyright'))
+            'copyright' => data_get($asset->data(), config('statamic.fairu.migration.copyright'))
         ];
 
-        $caption = Str::replace(["\n", '<br>', "\r", "\t", '|', ''], '', (new Augmentor(new FieldtypesBard))->augment(data_get($asset->data(), config('fairu.migration.caption'))));
-        $description = Str::replace(["\n", '<br>', "\r", "\t", '|', ''], '', (new Augmentor(new FieldtypesBard))->augment(data_get($asset->data(), config('fairu.migration.description'))));
+        $caption = Str::replace(["\n", '<br>', "\r", "\t", '|', ''], '', (new Augmentor(new FieldtypesBard))->augment(data_get($asset->data(), config('statamic.fairu.migration.caption'))));
+        $description = Str::replace(["\n", '<br>', "\r", "\t", '|', ''], '', (new Augmentor(new FieldtypesBard))->augment(data_get($asset->data(), config('statamic.fairu.migration.description'))));
 
         data_set($fairuAssetEntry, 'caption', $caption);
         data_set($fairuAssetEntry, 'description', $description);

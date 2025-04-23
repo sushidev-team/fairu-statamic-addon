@@ -56,7 +56,7 @@ class ServiceProvider extends AddonServiceProvider
     {
         $packageName = str_replace('\\', '-', strtolower(__NAMESPACE__));
 
-        if (config('fairu.deactivate_old') == true) {
+        if (config('statamic.fairu.deactivate_old') == true) {
             View::addNamespace('fairu-statamic', base_path("resources/views/vendor/{$packageName}"));
         }
         $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'fairu');
@@ -79,7 +79,7 @@ class ServiceProvider extends AddonServiceProvider
 
     public function register()
     {
-        if (config('fairu.deactivate_old') == true) {
+        if (config('statamic.fairu.deactivate_old') == true) {
             $this->app->bind(\Statamic\Http\Controllers\CP\Utilities\CacheController::class, \Sushidev\Fairu\Http\Controllers\CacheController::class);
         }
 
