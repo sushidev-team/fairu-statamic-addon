@@ -463,7 +463,8 @@ export default {
     },
 
     async mounted() {
-        this.assets = this.config.max_files === 1 ? [] : this.initialAssets;
+        this.assets =
+            this.config.max_files === 1 ? [] : [...(this.initialAssets?.length > 0 ? this.initialAssets : [])];
         await this.loadFolder(null, this.config.folder);
     },
     beforeDestroy() {
