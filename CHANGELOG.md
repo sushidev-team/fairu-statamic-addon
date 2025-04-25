@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.6.11](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.10...v1.6.11) (2025-04-25)
+
+
+### Bug Fixes
+
+* path for statamic config for fairu ([6f0124c](https://github.com/sushidev-team/fairu-statamic-addon/commit/6f0124c9a79fb47edc05facbe3e36bf1cb947c13))
+* shallow copy to only select when wanted ([9af6c2c](https://github.com/sushidev-team/fairu-statamic-addon/commit/9af6c2c63d5417f6e0c224df520e33b8e8b266ca))
+* updated README.md to reflect new tags ([319297d](https://github.com/sushidev-team/fairu-statamic-addon/commit/319297da99b1eab3db73214afdcd3e96199e0893))
+* video thumbnails in browser ([dd4ae12](https://github.com/sushidev-team/fairu-statamic-addon/commit/dd4ae12a1ade7abb72107461064ae6f01b6dafec))
+
 ## [1.6.10](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.9...v1.6.10) (2025-04-22)
 
 
