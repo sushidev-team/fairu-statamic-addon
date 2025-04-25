@@ -12,13 +12,17 @@
                 :checked="selected" />
             <div class="flex items-center justify-center flex-none overflow-hidden bg-gray-300 rounded-full fa-size-8">
                 <img
-                    v-if="meta.proxy && asset?.blocked != true && asset?.mime?.startsWith('image/')"
+                    v-if="
+                        meta.proxy &&
+                        asset?.blocked != true &&
+                        (asset?.mime?.startsWith('image/') || asset?.mime?.startsWith('video/'))
+                    "
                     :src="`${meta.proxy}/${asset.id}/thumbnail.webp?width=34&height=34`"
                     class="object-cover" />
                 <span
                     class="block text-gray-600"
                     style="font-size: 8px"
-                    v-if="asset?.mime?.startsWith('image/') == false">
+                    v-if="asset?.mime?.startsWith('image/') == false && asset?.mime?.startsWith('video/') == false">
                     {{ getExtension(asset.mime) }}
                 </span>
             </div>
