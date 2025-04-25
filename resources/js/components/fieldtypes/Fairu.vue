@@ -278,7 +278,9 @@ export default {
                 this.loading = false;
             }
         },
+    },
 
+    computed: {
         canBrowse() {
             const hasPermission =
                 this.can('configure asset containers') || this.can('view ' + this.container + ' assets');
@@ -292,13 +294,11 @@ export default {
             const hasPermission =
                 this.can('configure asset containers') || this.can('upload ' + this.container + ' assets');
 
-            if (!hasPermission) return false;
+            const allow = hasPermission && this.config.allow_uploads;
 
-            return !this.hasPendingDynamicFolder;
+            return allow;
         },
     },
-
-    computed: {},
     async mounted() {
         this.multiselect = this.config.max_files !== 1;
         this.assets = await this.loadMetaData(this.value);

@@ -2,24 +2,9 @@ export default {
   content: ['./resources/**/*.{blade.php,antlers.html,vue}', './src/**/*.{blade.php,antlers.html,php}'],
   prefix: 'fa-',
   theme: {
-    extends: {
+    extend: {
       colors: {
         transparent: 'transparent',
-        gray: {
-          100: '#fafcff',
-          200: '#f5f8fc',
-          300: '#eef2f6',
-          400: '#dde3e9',
-          500: '#c4ccd4',
-          600: '#a7b3be',
-          700: '#73808c',
-          750: '#354248',
-          775: '#2e393d',
-          800: '#1c2e36',
-          900: '#19292f',
-          950: '#141a1f',
-          DEFAULT: '#73808c',
-        },
         dark: {
           100: '#dfe1e5',
           150: '#bbbdc0',
@@ -42,6 +27,9 @@ export default {
           950: '#161616',
           975: '#131314',
         },
+      },
+      gridTemplateColumns: {
+        'assets-big': 'repeat(auto-fill, minmax(250px, 1fr))',
       },
     },
   },

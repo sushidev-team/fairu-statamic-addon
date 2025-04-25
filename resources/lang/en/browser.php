@@ -3,6 +3,7 @@ return [
     "cancel" => "Cancel",
     "clear_selection" => "Clear selection",
     "create" => "Create",
+    "display_types" => ["list" => "List", "tiles" => "Tiles"],
     "edit_in_fairu" => "Edit in Fairu",
     "entries_selected" => "entries selected",
     "errors" => ["error_fetching_files" => "Error fetching files"],
