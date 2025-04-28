@@ -86,8 +86,12 @@ trait TransformAssets
         return $ids;
     }
 
-    protected function buildFileUrl(string $id, ?string $filename = null)
+    protected function buildFileUrl(?string $id, ?string $filename = null)
     {
+        if ($id == null){
+            return null;
+        }
+        
         $baseUrl = Str::endsWith(config('statamic.fairu.url_proxy'), "/")
             ? config('statamic.fairu.url_proxy')
             : config('statamic.fairu.url_proxy') . "/";
