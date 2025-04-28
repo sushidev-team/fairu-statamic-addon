@@ -28,10 +28,7 @@
 <script>
 export default {
     props: {
-        enabled: {
-            type: Boolean,
-            default: () => true,
-        },
+        enabled: Boolean,
         extraData: {
             type: Object,
             default: () => ({}),
@@ -79,17 +76,20 @@ export default {
         },
 
         dragenter(e) {
+            if (!this.enabled) return;
             e.stopPropagation();
             e.preventDefault();
             this.dragging = true;
         },
 
         dragover(e) {
+            if (!this.enabled) return;
             e.stopPropagation();
             e.preventDefault();
         },
 
         dragleave(e) {
+            if (!this.enabled) return;
             // When dragging over a child, the parent will trigger a dragleave.
             if (e.target !== e.currentTarget) return;
 
@@ -97,6 +97,7 @@ export default {
         },
 
         drop(e) {
+            if (!this.enabled) return;
             e.stopPropagation();
             e.preventDefault();
             this.dragging = false;

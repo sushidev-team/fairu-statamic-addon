@@ -144,6 +144,16 @@ class Fairu extends Fieldtype
                 'instructions' => '',
                 'type' => 'integer',
             ],
+            'display_type' => [
+                'display' => 'Display type',
+                'type' => 'select',
+                'default' => 'list',
+                'options' => [
+                    'list' => __('fairu::browser.display_types.list'),
+                    'tiles' => __('fairu::browser.display_types.tiles'),
+                ],
+                'instructions' => 'The folder to begin browsing in.',
+            ],
             'allow_uploads' => [
                 'display' => 'Allow uploads',
                 'instructions' => '',
@@ -155,6 +165,7 @@ class Fairu extends Fieldtype
                 'instructions' => 'The folder to begin browsing in.',
                 'type' => 'folder_selector',
             ],
+
         ];
     }
 

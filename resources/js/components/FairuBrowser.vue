@@ -49,7 +49,7 @@
                         href="#"
                         class="flex items-center gap-1 btn btn-sm"
                         @click="openCreateFolder"
-                        v-if="!createFolderInputVisible">
+                        v-if="!createFolderInputVisible && canUpload">
                         <i class="text-gray-700 material-symbols-outlined">create_new_folder</i>
                         <span>{{ __('fairu::browser.new_folder') }}</span>
                     </button>
@@ -57,31 +57,40 @@
             </section>
             <section>
                 <div
-                    class="flex items-center w-full gap-2 fa-border-y fa-border-gray-200 fa-bg-gray-50 fa-px-3 fa-py-2 fa-text-gray-600 dark:fa-border-zinc-700 dark:fa-bg-zinc-800 dark:fa-text-zinc-400"
-                    v-if="multiselect && assets?.length > 0">
-                    <input-checkbox
-                        @change="toggleCurrentSelection"
-                        :checked="
-                            showSelection ||
-                            folderContent?.data.every((file) => assets.map((e) => e.id).includes(file.id)) ||
-                            (config.max_files && assets?.length >= config.max_files)
-                        "
-                        :disabled="assets.length < 1" />
-                    <button
-                        class="px-2 py-1 text-xs border rounded fa-border-gray-200 dark:fa-border-gray-700"
-                        :class="showSelection ? 'text-white fa-bg-blue-500' : 'fa-bg-white dark:fa-bg-zinc-900'"
-                        @click="toggleShowSelection"
-                        v-if="assets?.length > 0"
-                        >{{ __('fairu::browser.only_selection')
-                        }}<span class="ml-1">({{ assets?.length }})</span></button
-                    >
-                    <button
-                        class="flex items-center px-2 py-1 text-xs border rounded fa-border-gray-200 dark:fa-border-gray-700"
-                        @click="clearSelection"
-                        v-if="assets?.length > 0"
-                        ><i class="mr-1 text-sm text-gray-700 material-symbols-outlined">clear</i
-                        >{{ __('fairu::browser.clear_selection') }}</button
-                    >
+                    class="grid items-center w-full fa-min-h-10 fa-grid-cols-[1fr,auto] fa-justify-between fa-gap-4 fa-border-y fa-border-gray-200 fa-bg-gray-50 fa-px-3 fa-py-2 fa-text-gray-600 dark:fa-border-zinc-700 dark:fa-bg-zinc-800 dark:fa-text-zinc-400">
+                    <div class="flex gap-2 fa-items-center">
+                        <input-checkbox
+                            @change="toggleCurrentSelection"
+                            :checked="
+                                showSelection ||
+                                folderContent?.data.every((file) => assets.map((e) => e.id).includes(file.id)) ||
+                                (config.max_files && assets?.length >= config.max_files)
+                            "
+                            v-if="multiselect" />
+                        <button
+                            class="px-2 py-1 text-xs border rounded fa-border-gray-200 disabled:fa-opacity-60 dark:fa-border-gray-700"
+                            :class="showSelection ? 'text-white fa-bg-blue-500' : 'fa-bg-white dark:fa-bg-zinc-900'"
+                            @click="toggleShowSelection"
+                            v-if="assets?.length > 0"
+                            >{{ __('fairu::browser.only_selection')
+                            }}<span class="ml-1">({{ assets?.length }})</span></button
+                        >
+                        <button
+                            class="flex items-center px-2 py-1 text-xs border rounded fa-border-gray-200 disabled:fa-opacity-60 dark:fa-border-gray-700"
+                            @click="clearSelection"
+                            v-if="assets?.length > 0"
+                            ><i class="mr-1 text-sm text-gray-700 material-symbols-outlined">clear</i
+                            >{{ __('fairu::browser.clear_selection') }}</button
+                        >
+                    </div>
+                    <div>
+                        <select
+                            class="px-2 py-1 text-sm bg-white"
+                            v-model="displayType"
+                            ><option value="list">{{ __('fairu::browser.display_types.list') }}</option>
+                            ><option value="tiles">{{ __('fairu::browser.display_types.tiles') }}</option>
+                        </select>
+                    </div>
                 </div>
             </section>
             <dropzone
@@ -97,41 +106,120 @@
                         size="24"
                         v-if="loadingList" />
                 </div>
-                <div v-show="!loadingList">
-                    <div
+                <div
+                    v-if="!loadingList"
+                    :class="displayType === 'tiles' ? 'grid fa-grid-cols-assets-big p-3 fa-gap-4' : 'px-2 group'">
+                    <folder
+                        custom
+                        name="..."
+                        @click="selectFolder(folder?.parent_id)"
                         v-if="folder"
-                        class="px-2 group last:fa-border-b-none fa-border-b fa-border-slate-100 hover:fa-bg-gray-50 dark:fa-border-zinc-700 dark:hover:fa-bg-zinc-700">
-                        <a
-                            href="#"
-                            class="flex items-center gap-1 px-2 py-1 fa-min-h-12"
-                            @click="selectFolder(folder?.parent_id)">
-                            <i class="text-gray-700 material-symbols-outlined fa-px-1 fa-text-2xl">folder</i> ...
-                        </a>
-                    </div>
+                        :displayType="displayType" />
+
+                    <folder
+                        v-if="!showSelection"
+                        v-for="(item, index) in folderContent?.data?.filter((e) => e?.type === 'folder')"
+                        :key="item.id + index"
+                        :asset="item"
+                        :displayType="displayType"
+                        @click="(asset) => selectFolder(asset.id)" />
+                    <browser-list-item
+                        v-for="(item, index) in showSelection
+                            ? assets
+                            : folderContent?.data?.filter((e) => e?.type !== 'folder')"
+                        :key="item.id + index"
+                        :asset="item"
+                        :meta="meta"
+                        :disabled="
+                            (config.max_files &&
+                                config.max_files > 0 &&
+                                assets?.length >= config.max_files &&
+                                !isSelected(item)) ||
+                            (selectionType === 'folder' && item?.type !== 'folder')
+                        "
+                        :selected="isSelected(item)"
+                        :multiselect="multiselect"
+                        :displayType="displayType"
+                        @change="multiselect ? toggleItemSelection(item) : selectItem(item)"
+                        @preview="setPreview(index)" />
+                </div>
+                <div
+                    class="z-10 grid fa-fixed fa-inset-0 fa-size-full fa-grid-rows-[auto,1fr] fa-bg-white/95"
+                    v-if="previewImage">
                     <div
-                        class="px-2 group last:fa-border-b-none fa-border-b fa-border-slate-100 hover:fa-bg-gray-50 dark:fa-border-zinc-700 dark:hover:fa-bg-zinc-700"
-                        v-for="(item, index) in showSelection ? assets : folderContent?.data"
-                        :key="item.id + index">
+                        class="fa-flex fa-h-min fa-max-h-screen fa-w-full fa-items-center fa-justify-end fa-gap-4 fa-p-4">
+                        <div class="fa-text-lg fa-text-gray-900"
+                            >{{ (previewItem ?? 0) + 1 }}/{{
+                                folderContent?.data?.filter((e) => e.type !== 'folder')?.length
+                            }}</div
+                        >
                         <button
-                            v-if="item.type === 'folder'"
-                            class="flex items-center w-full gap-1 px-2 py-1 text-sm fa-min-h-12"
-                            @click="selectFolder(item.id)">
-                            <i class="text-gray-700 material-symbols-outlined fa-px-1 fa-text-2xl">folder</i>
-                            {{ item.name }}
+                            class="flex items-center"
+                            @click="previewItem = null">
+                            <i
+                                class="text-3xl text-gray-900 material-symbols-outlined fa-pointer-events-none dark:!fa-text-gray-200 dark:hover:!fa-text-blue-500"
+                                >close</i
+                            >
                         </button>
-                        <browser-list-item
-                            :asset="item"
-                            :meta="meta"
-                            :disabled="
-                                (config.max_files &&
-                                    config.max_files > 0 &&
-                                    assets?.length >= config.max_files &&
-                                    !isSelected(item)) ||
-                                (selectionType === 'folder' && item?.type !== 'folder')
-                            "
-                            :selected="isSelected(item)"
-                            :multiselect="multiselect"
-                            @change="multiselect ? toggleItemSelection(item) : selectItem(item)" />
+                    </div>
+                    <div class="fa-grid fa-h-full fa-min-h-0 fa-items-center fa-pb-10">
+                        <div
+                            class="bg-white rounded-lg overflow-hidden fa-mx-auto fa-grid fa-size-full fa-max-h-[70vh] fa-min-h-0 fa-max-w-screen-xl fa-grid-rows-[1fr,auto] fa-shadow-lg">
+                            <div class="fa-relative fa-size-full fa-min-h-0">
+                                <img
+                                    v-if="
+                                        meta.proxy &&
+                                        previewImage?.blocked != true &&
+                                        (previewImage?.mime?.startsWith('image/') ||
+                                            previewImage?.mime?.startsWith('video/'))
+                                    "
+                                    draggable="false"
+                                    :src="`${meta.proxy}/${previewImage.id}/thumbnail.webp?width=1280`"
+                                    @click="multiselect ? toggleItemSelection(previewImage) : selectItem(previewImage)"
+                                    class="fa-size-full fa-object-contain" />
+                                <input-checkbox
+                                    v-if="multiselect"
+                                    class="absolute fa-left-0 fa-top-0 fa-m-3"
+                                    :id="previewImage?.id"
+                                    :checked="isSelected(previewImage)" />
+                                <div class="grid fa-size-full fa-place-items-center">
+                                    <div
+                                        class="fa-whitespace-pre-wrap fa-text-gray-600"
+                                        v-if="
+                                            !previewImage?.mime?.startsWith('image/') &&
+                                            !previewImage?.mime?.startsWith('video/')
+                                        ">
+                                        <i
+                                            class="material-symbols-outlined fa-pointer-events-none fa-text-[200px] fa-text-gray-900 dark:!fa-text-gray-600 dark:hover:!fa-text-blue-500"
+                                            >description</i
+                                        >
+                                    </div>
+                                </div>
+                                <button
+                                    class="absolute fa-left-8 fa-top-1/2 fa-z-10 fa-grid fa-size-12 -fa-translate-y-1/2 fa-place-items-center fa-rounded-full fa-border fa-border-gray-500 fa-bg-white fa-shadow-sm"
+                                    @click.stop.prevent="navigatePreview(-1)">
+                                    <i
+                                        class="text-lg text-gray-900 material-symbols-outlined fa-pointer-events-none dark:!fa-text-gray-600 dark:hover:!fa-text-blue-500"
+                                        >arrow_back</i
+                                    >
+                                </button>
+                                <button
+                                    class="absolute fa-right-8 fa-top-1/2 fa-z-10 fa-grid fa-size-12 -fa-translate-y-1/2 fa-place-items-center fa-rounded-full fa-border fa-border-gray-500 fa-bg-white fa-shadow-sm"
+                                    @click.stop.prevent="navigatePreview(1)">
+                                    <i
+                                        class="text-lg text-gray-900 material-symbols-outlined fa-pointer-events-none dark:!fa-text-gray-600 dark:hover:!fa-text-blue-500"
+                                        >arrow_forward</i
+                                    >
+                                </button>
+                            </div>
+                            <div
+                                class="flex items-center justify-between gap-2 grow fa-border-t fa-border-gray-100 fa-bg-gray-100/50 fa-px-6 fa-py-3 fa-text-base">
+                                <div class="fa-font-normal">{{ previewImage.name }}</div>
+                                <div class="fa-text-xs fa-uppercase fa-tracking-wider fa-text-gray-500">{{
+                                    getExtension(previewImage.mime)
+                                }}</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </dropzone>
@@ -226,12 +314,14 @@ export default {
             loading: false,
             folder: null,
             page: 1,
+            displayType: 'list',
             lastPage: 1,
             loadingList: false,
             showSelection: false,
             percentUploaded: 0,
             folderContent: null,
             createFolderInputVisible: false,
+            previewItem: null,
         };
     },
     props: {
@@ -311,6 +401,15 @@ export default {
 
                 this.assets.push(...newItems.slice(0, remainingSlots));
             }
+        },
+        setPreview(itemIndex) {
+            this.previewItem = itemIndex;
+        },
+        navigatePreview(diff) {
+            this.previewItem = Math.min(
+                Math.max(0, this.previewItem + diff),
+                (this.folderContent?.data?.filter((e) => e.type !== 'folder')?.length ?? 1) - 1,
+            );
         },
         isSelected(asset) {
             return this.assets?.findIndex((e) => e?.id === asset.id) > -1;
@@ -450,9 +549,12 @@ export default {
                 this.loading = false;
             }
         },
-
-        canUpload() {
-            return this.config.allow_uploads;
+        getExtension(mime) {
+            const parts = mime.split('/');
+            if (parts.length == 2) {
+                return parts[1];
+            }
+            return 'n/a';
         },
     },
 
@@ -460,9 +562,22 @@ export default {
         url() {
             return this.meta.proxy + '/' + this.asset?.id + '/thumbnail.webp?width=50&height=50';
         },
+        canUpload() {
+            const hasPermission =
+                this.can('configure asset containers') || this.can('upload ' + this.container + ' assets');
+
+            const allow = hasPermission && this.config.allow_uploads;
+
+            return allow;
+        },
+        previewImage() {
+            if (this.previewItem === null || this.previewItem === undefined) return null;
+            return this.folderContent?.data?.filter((e) => e?.type !== 'folder')?.[this.previewItem];
+        },
     },
 
     async mounted() {
+        this.displayType = this.config.display_type;
         this.assets =
             this.config.max_files === 1 ? [] : [...(this.initialAssets?.length > 0 ? this.initialAssets : [])];
         await this.loadFolder(null, this.config.folder);
