@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.11...v1.7.0) (2025-04-28)
+
+
+### Features
+
+* display types list & tiles, preview ([3da8af9](https://github.com/sushidev-team/fairu-statamic-addon/commit/3da8af9d247f9dcf8be58d3d478cfe677036f77d))
+
+
+### Bug Fixes
+
+* handle if properties are null ([ed267a2](https://github.com/sushidev-team/fairu-statamic-addon/commit/ed267a22312f26456e3d753540a9f10872216288))
+
 ## [1.6.11](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.10...v1.6.11) (2025-04-25)
 
 
