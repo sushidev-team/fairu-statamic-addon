@@ -29,7 +29,7 @@ export default {
         },
       },
       gridTemplateColumns: {
-        'assets-big': 'repeat(auto-fill, minmax(250px, 1fr))',
+        'assets-big': 'repeat(auto-fill, minmax(230px, 1fr))',
       },
     },
   },

@@ -73,6 +73,7 @@ You can fetch metadata by passing `fetchMeta="true"` to the tags, which makes th
 | **⁠sources**     | Semicolon separated srcset entries | **✓** |       | **✓**  | **✓**   |
 | **ratio**        | Aspect ratio for sources           | **✓** |       | **✓**  | **✓**   |
 | **⁠format**      | Convert image format               | **✓** |       | **✓**  | **✓**   |
+| **fit**          | cover / contain the image          | **✓** |       | **✓**  | **✓**   |
 | **⁠focal_point** | Focal point for cropping           | **✓** |       | **✓**  | **✓**   |
 
 ## {{ fairu }}
