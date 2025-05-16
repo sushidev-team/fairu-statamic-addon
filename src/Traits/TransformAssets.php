@@ -105,6 +105,7 @@ trait TransformAssets
         ?int $width = null,
         ?int $height = null,
         ?string $focalPoint = "50-50-1",
+        ?string $fit = null,
         ?bool $appendQuery = false
     ): string | null {
 
@@ -119,6 +120,7 @@ trait TransformAssets
                 'quality' => $this->getParam('quality', null, 90),
                 'timestamp' => $this->getParam('timestamp'),
                 'format' => $this->getParam('format'),
+                'fit' => $this->getParam('fit'),
                 'focal' => $focalPoint,
             ];
 

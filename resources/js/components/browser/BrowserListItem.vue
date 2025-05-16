@@ -21,11 +21,11 @@
                     :src="`${meta.proxy}/${asset.id}/thumbnail.webp?width=${imageSize}&height=${imageSize}`"
                     :class="classes.image" />
                 <div
-                    class="fa-grid fa-size-full fa-place-items-center fa-text-gray-600"
+                    class="items-end content-center fa-grid fa-size-full fa-justify-center fa-p-8 fa-text-center fa-text-gray-600"
                     style="font-size: 8px"
                     v-if="!asset?.mime?.startsWith('image/') && !asset?.mime?.startsWith('video/')">
                     <i
-                        class="material-symbols-outlined fa-pointer-events-none fa-text-[200px] fa-text-gray-900 dark:!fa-text-gray-600 dark:hover:!fa-text-blue-500"
+                        class="material-symbols-outlined fa-pointer-events-none fa-text-[150px] fa-text-gray-900 dark:!fa-text-gray-600 dark:hover:!fa-text-blue-500"
                         >description</i
                     >
                     <div class="fa-text-base fa-text-gray-800">{{ asset?.name }}</div>
