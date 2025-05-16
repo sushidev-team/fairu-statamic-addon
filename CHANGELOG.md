@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.7.0...v1.8.0) (2025-05-16)
+
+
+### Features
+
+* added new option fit ([37a1749](https://github.com/sushidev-team/fairu-statamic-addon/commit/37a1749ea7e710607b4c20bb7639020a3fa78757))
+
+
+### Bug Fixes
+
+* added documentation to new param ([9e2571e](https://github.com/sushidev-team/fairu-statamic-addon/commit/9e2571eebbefaadf4cd5af0d5c1272aeeb07e572))
+
 ## [1.7.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.6.11...v1.7.0) (2025-04-28)
 
 
