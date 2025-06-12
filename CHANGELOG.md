@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.8.0...v1.9.0) (2025-06-12)
+
+
+### Features
+
+* return offline array on bad request ([bae23b7](https://github.com/sushidev-team/fairu-statamic-addon/commit/bae23b74a6d0085c88f230f3c4c4fedba0e5fc5b))
+
 ## [1.8.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.7.0...v1.8.0) (2025-05-16)
 
 
