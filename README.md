@@ -212,4 +212,4 @@ sizes="(min-width: 1200px) 1200px, (min-width: 768px) 800px, 100vw"
 
 ## Details
 
-For more information, visit the documentation at https://docs.fairu.app/docs/addons/statamic to find out what else you can do with Fairu.
+For more information, visit the documentation at https://docs.fairu.app/docs/addons/00-statamic to find out what else you can do with Fairu.
