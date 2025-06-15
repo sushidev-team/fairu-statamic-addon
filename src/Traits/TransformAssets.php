@@ -5,6 +5,7 @@ namespace Sushidev\Fairu\Traits;
 use Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use Log;
 use Sushidev\Fairu\Services\Fairu;
 
 trait TransformAssets
@@ -88,10 +89,10 @@ trait TransformAssets
 
     protected function buildFileUrl(?string $id, ?string $filename = null)
     {
-        if ($id == null){
+        if ($id == null) {
             return null;
         }
-        
+
         $baseUrl = Str::endsWith(config('statamic.fairu.url_proxy'), "/")
             ? config('statamic.fairu.url_proxy')
             : config('statamic.fairu.url_proxy') . "/";
@@ -144,23 +145,28 @@ trait TransformAssets
         sort($ids);
 
 
+        $result = [];
+        foreach ($ids as $id) {
+            $result[] = [
+                'id' => $id,
+                'url' => $this->buildFileUrl($id)
+            ];
+        }
         if ($fetchMeta !== true) {
-            $result = [];
-            foreach ($ids as $id) {
-                $result[] = [
-                    'id' => $id,
-                    'url' => $this->buildFileUrl($id)
-                ];
-            }
             return $result;
         }
 
 
         $fingerprint = md5(json_encode($ids));
 
-        return Cache::flexible('file-' . $fingerprint, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids) {
-            $files = (new Fairu($this->getConnectionName()))->getFiles($ids);
-            return $files;
+        return Cache::flexible('file-' . $fingerprint, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids, $result) {
+            $files = null;
+            try {
+                $files = (new Fairu($this->getConnectionName()))->getFiles($ids);
+            } catch (\Exception $e) {
+                Log::error($e);
+            }
+            return $files !== null ? $files : $result;
         });
     }
 
