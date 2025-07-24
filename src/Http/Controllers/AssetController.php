@@ -29,11 +29,11 @@ class AssetController extends Controller
         ]);
 
         if ($result->status() == 403) {
-            return abort(403, 'FAIRU: Derzeit exisitert zu diesem Tenant kein Abo. Bitte wende dich an den Support.');
+            return abort(403, 'Fairu: Currently, no subscription is active for this tenant.');
         }
 
         if ($result->status() != 200) {
-            return abort(400, 'Fehler bei der Kommunikation mit Fairu.');
+            return abort(400, 'Communication error with Fairu.');
         }
 
         return $result->json();
@@ -54,7 +54,7 @@ class AssetController extends Controller
         ]);
 
         if ($result->status() != 200) {
-            return abort(400, 'Fehler bei der Kommunikation mit Fairu.');
+            return abort(400, 'Communication error with Fairu.');
         }
 
         return $result->json();
@@ -80,13 +80,13 @@ class AssetController extends Controller
             ]);
 
             if (!$result->successful()) {
-                return response()->json(['error' => 'Fehler bei der Kommunikation mit Fairu: ' . $result->body()], $result->status());
+                return response()->json(['error' => 'Communication error with Fairu: ' . $result->body()], $result->status());
             }
 
             return response()->json($result->json());
         } catch (\Exception $e) {
             \Log::error('Fairu upload error: ' . $e->getMessage());
-            return response()->json(['error' => 'Ein unerwarteter Fehler ist aufgetreten: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'An unexpected error occured: ' . $e->getMessage()], 500);
         }
     }
 
@@ -104,7 +104,7 @@ class AssetController extends Controller
         ]);
 
         if ($result->status() != 200) {
-            return abort(400, 'Fehler bei der Kommunikation mit Fairu.');
+            return abort(400, 'Communication error with Fairu.');
         }
 
         return $result->json();
@@ -124,7 +124,7 @@ class AssetController extends Controller
         ]);
 
         if ($result->status() != 200) {
-            return abort(400, 'Fehler bei der Kommunikation mit Fairu.');
+            return abort(400, 'Communication error with Fairu.');
         }
 
         return $result->json();
@@ -144,7 +144,7 @@ class AssetController extends Controller
         ]);
 
         if ($result->status() != 200) {
-            return abort(400, 'Fehler bei der Kommunikation mit Fairu.');
+            return abort(400, 'Communication error with Fairu.');
         }
 
         return $result->json();
@@ -160,11 +160,11 @@ class AssetController extends Controller
         ])->get(config('statamic.fairu.url') . '/api/files/' . $id);
 
         if ($result->status() == 403) {
-            return abort(403, 'FAIRU: Derzeit exisitert zu diesem Tenant kein Abo. Bitte wende dich an den Support.');
+            return abort(403, 'Fairu: Currently, no subscription is active for this tenant.');
         }
 
         if ($result->status() != 200) {
-            return abort(400, 'Fehler bei der Kommunikation mit Fairu.');
+            return abort(400, 'Communication error with Fairu.');
         }
 
         return $result->json();
@@ -182,15 +182,16 @@ class AssetController extends Controller
         ]);
 
         if ($result->status() == 403) {
-            return abort(403, 'FAIRU: Derzeit exisitert zu diesem Tenant kein Abo. Bitte wende dich an den Support.');
+            return abort(403, 'Fairu: Currently, no subscription is active for this tenant.');
         }
 
         if ($result->status() != 200) {
-            return abort(400, 'Fehler bei der Kommunikation mit Fairu.');
+            return abort(400, 'Communication error with Fairu.');
         }
 
         return $result->json();
     }
+
 
     public function getFolder(Request $request, String $id)
     {
@@ -202,11 +203,11 @@ class AssetController extends Controller
         ])->get(config('statamic.fairu.url') . '/api/folders/' . $id);
 
         if ($result->status() == 403) {
-            return abort(403, 'FAIRU: Derzeit exisitert zu diesem Tenant kein Abo. Bitte wende dich an den Support.');
+            return abort(403, 'Fairu: Currently, no subscription is active for this tenant.');
         }
 
         if ($result->status() != 200) {
-            return abort(400, 'Fehler bei der Kommunikation mit Fairu.');
+            return abort(400, 'Communication error with Fairu.');
         }
 
         return $result->json();
