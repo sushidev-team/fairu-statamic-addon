@@ -101,7 +101,7 @@ class FairuAssetTags extends Tags
         return $this->getUrl(
             id: $id,
             filename: $this->params->get('name') ?? 'file',
-            appendQuery: false
+            appendQuery: true
         );
     }
 
