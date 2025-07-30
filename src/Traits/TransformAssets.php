@@ -110,6 +110,8 @@ trait TransformAssets
         ?bool $appendQuery = false
     ): string | null {
 
+        $queryString = '';
+
         if ($id == null) {
             return null;
         }
