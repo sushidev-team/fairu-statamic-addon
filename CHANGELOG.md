@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.9.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.9.0...v1.9.1) (2025-07-30)
+
+
+### Bug Fixes
+
+* readme ([fd25b2d](https://github.com/sushidev-team/fairu-statamic-addon/commit/fd25b2dc0c16ce2e2f8cb07d7bc33426a2e262c7))
+* translated error texts ([565bbc2](https://github.com/sushidev-team/fairu-statamic-addon/commit/565bbc2a4485d9485dca2636d0a54ffa4c95dd94))
+* variable added ([a5c6bb3](https://github.com/sushidev-team/fairu-statamic-addon/commit/a5c6bb345e675e2ccc186f451dd8d297789122d2))
+
 ## [1.9.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.8.0...v1.9.0) (2025-06-12)
 
 
