@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.2](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.9.1...v1.9.2) (2025-07-30)
+
+
+### Bug Fixes
+
+* add append query for url tag ([47533f5](https://github.com/sushidev-team/fairu-statamic-addon/commit/47533f5f62e2192de318089d92baeaa67482d792))
+
 ## [1.9.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.9.0...v1.9.1) (2025-07-30)
 
 
