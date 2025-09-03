@@ -98,7 +98,7 @@ class Setup extends Command
         $assets = Asset::whereContainer($assetContainer);
         $folderList = FacadesAssetContainer::find($assetContainer)?->folders();
 
-        if ($assets?->count() == 0){
+        if ($assets?->count() == 0) {
             $this->error('No assets found.');
             return;
         }
@@ -214,6 +214,12 @@ class Setup extends Command
 
         $result = (new ServicesFairu($this->connection))->createFile($fairuAssetEntry);
 
+        if ($result == null) {
+            $progress
+                ->label("Failed uploading " . $asset->basename());
+            return null;
+        }
+
         $progress
             ->label("Uploading " . $asset->basename());
 
@@ -252,5 +258,4 @@ class Setup extends Command
             }
         }
     }
-
 }

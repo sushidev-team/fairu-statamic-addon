@@ -24,6 +24,11 @@ class Import
 
                 if (!isset($uuids[$currentPath])) {
                     $uuid = (string) (new Fairu($connection))->convertToUuid($currentPath);
+
+                    if ($part == null) {
+                        continue;
+                    }
+
                     $folders[] = [
                         'name' => $part,
                         'id' => $uuid,
