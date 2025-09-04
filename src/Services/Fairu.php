@@ -158,12 +158,12 @@ class Fairu
         return $id;
     }
 
-    public function createUploadLink(string $filename): ?array
+    public function createUploadLink(string $filename, ?string $folder): ?array
     {
         $response = $this->client->post($this->endpoint('graphql'), [
             'query' => <<<'GRAPHQL'
-                mutation CreateUploadLink($filename: String!) {
-                    createFairuUploadLink(filename: $filename, type: STANDARD) {
+                mutation CreateUploadLink($filename: String!, $folder: ID) {
+                    createFairuUploadLink(filename: $filename, type: STANDARD, folder: $folder) {
                         id
                         mime
                         upload_url
@@ -173,9 +173,31 @@ class Fairu
             GRAPHQL,
             'variables' => [
                 'filename' => $filename,
+                'folder' => $folder,
             ],
         ]);
 
         return data_get($response->json(), 'data.createFairuUploadLink', []);
+    }
+
+    public function uploadFile(string $content, string $filename, ?string $folder): ?bool
+    {
+        $success = false;
+        $uploadLink = $this->createUploadLink($filename, $folder);
+
+        $resultUpload = Http::withHeaders([
+            'x-amz-acl'    => 'public-read',
+            'Content-Type' => data_get($uploadLink, 'mime'),
+        ])->put(
+            data_get($uploadLink, 'upload_url'),
+            $content,
+        );
+
+        if ($resultUpload->ok()) {
+            Http::get(data_get($uploadLink, 'sync_url'));
+            $success = true;
+        }
+
+        return $success;
     }
 }
