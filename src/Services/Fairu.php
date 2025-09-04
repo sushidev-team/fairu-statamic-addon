@@ -177,27 +177,32 @@ class Fairu
             ],
         ]);
 
+
         return data_get($response->json(), 'data.createFairuUploadLink', []);
     }
 
-    public function uploadFile(string $content, string $filename, ?string $folder): ?bool
+    public function uploadFile(string $content, string $filename, ?string $folder): ?string
     {
-        $success = false;
+        $id = null;
         $uploadLink = $this->createUploadLink($filename, $folder);
 
-        $resultUpload = Http::withHeaders([
-            'x-amz-acl'    => 'public-read',
-            'Content-Type' => data_get($uploadLink, 'mime'),
-        ])->put(
-            data_get($uploadLink, 'upload_url'),
-            $content,
-        );
+        try {
 
-        if ($resultUpload->ok()) {
-            Http::get(data_get($uploadLink, 'sync_url'));
-            $success = true;
+            $resultUpload = Http::withHeaders([
+                'x-amz-acl'    => 'public-read',
+                'Content-Type' => data_get($uploadLink, 'mime'),
+            ])->send('PUT', data_get($uploadLink, 'upload_url'), [
+                'body' => $content,
+            ]);
+        } catch (Throwable $ex) {
+            Log::error('Error while uploading ' . $filename);
         }
 
-        return $success;
+        if ($resultUpload->status() == 200) {
+            Http::get(data_get($uploadLink, 'sync_url'));
+            $id = data_get($uploadLink, 'id');
+        }
+
+        return $id;
     }
 }
