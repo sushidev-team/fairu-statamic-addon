@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use Statamic\Assets\AssetContainer;
 use Statamic\Facades\AssetContainer as FacadesAssetContainer;
+use Throwable;
 
 class Fairu
 {
@@ -82,14 +83,18 @@ class Fairu
 
     public function createFile(array $file): ?array
     {
+        try {
 
-        $result = $this->client->post($this->endpoint('api/files'), $file);
+            $result = $this->client->post($this->endpoint('api/files'), $file);
 
-        if ($result->status() != 200) {
-            throw new Exception(json_encode($result?->json()));
+            if ($result->status() != 200) {
+                throw new Exception(json_encode($result?->json()));
+            }
+
+            return $result?->json();
+        } catch (Throwable $ex) {
+            return null;
         }
-
-        return $result?->json();
     }
 
     public function convertToUuid(string $str): string
@@ -99,10 +104,10 @@ class Fairu
 
     public function parse($str, ?string $container = null)
     {
-        if ($str == null){
+        if ($str == null) {
             return null;
         }
-        
+
         if (is_array($str)) {
             return array_map(function ($strItem) use ($container) {
                 if (Str::isUuid($strItem)) {
@@ -151,5 +156,26 @@ class Fairu
         }
 
         return $id;
+    }
+
+    public function createUploadLink(string $filename): ?array
+    {
+        $response = $this->client->post($this->endpoint('graphql'), [
+            'query' => <<<'GRAPHQL'
+                mutation CreateUploadLink($filename: String!) {
+                    createFairuUploadLink(filename: $filename, type: STANDARD) {
+                        id
+                        mime
+                        upload_url
+                        sync_url
+                    }
+                }
+            GRAPHQL,
+            'variables' => [
+                'filename' => $filename,
+            ],
+        ]);
+
+        return data_get($response->json(), 'data.createFairuUploadLink', []);
     }
 }
