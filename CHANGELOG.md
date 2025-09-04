@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.10.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.9.3...v1.10.0) (2025-09-04)
+
+
+### Features
+
+* add upload method ([821af39](https://github.com/sushidev-team/fairu-statamic-addon/commit/821af39792d40ef21b08596f3d5654f205166bba))
+* create upload link ([0a6fbc5](https://github.com/sushidev-team/fairu-statamic-addon/commit/0a6fbc5579c310a46db7450dda3ffe4752559639))
+
+
+### Bug Fixes
+
+* issue with upload ([3fc15e0](https://github.com/sushidev-team/fairu-statamic-addon/commit/3fc15e012b342bf7eedfd55a6b7a4ac11793aede))
+
 ## [1.9.3](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.9.2...v1.9.3) (2025-09-03)
 
 
