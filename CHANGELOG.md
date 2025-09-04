@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.10.0...v1.10.1) (2025-09-04)
+
+
+### Bug Fixes
+
+* bump dep ([fb9daac](https://github.com/sushidev-team/fairu-statamic-addon/commit/fb9daacc8ef0c47f0289ab5b48e470c025204943))
+
 ## [1.10.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.9.3...v1.10.0) (2025-09-04)
 
 
