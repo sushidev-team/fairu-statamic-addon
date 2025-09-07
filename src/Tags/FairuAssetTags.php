@@ -2,7 +2,7 @@
 
 namespace Sushidev\Fairu\Tags;
 
-use Arr;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
 use Statamic\Tags\Tags;
