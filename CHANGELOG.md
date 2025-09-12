@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.10.0...v1.10.1) (2025-09-07)
+
+
+### Bug Fixes
+
+* bump dep ([fb9daac](https://github.com/sushidev-team/fairu-statamic-addon/commit/fb9daacc8ef0c47f0289ab5b48e470c025204943))
+* issue with arr import ([9fd8f5e](https://github.com/sushidev-team/fairu-statamic-addon/commit/9fd8f5e7f30d09c230a0c9471c7d1a68ec405e09))
+
 ## [1.10.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.9.3...v1.10.0) (2025-09-04)
 
 
