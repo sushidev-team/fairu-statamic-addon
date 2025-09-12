@@ -2,10 +2,10 @@
 
 namespace Sushidev\Fairu\Traits;
 
-use Arr;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
-use Log;
+use Illuminate\Support\Facades\Log;
 use Sushidev\Fairu\Services\Fairu;
 
 trait TransformAssets
