@@ -4,6 +4,7 @@ namespace Sushidev\Fairu;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Statamic\Facades\AssetContainer;
@@ -57,7 +58,14 @@ class ServiceProvider extends AddonServiceProvider
         $packageName = str_replace('\\', '-', strtolower(__NAMESPACE__));
 
         if (config('statamic.fairu.deactivate_old') == true) {
-            View::addNamespace('fairu-statamic', base_path("resources/views/vendor/{$packageName}"));
+            $vendorViewsPath = base_path("resources/views/vendor/{$packageName}");
+            
+            // Automatically create the vendor views directory if it doesn't exist
+            if (!File::exists($vendorViewsPath)) {
+                File::makeDirectory($vendorViewsPath, 0755, true);
+            }
+            
+            View::addNamespace('fairu-statamic', $vendorViewsPath);
         }
         $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'fairu');
         $this->bootAddonConfig();
