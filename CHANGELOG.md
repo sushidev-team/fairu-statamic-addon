@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.3](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.10.2...v1.10.3) (2025-10-15)
+
+
+### Bug Fixes
+
+* added folder creation to ServiceProvider ([6d97289](https://github.com/sushidev-team/fairu-statamic-addon/commit/6d972897548f33812c053b6a985cbebf3ae05786))
+
 ## [1.10.2](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.10.1...v1.10.2) (2025-09-12)
 
 
