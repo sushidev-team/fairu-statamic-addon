@@ -109,7 +109,7 @@
                                 class="min-w-0 text-xs truncate fa-opacity-30"
                                 v-html="getSize(item)"></div>
                         </div>
-                        <div class="flex items-center gap-1">
+                        <div class="flex items-center gap-1 justify-end">
                             <a
                                 @click.stop
                                 :href="meta.file + '/' + item?.id"
@@ -133,176 +133,191 @@
 </template>
 
 <script>
-import axios from 'axios';
-import { RingLoader } from 'vue-spinners-css';
-import FairuBrowser from '../FairuBrowser.vue';
-import Dropzone from '../Dropzone.vue';
-import { fairuUpload } from '../../utils/fetches';
+import axios from "axios";
+import { RingLoader } from "vue-spinners-css";
+import FairuBrowser from "../FairuBrowser.vue";
+import Dropzone from "../Dropzone.vue";
+import { fairuUpload } from "../../utils/fetches";
 
 export default {
-    mixins: [Fieldtype],
+	mixins: [Fieldtype],
 
-    components: {
-        RingLoader,
-        FairuBrowser,
-        Dropzone,
-    },
+	components: {
+		RingLoader,
+		FairuBrowser,
+		Dropzone,
+	},
 
-    data() {
-        return {
-            assets: null,
-            searchOpen: false,
-            multiselect: false,
-            loading: true,
-            loadingList: false,
-            uploading: false,
-            percentUploaded: null,
-            metaItemsFetching: new Set(),
-        };
-    },
+	data() {
+		return {
+			assets: null,
+			searchOpen: false,
+			multiselect: false,
+			loading: true,
+			loadingList: false,
+			uploading: false,
+			percentUploaded: null,
+			metaItemsFetching: new Set(),
+		};
+	},
 
-    methods: {
-        openSearch() {
-            this.searchOpen = true;
-        },
-        getExtension(mime) {
-            const parts = mime.split('/');
-            if (parts.length == 2) {
-                return parts[1];
-            }
-            return 'n/a';
-        },
-        getSize(item) {
-            if (!item?.size) return null;
-            return (item.size / 1024 / 1024).toFixed(2) + ' MB';
-        },
-        isAvailable(item) {
-            return item?.exists && !item?.locked;
-        },
-        openFile() {
-            this.$refs.upload.value = null;
-            this.$refs.upload.click();
-        },
-        clearAsset(item) {
-            this.assets = this.assets.filter((e) => e.id !== item.id);
-            this.$nextTick(() => {
-                this.sendUpdate();
-            });
-        },
-        handleSelected(assets) {
-            this.assets = this.multiselect ? assets : [assets];
-            this.$nextTick(() => {
-                this.sendUpdate();
-            });
-        },
-        handleFileChange(evt) {
-            const files = evt.target.files;
-            this.handleUpload(files);
-        },
-        handleFileDrop(files) {
-            if (!files) return;
+	methods: {
+		openSearch() {
+			this.searchOpen = true;
+		},
+		getExtension(mime) {
+			const parts = mime.split("/");
+			if (parts.length == 2) {
+				return parts[1];
+			}
+			return "n/a";
+		},
+		getSize(item) {
+			if (!item?.size) return null;
+			return (item.size / 1024 / 1024).toFixed(2) + " MB";
+		},
+		isAvailable(item) {
+			return item?.exists && !item?.locked;
+		},
+		openFile() {
+			this.$refs.upload.value = null;
+			this.$refs.upload.click();
+		},
+		clearAsset(item) {
+			this.assets = this.assets.filter((e) => e.id !== item.id);
+			this.$nextTick(() => {
+				this.sendUpdate();
+			});
+		},
+		handleSelected(assets) {
+			this.assets = this.multiselect ? assets : [assets];
+			this.$nextTick(() => {
+				this.sendUpdate();
+			});
+		},
+		handleFileChange(evt) {
+			const files = evt.target.files;
+			this.handleUpload(files);
+		},
+		handleFileDrop(files) {
+			if (!files) return;
 
-            this.handleUpload(files);
-        },
-        handleUpload(files) {
-            this.$progress.start('upload' + this._uid);
-            this.percentUploaded = 0;
-            this.uploading = true;
+			this.handleUpload(files);
+		},
+		handleUpload(files) {
+			this.$progress.start("upload" + this._uid);
+			this.percentUploaded = 0;
+			this.uploading = true;
 
-            const successCallback = (result) => {
-                this.searchOpen = false;
-                this.uploading = false;
-                this.$progress.complete('upload' + this._uid);
-                this.$toast.success('Datei erfolgreich hochgeladen.');
-                this.metaItemsFetching.add(result?.data?.map((e) => e.id));
-                this.$nextTick(async () => {
-                    const fetchedAssets = await this.loadMetaData(result?.data?.map((e) => e.id));
-                    if (this.multiselect) {
-                        if (fetchedAssets?.length > 0) {
-                            const remainingSlots = Math.max(0, this.config.max_files - this.assets.length);
+			const successCallback = (result) => {
+				this.searchOpen = false;
+				this.uploading = false;
+				this.$progress.complete("upload" + this._uid);
+				this.$toast.success("Datei erfolgreich hochgeladen.");
+				this.metaItemsFetching.add(result?.data?.map((e) => e.id));
+				this.$nextTick(async () => {
+					const fetchedAssets = await this.loadMetaData(
+						result?.data?.map((e) => e.id),
+					);
+					if (this.multiselect) {
+						if (fetchedAssets?.length > 0) {
+							const remainingSlots = Math.max(
+								0,
+								this.config.max_files - this.assets.length,
+							);
 
-                            this.assets.push(...fetchedAssets.slice(0, remainingSlots));
-                        }
-                    } else {
-                        this.assets = fetchedAssets.slice(0, 1);
-                        this.sendUpdate();
-                    }
-                    this.metaItemsFetching.difference(result?.data?.map((e) => e.id));
-                });
-            };
+							this.assets.push(...fetchedAssets.slice(0, remainingSlots));
+						}
+					} else {
+						this.assets = fetchedAssets.slice(0, 1);
+						this.sendUpdate();
+					}
+					this.metaItemsFetching.difference(result?.data?.map((e) => e.id));
+				});
+			};
 
-            const errorCallback = (err) => {
-                this.uploading = false;
-                this.$progress.complete('upload' + this._uid);
-                this.$toast.error(err.response.data.message);
-                this.$refs.upload.value = null;
-            };
+			const errorCallback = (err) => {
+				this.uploading = false;
+				this.$progress.complete("upload" + this._uid);
+				this.$toast.error(err.response.data.message);
+				this.$refs.upload.value = null;
+			};
 
-            fairuUpload({
-                files,
-                folder: this.config.folder ?? null,
-                onUploadProgressCallback: (progressEvent) => {
-                    this.percentUploaded = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                },
-                successCallback,
-                errorCallback,
-            });
-        },
-        sendUpdate() {
-            this.update(this.assets?.map((e) => e.id));
-        },
-        async loadMetaData(ids) {
-            if (!ids && !this.assets) {
-                this.loading = false;
-                return [];
-            }
+			fairuUpload({
+				files,
+				folder: this.config.folder ?? null,
+				onUploadProgressCallback: (progressEvent) => {
+					this.percentUploaded = Math.round(
+						(progressEvent.loaded * 100) / progressEvent.total,
+					);
+				},
+				successCallback,
+				errorCallback,
+			});
+		},
+		sendUpdate() {
+			this.update(this.assets?.map((e) => e.id));
+		},
+		async loadMetaData(ids) {
+			if (!ids && !this.assets) {
+				this.loading = false;
+				return [];
+			}
 
-            const assetIds = Array.isArray(ids) ? ids : [ids].filter(Boolean);
+			const assetIds = Array.isArray(ids) ? ids : [ids].filter(Boolean);
 
-            if (assetIds.length === 0) return [];
+			if (assetIds.length === 0) return [];
 
-            this.loading = true;
+			this.loading = true;
 
-            try {
-                return axios
-                    .post('/fairu/files/list', { ids: assetIds })
-                    .then((result) => result.data)
-                    .catch((err) => {
-                        console.error(`Error fetching files:`, err);
-                        return null;
-                    });
-            } catch (error) {
-                console.error('Error in loadMetaData:', error);
-                return [];
-            } finally {
-                this.loading = false;
-            }
-        },
-    },
+			try {
+				return axios
+					.post("/fairu/files/list", { ids: assetIds })
+					.then((result) => result.data)
+					.catch((err) => {
+						console.error(`Error fetching files:`, err);
+						// Return placeholder objects with entry IDs when access is denied
+						return assetIds.map((id) => ({
+							id: id,
+							name: `ID: ${id}`,
+							exists: false,
+							locked: true,
+						}));
+					});
+			} catch (error) {
+				console.error("Error in loadMetaData:", error);
+				return [];
+			} finally {
+				this.loading = false;
+			}
+		},
+	},
 
-    computed: {
-        canBrowse() {
-            const hasPermission =
-                this.can('configure asset containers') || this.can('view ' + this.container + ' assets');
+	computed: {
+		canBrowse() {
+			const hasPermission =
+				this.can("configure asset containers") ||
+				this.can("view " + this.container + " assets");
 
-            if (!hasPermission) return false;
+			if (!hasPermission) return false;
 
-            return !this.hasPendingDynamicFolder;
-        },
+			return !this.hasPendingDynamicFolder;
+		},
 
-        canUpload() {
-            const hasPermission =
-                this.can('configure asset containers') || this.can('upload ' + this.container + ' assets');
+		canUpload() {
+			const hasPermission =
+				this.can("configure asset containers") ||
+				this.can("upload " + this.container + " assets");
 
-            const allow = hasPermission && this.config.allow_uploads;
+			const allow = hasPermission && this.config.allow_uploads;
 
-            return allow;
-        },
-    },
-    async mounted() {
-        this.multiselect = this.config.max_files !== 1;
-        this.assets = await this.loadMetaData(this.value);
-    },
-    beforeDestroy() {},
+			return allow;
+		},
+	},
+	async mounted() {
+		this.multiselect = this.config.max_files !== 1;
+		this.assets = await this.loadMetaData(this.value);
+	},
+	beforeDestroy() {},
 };
 </script>
