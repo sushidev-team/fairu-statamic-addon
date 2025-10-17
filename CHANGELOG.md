@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.4](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.10.3...v1.10.4) (2025-10-17)
+
+
+### Bug Fixes
+
+* show fallback on 403 ([e23e23f](https://github.com/sushidev-team/fairu-statamic-addon/commit/e23e23fbaac54c9ca3796e1fdb10376dc4594605))
+
 ## [1.10.3](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.10.2...v1.10.3) (2025-10-15)
 
 
