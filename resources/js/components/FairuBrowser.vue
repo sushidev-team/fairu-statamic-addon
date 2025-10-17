@@ -291,306 +291,356 @@
 </template>
 
 <script>
-import { RingLoader } from 'vue-spinners-css';
-import Dropzone from './Dropzone.vue';
-import BrowserListItem from './browser/BrowserListItem.vue';
-import InputCheckbox from './input/InputCheckbox.vue';
-import { fairuLoadFolder, fairuUpload } from '../utils/fetches';
-import axios from 'axios';
+import { RingLoader } from "vue-spinners-css";
+import Dropzone from "./Dropzone.vue";
+import BrowserListItem from "./browser/BrowserListItem.vue";
+import InputCheckbox from "./input/InputCheckbox.vue";
+import { fairuLoadFolder, fairuUpload } from "../utils/fetches";
+import axios from "axios";
 
 export default {
-    mixins: [Fieldtype],
+	mixins: [Fieldtype],
 
-    components: {
-        RingLoader,
-        Dropzone,
-        BrowserListItem,
-        InputCheckbox,
-    },
+	components: {
+		RingLoader,
+		Dropzone,
+		BrowserListItem,
+		InputCheckbox,
+	},
 
-    data() {
-        return {
-            assets: [],
-            loading: false,
-            folder: null,
-            page: 1,
-            displayType: 'list',
-            lastPage: 1,
-            loadingList: false,
-            showSelection: false,
-            percentUploaded: 0,
-            folderContent: null,
-            createFolderInputVisible: false,
-            previewItem: null,
-        };
-    },
-    props: {
-        meta: null,
-        config: null,
-        initialAssets: [],
-        selectionType: {
-            type: 'folder' | 'files',
-            default: 'files',
-        },
-        multiselect: Boolean,
-    },
-    methods: {
-        emitClose() {
-            this.$emit('close');
-        },
-        openFile() {
-            this.$refs.upload.value = null;
-            this.$refs.upload.click();
-        },
-        openCreateFolder() {
-            this.createFolderInputVisible = true;
-        },
-        closeCreateFolder() {
-            this.createFolderInputVisible = false;
-            this.newFolderName = null;
-        },
-        selectFolder(folderId) {
-            this.page = 1;
-            this.loadFolder(null, folderId);
-            this.$refs.search.value = null;
-        },
-        selectItem(asset) {
-            this.$emit('selected', asset);
-            this.$nextTick(() => {
-                this.emitClose();
-            });
-        },
-        sendSelection() {
-            this.$emit('selected', this.selectionType === 'folder' ? this.folder : this.assets);
-            this.$nextTick(() => {
-                this.emitClose();
-            });
-        },
-        toggleItemSelection(asset) {
-            if (this.assets.find((e) => e?.id === asset.id)) {
-                this.assets = this.assets.filter((e) => e?.id !== asset.id);
-            } else {
-                this.assets.push(asset);
-            }
-            if (this.assets.length < 1) this.showSelection = false;
-        },
-        toggleShowSelection() {
-            this.showSelection = !this.showSelection;
-        },
-        clearSelection() {
-            this.assets = [];
-            this.showSelection = false;
-        },
-        toggleCurrentSelection() {
-            if (this.showSelection) {
-                this.clearSelection();
-                return;
-            }
+	data() {
+		return {
+			assets: [],
+			loading: false,
+			folder: null,
+			page: 1,
+			displayType: "list",
+			lastPage: 1,
+			loadingList: false,
+			showSelection: false,
+			percentUploaded: 0,
+			folderContent: null,
+			createFolderInputVisible: false,
+			previewItem: null,
+		};
+	},
+	props: {
+		meta: null,
+		config: null,
+		initialAssets: [],
+		selectionType: {
+			type: "folder" | "files",
+			default: "files",
+		},
+		multiselect: Boolean,
+	},
+	methods: {
+		emitClose() {
+			this.$emit("close");
+		},
+		openFile() {
+			this.$refs.upload.value = null;
+			this.$refs.upload.click();
+		},
+		openCreateFolder() {
+			this.createFolderInputVisible = true;
+		},
+		closeCreateFolder() {
+			this.createFolderInputVisible = false;
+			this.newFolderName = null;
+		},
+		selectFolder(folderId) {
+			this.page = 1;
+			this.loadFolder(null, folderId);
+			this.$refs.search.value = null;
+		},
+		selectItem(asset) {
+			this.$emit("selected", asset);
+			this.$nextTick(() => {
+				this.emitClose();
+			});
+		},
+		sendSelection() {
+			this.$emit(
+				"selected",
+				this.selectionType === "folder" ? this.folder : this.assets,
+			);
+			this.$nextTick(() => {
+				this.emitClose();
+			});
+		},
+		toggleItemSelection(asset) {
+			if (this.assets.find((e) => e?.id === asset.id)) {
+				this.assets = this.assets.filter((e) => e?.id !== asset.id);
+			} else {
+				this.assets.push(asset);
+			}
+			if (this.assets.length < 1) this.showSelection = false;
+		},
+		toggleShowSelection() {
+			this.showSelection = !this.showSelection;
+		},
+		clearSelection() {
+			this.assets = [];
+			this.showSelection = false;
+		},
+		toggleCurrentSelection() {
+			if (this.showSelection) {
+				this.clearSelection();
+				return;
+			}
 
-            const folderFiles = this.folderContent?.data.filter((e) => e.type !== 'folder');
-            if (
-                folderFiles.every((file) => this.assets.map((e) => e.id).includes(file.id)) ||
-                (this.config.max_files && this.assets?.length >= this.config.max_files)
-            ) {
-                this.assets = this.assets.filter((asset) => !folderFiles.map((file) => file.id).includes(asset.id));
-            } else {
-                const newItems = folderFiles.filter((file) => !this.assets.map((e) => e.id).includes(file.id));
-                if (!newItems) return;
+			const folderFiles = this.folderContent?.data.filter(
+				(e) => e.type !== "folder",
+			);
+			if (
+				folderFiles.every((file) =>
+					this.assets.map((e) => e.id).includes(file.id),
+				) ||
+				(this.config.max_files && this.assets?.length >= this.config.max_files)
+			) {
+				this.assets = this.assets.filter(
+					(asset) => !folderFiles.map((file) => file.id).includes(asset.id),
+				);
+			} else {
+				const newItems = folderFiles.filter(
+					(file) => !this.assets.map((e) => e.id).includes(file.id),
+				);
+				if (!newItems) return;
 
-                const remainingSlots = Math.max(0, this.config.max_files - this.assets.length);
+				const remainingSlots = Math.max(
+					0,
+					this.config.max_files - this.assets.length,
+				);
 
-                this.assets.push(...newItems.slice(0, remainingSlots));
-            }
-        },
-        setPreview(itemIndex) {
-            this.previewItem = itemIndex;
-        },
-        navigatePreview(diff) {
-            this.previewItem = Math.min(
-                Math.max(0, this.previewItem + diff),
-                (this.folderContent?.data?.filter((e) => e.type !== 'folder')?.length ?? 1) - 1,
-            );
-        },
-        isSelected(asset) {
-            return this.assets?.findIndex((e) => e?.id === asset.id) > -1;
-        },
-        handleFileChange(evt) {
-            const files = evt.target.files;
-            this.handleUpload(files);
-        },
-        handleFileDrop(files) {
-            if (!files) return;
+				this.assets.push(...newItems.slice(0, remainingSlots));
+			}
+		},
+		setPreview(itemIndex) {
+			this.previewItem = itemIndex;
+		},
+		navigatePreview(diff) {
+			this.previewItem = Math.min(
+				Math.max(0, this.previewItem + diff),
+				(this.folderContent?.data?.filter((e) => e.type !== "folder")?.length ??
+					1) - 1,
+			);
+		},
+		isSelected(asset) {
+			return this.assets?.findIndex((e) => e?.id === asset.id) > -1;
+		},
+		handleFileChange(evt) {
+			const files = evt.target.files;
+			this.handleUpload(files);
+		},
+		handleFileDrop(files) {
+			if (!files) return;
 
-            this.handleUpload(files);
-        },
-        handleUpload(files) {
-            const errorCallback = (err) => {
-                this.loading = false;
-                this.$progress.complete('upload' + this._uid);
-                this.$toast.error(err.response.data.message);
-                this.$refs.upload.value = null;
-            };
+			this.handleUpload(files);
+		},
+		handleUpload(files) {
+			const errorCallback = (err) => {
+				this.loading = false;
+				this.$progress.complete("upload" + this._uid);
+				this.$toast.error(err.response.data.message);
+				this.$refs.upload.value = null;
+			};
 
-            const successCallback = (result) => {
-                this.$progress.complete('upload' + this._uid);
-                this.$toast.success(__('fairu::browser.files_uploaded_successfully'));
-                this.fetchingMetaData = true;
-                this.$nextTick(async () => {
-                    const fetchedAssets = await this.loadMetaData(result?.data?.map((e) => e.id));
-                    if (this.multiselect) {
-                        if (fetchedAssets?.length > 0) {
-                            const remainingSlots = Math.max(0, this.config.max_files - this.assets.length);
+			const successCallback = (result) => {
+				this.$progress.complete("upload" + this._uid);
+				this.$toast.success(__("fairu::browser.files_uploaded_successfully"));
+				this.fetchingMetaData = true;
+				this.$nextTick(async () => {
+					const fetchedAssets = await this.loadMetaData(
+						result?.data?.map((e) => e.id),
+					);
+					if (this.multiselect) {
+						if (fetchedAssets?.length > 0) {
+							const remainingSlots = Math.max(
+								0,
+								this.config.max_files - this.assets.length,
+							);
 
-                            this.assets.push(...fetchedAssets.slice(0, remainingSlots));
-                        }
-                        await this.loadFolder();
-                    } else {
-                        this.assets = fetchedAssets.slice(0, 1);
-                        this.selectItem(this.assets[0]);
-                    }
-                    this.fetchingMetaData = false;
-                });
-            };
-            this.$progress.start('upload' + this._uid);
-            this.percentUploaded = 0;
-            this.loading = true;
+							this.assets.push(...fetchedAssets.slice(0, remainingSlots));
+						}
+						await this.loadFolder();
+					} else {
+						this.assets = fetchedAssets.slice(0, 1);
+						this.selectItem(this.assets[0]);
+					}
+					this.fetchingMetaData = false;
+				});
+			};
+			this.$progress.start("upload" + this._uid);
+			this.percentUploaded = 0;
+			this.loading = true;
 
-            fairuUpload({
-                files,
-                folder: this.folder?.id ?? null,
-                onUploadProgressCallback: (progressEvent) => {
-                    this.percentUploaded = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                },
-                successCallback,
-                errorCallback,
-            });
-        },
-        handleCreateFolder() {
-            this.loading = true;
-            axios
-                .post('/fairu/folders/create', {
-                    name: this.newFolderName,
-                    folder: this.folder?.id ?? null,
-                })
-                .then(async (result) => {
-                    this.$nextTick(() => {
-                        this.closeCreateFolder();
-                        this.loadFolder();
-                    });
-                })
-                .catch((error) => {
-                    this.$toast.error(error.response.data.message);
-                    this.loading = false;
-                });
-        },
-        handleSearchInput(e) {
-            clearTimeout(this.searchTimer);
-            this.searchTimer = setTimeout(() => {
-                this.page = 1;
-                this.loadFolder(e.target.value);
-            }, 250);
-        },
-        nextPage() {
-            this.page = this.page + 1;
-            this.loadFolder(this.$refs.search.value);
-        },
-        previousPage() {
-            this.page = this.page - 1;
-            this.loadFolder(this.$refs.search.value);
-        },
-        goToPage(page) {
-            this.page = page;
-            this.loadFolder(this.$refs.search.value);
-        },
-        async loadFolder(search, folderId) {
-            this.loadingList = true;
+			fairuUpload({
+				files,
+				folder: this.folder?.id ?? null,
+				onUploadProgressCallback: (progressEvent) => {
+					this.percentUploaded = Math.round(
+						(progressEvent.loaded * 100) / progressEvent.total,
+					);
+				},
+				successCallback,
+				errorCallback,
+			});
+		},
+		handleCreateFolder() {
+			this.loading = true;
+			axios
+				.post("/fairu/folders/create", {
+					name: this.newFolderName,
+					folder: this.folder?.id ?? null,
+				})
+				.then(async (result) => {
+					this.$nextTick(() => {
+						this.closeCreateFolder();
+						this.loadFolder();
+					});
+				})
+				.catch((error) => {
+					this.$toast.error(error.response.data.message);
+					this.loading = false;
+				});
+		},
+		handleSearchInput(e) {
+			clearTimeout(this.searchTimer);
+			this.searchTimer = setTimeout(() => {
+				this.page = 1;
+				this.loadFolder(e.target.value);
+			}, 250);
+		},
+		nextPage() {
+			this.page = this.page + 1;
+			this.loadFolder(this.$refs.search.value);
+		},
+		previousPage() {
+			this.page = this.page - 1;
+			this.loadFolder(this.$refs.search.value);
+		},
+		goToPage(page) {
+			this.page = page;
+			this.loadFolder(this.$refs.search.value);
+		},
+		async loadFolder(search, folderId) {
+			this.loadingList = true;
+			let retriesAvailable = 1;
 
-            return await fairuLoadFolder({
-                page: this.page,
-                folder: folderId !== undefined ? folderId : this.folder?.id,
-                search: search ?? null,
-                successCallback: (result) => {
-                    this.folder = result.data.entry;
-                    this.folderContent = result.data.entries;
-                    this.lastPage = result.data.entries?.last_page;
+			return await fairuLoadFolder({
+				page: this.page,
+				folder: folderId !== undefined ? folderId : this.folder?.id,
+				search: search ?? null,
+				successCallback: (result) => {
+					this.folder = result.data.entry;
+					this.folderContent = result.data.entries;
+					this.lastPage = result.data.entries?.last_page;
 
-                    this.loadingList = false;
-                    return result.data.entry;
-                },
-                errorCallback: () => {
-                    this.folderContent = null;
-                    this.folder = null;
-                    this.loadingList = false;
-                },
-            });
-        },
-        async loadMetaData(ids) {
-            if (!ids && !this.assets) return [];
+					this.loadingList = false;
+					return result.data.entry;
+				},
+				errorCallback: () => {
+					if (folderId && retriesAvailable >= 0) {
+						retriesAvailable -= 1;
+						this.$toast.error("There was an error accessing the folder.");
+						this.loadFolder(search);
+					}
+					this.folderContent = null;
+					this.folder = null;
+					this.loadingList = false;
+				},
+			});
+		},
+		async loadMetaData(ids) {
+			if (!ids && !this.assets) return [];
 
-            // Ensure ids is always an array
-            const assetIds = Array.isArray(ids) ? ids : [ids].filter(Boolean);
+			// Ensure ids is always an array
+			const assetIds = Array.isArray(ids) ? ids : [ids].filter(Boolean);
 
-            if (assetIds.length === 0) return [];
+			if (assetIds.length === 0) return [];
 
-            this.loading = true;
+			this.loading = true;
 
-            try {
-                return axios
-                    .post('/fairu/files/list', { ids: assetIds })
-                    .then((result) => result.data)
-                    .catch((err) => {
-                        console.error(`${__('fairu::browser.errors.error_fetching_files')}:`, err);
-                        return null;
-                    });
-            } catch (error) {
-                console.error(`${__('fairu::browser.errors.error_fetching_files')}:`, error);
-                return [];
-            } finally {
-                this.loading = false;
-            }
-        },
-        getExtension(mime) {
-            const parts = mime.split('/');
-            if (parts.length == 2) {
-                return parts[1];
-            }
-            return 'n/a';
-        },
-    },
+			try {
+				return axios
+					.post("/fairu/files/list", { ids: assetIds })
+					.then((result) => result.data)
+					.catch((err) => {
+						console.error(
+							`${__("fairu::browser.errors.error_fetching_files")}:`,
+							err,
+						);
+						return null;
+					});
+			} catch (error) {
+				console.error(
+					`${__("fairu::browser.errors.error_fetching_files")}:`,
+					error,
+				);
+				return [];
+			} finally {
+				this.loading = false;
+			}
+		},
+		getExtension(mime) {
+			const parts = mime.split("/");
+			if (parts.length == 2) {
+				return parts[1];
+			}
+			return "n/a";
+		},
+	},
 
-    computed: {
-        url() {
-            return this.meta.proxy + '/' + this.asset?.id + '/thumbnail.webp?width=50&height=50';
-        },
-        canUpload() {
-            const hasPermission =
-                this.can('configure asset containers') || this.can('upload ' + this.container + ' assets');
+	computed: {
+		url() {
+			return (
+				this.meta.proxy +
+				"/" +
+				this.asset?.id +
+				"/thumbnail.webp?width=50&height=50"
+			);
+		},
+		canUpload() {
+			const hasPermission =
+				this.can("configure asset containers") ||
+				this.can("upload " + this.container + " assets");
 
-            const allow = hasPermission && this.config.allow_uploads;
+			const allow = hasPermission && this.config.allow_uploads;
 
-            return allow;
-        },
-        previewImage() {
-            if (this.previewItem === null || this.previewItem === undefined) return null;
-            return this.folderContent?.data?.filter((e) => e?.type !== 'folder')?.[this.previewItem];
-        },
-    },
+			return allow;
+		},
+		previewImage() {
+			if (this.previewItem === null || this.previewItem === undefined)
+				return null;
+			return this.folderContent?.data?.filter((e) => e?.type !== "folder")?.[
+				this.previewItem
+			];
+		},
+	},
 
-    async mounted() {
-        this.displayType = this.config.display_type;
-        this.assets =
-            this.config.max_files === 1 ? [] : [...(this.initialAssets?.length > 0 ? this.initialAssets : [])];
-        await this.loadFolder(null, this.config.folder);
-    },
-    beforeDestroy() {
-        if (this.searchTimer) {
-            clearTimeout(this.searchTimer);
-            this.searchTimer = null;
-        }
+	async mounted() {
+		this.displayType = this.config.display_type;
+		this.assets =
+			this.config.max_files === 1
+				? []
+				: [...(this.initialAssets?.length > 0 ? this.initialAssets : [])];
+		try {
+			await this.loadFolder(null, this.config.folder);
+		} catch (error) {
+			this.$toast.error(__("fairu::browser.errors.error_loading_folder"));
+			await this.loadFolder(null, null);
+		}
+	},
+	beforeDestroy() {
+		if (this.searchTimer) {
+			clearTimeout(this.searchTimer);
+			this.searchTimer = null;
+		}
 
-        if (this.$refs.search) {
-            this.$refs.search.removeEventListener('input', this.handleSearchInput);
-        }
-    },
+		if (this.$refs.search) {
+			this.$refs.search.removeEventListener("input", this.handleSearchInput);
+		}
+	},
 };
 </script>
