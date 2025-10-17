@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.6](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.10.5...v1.10.6) (2025-10-17)
+
+
+### Bug Fixes
+
+* catch not accessible folders ([047a942](https://github.com/sushidev-team/fairu-statamic-addon/commit/047a942e5fc7a9973a1fb46b4dbba7761d4b58d6))
+
 ## [1.10.5](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.10.4...v1.10.5) (2025-10-17)
 
 
