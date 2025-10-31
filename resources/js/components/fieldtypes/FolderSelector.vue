@@ -1,81 +1,87 @@
 <template>
     <div class="fa-grid fa-grid-cols-[1fr,auto]">
-        <ring-loader
-            color="#4a4a4a"
-            class="w-5 h-5"
-            size="24"
-            v-if="loading" />
+        <div v-if="loading.value">Loading</div>
+
         <div v-else>
             <div
-                class="text-sm"
                 v-if="folder"
+                class="text-sm"
                 >{{ folder?.name }}</div
             >
-            <button
+            <Button
                 class="text-sm text-blue"
                 @click="searchOpen = true"
                 v-text="
                     !!folder ? __('fairu::folderselect.change_folder') : __('fairu::folderselect.select_folder')
-                "></button>
+                "></Button>
         </div>
         <div>
-            <button @click="handleSelected(null)"
+            <Button @click="handleSelected(null)"
                 ><i
                     class="text-lg material-symbols-outlined fa-pointer-events-none dark:!fa-text-white dark:hover:!fa-text-blue-500"
                     >close</i
-                ></button
+                ></Button
             >
         </div>
         <fairu-browser
             v-if="searchOpen"
-            @close="searchOpen = false"
-            @selected="handleSelected"
             :multiselect="multiselect"
-            :initialAssets="assets"
+            :initial-assets="assets"
             :meta="meta"
-            selectionType="folder"
-            :config="config" />
+            selection-type="folder"
+            :config="config"
+            @close="searchOpen = false"
+            @selected="handleSelected" />
     </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted } from 'vue';
 import FairuBrowser from '../FairuBrowser.vue';
 import { fairuGetFolder } from '../../utils/fetches';
+import { Fieldtype } from '@statamic/cms';
+import { Button } from '@statamic/cms/ui';
 
-export default {
-    mixins: [Fieldtype],
+// const props = defineProps({
+//     value: String,
+//     initialFolder: String,
+//     meta: Object,
+//     config: Object,
+//     multiselect: {
+//         type: Boolean,
+//         default: false
+//     },
+//     assets: {
+//         type: Array,
+//         default: () => []
+//     }
+// })
 
-    components: {
-        FairuBrowser,
-    },
-    props: {
-        initialFolder: String,
-    },
+const emit = defineEmits(Fieldtype.emits);
+const props = defineProps(Fieldtype.props);
+const { expose } = Fieldtype.use(emit, props);
+defineExpose(expose);
 
-    data() {
-        return {
-            folder: null,
-            searchOpen: false,
-            loading: true,
-        };
-    },
+const folder = ref(null);
+const searchOpen = ref(false);
+const loading = ref(true);
 
-    methods: {
-        handleSelected(folder) {
-            this.folder = folder;
-            this.update(folder?.id);
-        },
-    },
-    async mounted() {
-        if (this.value) {
-            await fairuGetFolder({
-                folder: this.value,
-                successCallback: (res) => {
-                    this.folder = res?.data?.entry;
-                },
-            });
-        }
-        this.loading = false;
-    },
+const handleSelected = (selectedFolder) => {
+    folder.value = selectedFolder;
+    emit('update', selectedFolder?.id);
 };
+
+onMounted(async () => {
+    if (props.value) {
+        await fairuGetFolder({
+            folder: props.value,
+            successCallback: (res) => {
+                folder.value = res?.data?.entry;
+                console.log('Success');
+            },
+        });
+    }
+    loading.value = false;
+    console.log({ loading: loading.value });
+});
 </script>

@@ -35,7 +35,7 @@ class ServiceProvider extends AddonServiceProvider
             'resources/css/addon.css',
         ],
         'publicDirectory' => 'resources/dist',
-        'hotFile' => __DIR__.'/../resources/dist/hot',
+        // 'hotFile' => __DIR__.'/../resources/dist/hot',
     ];
 
     protected $routes = [

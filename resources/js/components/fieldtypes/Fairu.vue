@@ -1,27 +1,29 @@
 <template>
     <div>
-        <fairu-browser
+        <!-- <fairu-browser
             v-if="searchOpen"
-            @close="searchOpen = false"
-            @selected="handleSelected"
             :multiselect="multiselect"
-            :initialAssets="assets"
+            :initial-assets="assets"
             :meta="meta"
-            :config="config" />
-        <dropzone
+            :config="config"
+            @close="searchOpen = false"
+            @selected="handleSelected" /> -->
+        <Dropzone
             :enabled="canUpload"
-            class="border rounded border-slate-400 dark:fa-bg-dark-900 fa-overflow-hidden fa-bg-slate-100 dark:fa-border-zinc-900 dark:fa-bg-zinc-800"
+            class="border rounded border-slate-400 fa-overflow-hidden fa-bg-slate-100 dark:fa-border-zinc-900 dark:fa-bg-dark-900 dark:fa-bg-zinc-800"
             @dropped="handleFileDrop">
-            <div v-if="(multiselect || assets?.length < 1) && !uploading">
+            <div>
                 <input
+                    ref="upload"
                     class="hidden"
                     type="file"
-                    ref="upload"
                     @change="handleUpload" />
-                <div class="flex flex-wrap items-center p-3 gap-x-4">
+                <div
+                    v-show="(multiselect || assets?.length < 1) && !uploading"
+                    class="flex flex-wrap items-center p-3 gap-x-4">
                     <button
-                        @click="openSearch()"
                         class="btn"
+                        @click="openSearch()"
                         ><i class="inline-block mr-2 material-symbols-outlined">drive_folder_upload</i>
                         {{ __('fairu::fieldtype.search') }}
                     </button>
@@ -39,283 +41,283 @@
                         </p>
                     </div>
                 </div>
-            </div>
-            <div
-                :id="_uid"
-                class="flex items-center gap-2 fa-cursor-pointer"
-                :class="
-                    multiselect
-                        ? 'p-2 fa-border-t fa-border-slate-300 fa-bg-white hover:fa-bg-white/70 dark:fa-border-zinc-700 dark:fa-bg-zinc-800 dark:hover:fa-bg-zinc-700/60'
-                        : 'fa-p-2.5 hover:fa-bg-white/40 dark:fa-bg-zinc-800/40 dark:hover:fa-bg-zinc-700/60'
-                "
-                v-if="assets?.length > 0 || loading || uploading"
-                @click.prevent="openSearch">
-                <!-- <ring-loader
-                    color="#4a4a4a"
-                    class="w-5 h-5"
-                    size="24"
-                    v-if="loading || uploading" /> -->
-                <span v-if="uploading">{{ percentUploaded }}%</span>
+
                 <div
-                    class="w-full"
-                    v-if="!loading && !uploading">
+                    v-show="assets?.length > 0 || loading || uploading"
+                    class="flex items-center gap-2 fa-cursor-pointer"
+                    :class="
+                        multiselect
+                            ? 'p-2 fa-border-t fa-border-slate-300 fa-bg-white hover:fa-bg-white/70 dark:fa-border-zinc-700 dark:fa-bg-zinc-800 dark:hover:fa-bg-zinc-700/60'
+                            : 'fa-p-2.5 hover:fa-bg-white/40 dark:fa-bg-zinc-800/40 dark:hover:fa-bg-zinc-700/60'
+                    "
+                    @click.prevent="openSearch">
+                    <span v-if="uploading">{{ percentUploaded }}%</span>
                     <div
-                        class="text-xs fa-divide-x fa-divide-gray-200 fa-text-gray-400 dark:fa-divide-zinc-700 dark:fa-text-zinc-500"
-                        v-if="(config.max_files && config.max_files !== 1) || config.min_files"
-                        ><span
-                            class="fa-pr-2"
-                            v-if="config.min_files"
-                            >{{ __('fairu::fieldtype.rules.min') }}: {{ config.min_files }}</span
-                        ><span
-                            class="fa-pl-2 first:fa-pl-0"
-                            v-if="config.max_files"
-                            >{{ __('fairu::fieldtype.rules.max') }}: {{ config.max_files }}</span
-                        ></div
-                    >
-                    <div
-                        class="grid w-full min-w-0 gap-2 items-center fa-mt-2 fa-grid-cols-[auto,auto,1fr,auto] fa-border-t fa-border-zinc-200 fa-pt-2 first:fa-mt-0 first:fa-border-none first:fa-pt-0 dark:fa-border-zinc-700"
-                        v-for="(item, index) in assets"
-                        :key="item.id + index">
+                        v-if="!loading && !uploading"
+                        class="w-full">
                         <div
-                            :aria-label="__('fairu::fieldtype.asset.availability')"
-                            class="mx-2 fa-size-2 fa-rounded-full"
-                            :title="
-                                isAvailable(item)
-                                    ? __('fairu::fieldtype.asset.item_available')
-                                    : __('fairu::fieldtype.asset.item_unavailable')
-                            "
-                            :class="isAvailable(item) ? 'fa-bg-green-500' : 'bg-red-500'"></div>
-                        <img
-                            ref="fileImage"
-                            v-if="
-                                loading == false &&
-                                !metaItemsFetching.has(item.id) &&
-                                item?.mime?.match(/^(image|video)\//)
-                            "
-                            :key="item.id + index + 'image'"
-                            class="flex-none overflow-hidden rounded-md"
-                            :class="multiselect ? 'fa-size-8' : 'fa-size-10'"
-                            :src="meta.proxy + '/' + item?.id + '/thumbnail.webp?width=50&height=50'" />
-                        <ring-loader
-                            color="#4a4a4a"
-                            class="w-5 h-5"
-                            size="24"
-                            v-if="metaItemsFetching.has(item.id)" />
-                        <div class="flex w-full min-w-0 fa-content-center fa-items-center fa-justify-between">
+                            v-if="(config.max_files && config.max_files !== 1) || config.min_files"
+                            class="text-xs fa-divide-x fa-divide-gray-200 fa-text-gray-400 dark:fa-divide-zinc-700 dark:fa-text-zinc-500"
+                            ><span
+                                v-if="config.min_files"
+                                class="fa-pr-2"
+                                >{{ __('fairu::fieldtype.rules.min') }}: {{ config.min_files }}</span
+                            ><span
+                                v-if="config.max_files"
+                                class="fa-pl-2 first:fa-pl-0"
+                                >{{ __('fairu::fieldtype.rules.max') }}: {{ config.max_files }}</span
+                            ></div
+                        >
+                        <div
+                            v-for="(item, index) in assets"
+                            :key="item.id + index"
+                            class="grid w-full min-w-0 gap-2 items-center fa-mt-2 fa-grid-cols-[auto,auto,1fr,auto] fa-border-t fa-border-zinc-200 fa-pt-2 first:fa-mt-0 first:fa-border-none first:fa-pt-0 dark:fa-border-zinc-700">
                             <div
-                                class="min-w-0 text-xs truncate"
-                                v-html="item?.name"></div>
-                            <div
-                                class="min-w-0 text-xs truncate fa-opacity-30"
-                                v-html="getSize(item)"></div>
-                        </div>
-                        <div class="flex items-center gap-1 justify-end">
-                            <a
-                                @click.stop
-                                :href="meta.file + '/' + item?.id"
-                                target="_blank"
-                                :title="__('fairu::fieldtype.open_in_fairu')"
-                                class="flex items-center text-xs cursor-pointer hover:text-blue !fa-text-gray-300 dark:!fa-text-zinc-500"
-                                ><i class="text-lg material-symbols-outlined">open_in_new</i></a
-                            >
-                            <button
-                                class="flex items-center text-xs cursor-pointer !fa-text-gray-300 hover:!fa-text-gray-800 dark:!fa-text-zinc-500 dark:hover:!fa-text-zinc-100"
-                                title="__('fairu::fieldtype.delete')"
-                                @click.prevent.stop="clearAsset(item)"
-                                ><i class="text-lg material-symbols-outlined">delete</i></button
-                            >
+                                :aria-label="__('fairu::fieldtype.asset.availability')"
+                                class="mx-2 fa-size-2 fa-rounded-full"
+                                :title="
+                                    isAvailable(item)
+                                        ? __('fairu::fieldtype.asset.item_available')
+                                        : __('fairu::fieldtype.asset.item_unavailable')
+                                "
+                                :class="isAvailable(item) ? 'fa-bg-green-500' : 'bg-red-500'"></div>
+                            <img
+                                v-if="
+                                    loading == false &&
+                                    !metaItemsFetching.has(item.id) &&
+                                    item?.mime?.match(/^(image|video)\//)
+                                "
+                                ref="fileImage"
+                                :key="item.id + index + 'image'"
+                                class="flex-none overflow-hidden rounded-md"
+                                :class="multiselect ? 'fa-size-8' : 'fa-size-10'"
+                                :src="meta.proxy + '/' + item?.id + '/thumbnail.webp?width=50&height=50'" />
+                            <div class="flex w-full min-w-0 fa-content-center fa-items-center fa-justify-between">
+                                <div
+                                    class="min-w-0 text-xs truncate"
+                                    v-html="item?.name"></div>
+                                <div
+                                    class="min-w-0 text-xs truncate fa-opacity-30"
+                                    v-html="getSize(item)"></div>
+                            </div>
+                            <div class="flex items-center gap-1 justify-end">
+                                <a
+                                    :href="meta.file + '/' + item?.id"
+                                    target="_blank"
+                                    :title="__('fairu::fieldtype.open_in_fairu')"
+                                    class="flex items-center text-xs cursor-pointer hover:text-blue !fa-text-gray-300 dark:!fa-text-zinc-500"
+                                    @click.stop
+                                    ><i class="text-lg material-symbols-outlined">open_in_new</i></a
+                                >
+                                <button
+                                    class="flex items-center text-xs cursor-pointer !fa-text-gray-300 hover:!fa-text-gray-800 dark:!fa-text-zinc-500 dark:hover:!fa-text-zinc-100"
+                                    title="__('fairu::fieldtype.delete')"
+                                    @click.prevent.stop="clearAsset(item)"
+                                    ><i class="text-lg material-symbols-outlined">delete</i></button
+                                >
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </dropzone>
+        </Dropzone>
     </div>
 </template>
 
-<script>
-import axios from "axios";
-import FairuBrowser from "../FairuBrowser.vue";
-import Dropzone from "../Dropzone.vue";
-import { fairuUpload } from "../../utils/fetches";
+<script setup>
+import { ref, useTemplateRef, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import axios from 'axios';
+import { Fieldtype } from '@statamic/cms';
+import { fairuUpload } from '../../utils/fetches';
 
-export default {
-	mixins: [Fieldtype],
+const emit = defineEmits(Fieldtype.emits);
+const props = defineProps({ ...Fieldtype.props, meta: Object, config: Object, container: String });
+const { expose } = Fieldtype.use(emit, props);
+defineExpose(expose);
 
-	components: {
-		FairuBrowser,
-		Dropzone,
-	},
+// Refs
+const upload = useTemplateRef('upload');
+const fileImage = useTemplateRef('fileImage');
 
-	data() {
-		return {
-			assets: null,
-			searchOpen: false,
-			multiselect: false,
-			loading: true,
-			loadingList: false,
-			uploading: false,
-			percentUploaded: null,
-			metaItemsFetching: new Set(),
-		};
-	},
+// Reactive data
+const assets = ref([]);
+const searchOpen = ref(false);
+const multiselect = ref(false);
+const loading = ref(true);
+const loadingList = ref(false);
+const uploading = ref(false);
+const percentUploaded = ref(null);
+const metaItemsFetching = ref(new Set());
 
-	methods: {
-		openSearch() {
-			this.searchOpen = true;
-		},
-		getExtension(mime) {
-			const parts = mime.split("/");
-			if (parts.length == 2) {
-				return parts[1];
-			}
-			return "n/a";
-		},
-		getSize(item) {
-			if (!item?.size) return null;
-			return (item.size / 1024 / 1024).toFixed(2) + " MB";
-		},
-		isAvailable(item) {
-			return item?.exists && !item?.locked;
-		},
-		openFile() {
-			this.$refs.upload.value = null;
-			this.$refs.upload.click();
-		},
-		clearAsset(item) {
-			this.assets = this.assets.filter((e) => e.id !== item.id);
-			this.$nextTick(() => {
-				this.sendUpdate();
-			});
-		},
-		handleSelected(assets) {
-			this.assets = this.multiselect ? assets : [assets];
-			this.$nextTick(() => {
-				this.sendUpdate();
-			});
-		},
-		handleFileChange(evt) {
-			const files = evt.target.files;
-			this.handleUpload(files);
-		},
-		handleFileDrop(files) {
-			if (!files) return;
+// Computed
+const canBrowse = computed(() => {
+    // Note: This needs to be adapted for Vue 3 as Fieldtype mixin is not available
+    const hasPermission = true; // Placeholder - needs proper implementation
+    if (!hasPermission) return false;
+    return !false; // Placeholder for hasPendingDynamicFolder
+});
 
-			this.handleUpload(files);
-		},
-		handleUpload(files) {
-			this.$progress.start("upload" + this._uid);
-			this.percentUploaded = 0;
-			this.uploading = true;
+const canUpload = computed(() => {
+    // Note: This needs to be adapted for Vue 3 as Fieldtype mixin is not available
+    const hasPermission = true; // Placeholder - needs proper implementation
+    const allow = hasPermission && props.config.allow_uploads;
+    return allow;
+});
 
-			const successCallback = (result) => {
-				this.searchOpen = false;
-				this.uploading = false;
-				this.$progress.complete("upload" + this._uid);
-				this.$toast.success("Datei erfolgreich hochgeladen.");
-				this.metaItemsFetching.add(result?.data?.map((e) => e.id));
-				this.$nextTick(async () => {
-					const fetchedAssets = await this.loadMetaData(
-						result?.data?.map((e) => e.id),
-					);
-					if (this.multiselect) {
-						if (fetchedAssets?.length > 0) {
-							const remainingSlots = Math.max(
-								0,
-								this.config.max_files - this.assets.length,
-							);
-
-							this.assets.push(...fetchedAssets.slice(0, remainingSlots));
-						}
-					} else {
-						this.assets = fetchedAssets.slice(0, 1);
-						this.sendUpdate();
-					}
-					this.metaItemsFetching.difference(result?.data?.map((e) => e.id));
-				});
-			};
-
-			const errorCallback = (err) => {
-				this.uploading = false;
-				this.$progress.complete("upload" + this._uid);
-				this.$toast.error(err.response.data.message);
-				this.$refs.upload.value = null;
-			};
-
-			fairuUpload({
-				files,
-				folder: this.config.folder ?? null,
-				onUploadProgressCallback: (progressEvent) => {
-					this.percentUploaded = Math.round(
-						(progressEvent.loaded * 100) / progressEvent.total,
-					);
-				},
-				successCallback,
-				errorCallback,
-			});
-		},
-		sendUpdate() {
-			this.update(this.assets?.map((e) => e.id));
-		},
-		async loadMetaData(ids) {
-			if (!ids && !this.assets) {
-				this.loading = false;
-				return [];
-			}
-
-			const assetIds = Array.isArray(ids) ? ids : [ids].filter(Boolean);
-
-			if (assetIds.length === 0) return [];
-
-			this.loading = true;
-
-			try {
-				return axios
-					.post("/fairu/files/list", { ids: assetIds })
-					.then((result) => result.data)
-					.catch((err) => {
-						console.error(`Error fetching files:`, err);
-						// Return placeholder objects with entry IDs when access is denied
-						return assetIds.map((id) => ({
-							id: id,
-							name: `ID: ${id}`,
-							exists: false,
-							locked: true,
-						}));
-					});
-			} catch (error) {
-				console.error("Error in loadMetaData:", error);
-				return [];
-			} finally {
-				this.loading = false;
-			}
-		},
-	},
-
-	computed: {
-		canBrowse() {
-			const hasPermission =
-				this.can("configure asset containers") ||
-				this.can("view " + this.container + " assets");
-
-			if (!hasPermission) return false;
-
-			return !this.hasPendingDynamicFolder;
-		},
-
-		canUpload() {
-			const hasPermission =
-				this.can("configure asset containers") ||
-				this.can("upload " + this.container + " assets");
-
-			const allow = hasPermission && this.config.allow_uploads;
-
-			return allow;
-		},
-	},
-	async mounted() {
-		this.multiselect = this.config.max_files !== 1;
-		this.assets = await this.loadMetaData(this.value);
-	},
-	beforeDestroy() {},
+// Methods
+const openSearch = () => {
+    searchOpen.value = true;
 };
+
+const getExtension = (mime) => {
+    const parts = mime.split('/');
+    if (parts.length === 2) {
+        return parts[1];
+    }
+    return 'n/a';
+};
+
+const getSize = (item) => {
+    if (!item?.size) return null;
+    return (item.size / 1024 / 1024).toFixed(2) + ' MB';
+};
+
+const isAvailable = (item) => {
+    return item?.exists && !item?.locked;
+};
+
+const openFile = () => {
+    if (upload.value) {
+        upload.value.value = null;
+        upload.value.click();
+    }
+};
+
+const clearAsset = (item) => {
+    assets.value = assets.value.filter((e) => e.id !== item.id);
+    nextTick(() => {
+        sendUpdate();
+    });
+};
+
+const handleSelected = (selectedAssets) => {
+    assets.value = multiselect.value ? selectedAssets : [selectedAssets];
+    nextTick(() => {
+        sendUpdate();
+    });
+};
+
+const handleFileChange = (evt) => {
+    const files = evt.target.files;
+    handleUpload(files);
+};
+
+const handleFileDrop = (files) => {
+    if (!files) return;
+    handleUpload(files);
+};
+
+const handleUpload = (files) => {
+    // $progress.start("upload" + this._uid); // Needs Vue 3 adaptation
+    percentUploaded.value = 0;
+    uploading.value = true;
+
+    const successCallback = (result) => {
+        searchOpen.value = false;
+        uploading.value = false;
+        // $progress.complete("upload" + this._uid); // Needs Vue 3 adaptation
+        // $toast.success("Datei erfolgreich hochgeladen."); // Needs Vue 3 adaptation
+        const resultIds = result?.data?.map((e) => e.id);
+        resultIds.forEach((id) => {
+            metaItemsFetching.value.add(id);
+        });
+        nextTick(async () => {
+            const fetchedAssets = await loadMetaData(resultIds);
+            if (multiselect.value) {
+                if (fetchedAssets?.length > 0) {
+                    const remainingSlots = Math.max(0, props.config.max_files - assets.value.length);
+
+                    assets.value.push(...fetchedAssets.slice(0, remainingSlots));
+                }
+            } else {
+                assets.value = fetchedAssets.slice(0, 1);
+                sendUpdate();
+            }
+            resultIds.forEach((id) => {
+                metaItemsFetching.value.delete(id);
+            });
+        });
+    };
+
+    const errorCallback = (err) => {
+        uploading.value = false;
+        // $progress.complete("upload" + this._uid); // Needs Vue 3 adaptation
+        // $toast.error(err.response.data.message); // Needs Vue 3 adaptation
+        if (upload.value) {
+            upload.value.value = null;
+        }
+    };
+
+    fairuUpload({
+        files,
+        folder: props.config.folder ?? null,
+        onUploadProgressCallback: (progressEvent) => {
+            percentUploaded.value = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        },
+        successCallback,
+        errorCallback,
+    });
+};
+
+const sendUpdate = () => {
+    emit(
+        'update',
+        assets.value?.map((e) => e.id),
+    );
+};
+
+const loadMetaData = async (ids) => {
+    if (!ids && !assets.value) {
+        loading.value = false;
+        return [];
+    }
+
+    const assetIds = Array.isArray(ids) ? ids : [ids].filter(Boolean);
+
+    if (assetIds.length === 0) return [];
+
+    loading.value = true;
+
+    try {
+        return axios
+            .post('/fairu/files/list', { ids: assetIds })
+            .then((result) => result.data)
+            .catch((err) => {
+                console.error(`Error fetching files:`, err);
+                // Return placeholder objects with entry IDs when access is denied
+                return assetIds.map((id) => ({
+                    id: id,
+                    name: `ID: ${id}`,
+                    exists: false,
+                    locked: true,
+                }));
+            });
+    } catch (error) {
+        console.error('Error in loadMetaData:', error);
+        return [];
+    } finally {
+        loading.value = false;
+    }
+};
+
+// Lifecycle
+onMounted(async () => {
+    multiselect.value = props.config.max_files !== 1;
+    assets.value = await loadMetaData(props.value);
+    console.log(props.config);
+});
+
+onBeforeUnmount(() => {
+    // Cleanup if needed
+});
 </script>

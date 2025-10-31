@@ -39,30 +39,22 @@
     </div>
 </template>
 
-<script>
-export default {
-    components: {},
+<script setup>
+import { defineProps, defineEmits } from 'vue'
 
-    data() {
-        return {};
+const props = defineProps({
+    id: String,
+    label: String,
+    checked: Boolean,
+    disabled: {
+        type: Boolean,
+        default: false,
     },
-    props: {
-        id: String,
-        label: String,
-        checked: Boolean,
-        disabled: {
-            type: Object,
-            default: () => false,
-        },
-    },
-    methods: {
-        emitChange() {
-            this.$emit('change', !this.checked);
-        },
-    },
+})
 
-    computed: {},
+const emit = defineEmits(['change'])
 
-    mounted() {},
-};
+const emitChange = () => {
+    emit('change', !props.checked)
+}
 </script>

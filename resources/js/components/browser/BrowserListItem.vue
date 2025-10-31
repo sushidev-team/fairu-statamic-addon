@@ -55,7 +55,9 @@
     </div>
 </template>
 
-<script>
+<script setup>
+import { computed } from 'vue'
+
 const displayTypeStyles = {
     list: {
         root: 'grid items-center gap-2 px-2 py-1 fa-min-h-12 fa-select-none fa-grid-cols-[1fr,auto] last:fa-border-b-none fa-border-b fa-border-slate-100 hover:fa-bg-gray-50 dark:fa-border-zinc-700 dark:hover:fa-bg-zinc-700',
@@ -74,48 +76,41 @@ const displayTypeStyles = {
             'fa-flex fa-w-auto fa-absolute fa-right-2 fa-bottom-2 fa-justify-end fa-px-1 fa-bg-gray-900/0 fa-rounded-xl group-hover:fa-bg-gray-900/30 fa-transition-all fa-duration-300',
         action: 'fa-text-xl fa-p-1.5 text-gray-300 material-symbols-outlined fa-pointer-events-none dark:fa-text-gray-600 dark:hover:fa-text-blue-500 fa-opacity-60 group-hover:fa-opacity-100 fa-transition-opacity fa-duration-300',
     },
-};
+}
 
-export default {
-    components: {},
+const props = defineProps({
+    asset: null,
+    meta: null,
+    displayType: String,
+    selected: Boolean,
+    multiselect: Boolean,
+    disabled: Boolean,
+})
 
-    data() {
-        return {};
-    },
-    props: {
-        asset: null,
-        meta: null,
-        displayType: String,
-        selected: Boolean,
-        multiselect: Boolean,
-        disabled: Boolean,
-    },
-    methods: {
-        toggleSelection() {
-            if (this.disabled) return;
-            this.$emit('change', { asset: this.asset, selected: !this.selected });
-        },
-        getExtension(mime) {
-            const parts = mime.split('/');
-            if (parts.length == 2) {
-                return parts[1];
-            }
-            return 'n/a';
-        },
-        emitPreview() {
-            this.$emit('preview');
-        },
-    },
+const emit = defineEmits(['change', 'preview'])
 
-    computed: {
-        classes() {
-            return displayTypeStyles[this.displayType ?? 'list'];
-        },
-        imageSize() {
-            return this.displayType === 'tiles' ? 350 : 34;
-        },
-    },
+const classes = computed(() => {
+    return displayTypeStyles[props.displayType ?? 'list']
+})
 
-    mounted() {},
-};
+const imageSize = computed(() => {
+    return props.displayType === 'tiles' ? 350 : 34
+})
+
+const toggleSelection = () => {
+    if (props.disabled) return
+    emit('change', { asset: props.asset, selected: !props.selected })
+}
+
+const getExtension = (mime) => {
+    const parts = mime.split('/')
+    if (parts.length === 2) {
+        return parts[1]
+    }
+    return 'n/a'
+}
+
+const emitPreview = () => {
+    emit('preview')
+}
 </script>

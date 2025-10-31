@@ -2,6 +2,8 @@ import html from '@html-eslint/eslint-plugin';
 import htmlParser from '@html-eslint/parser';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import eslintPluginPrettier from 'eslint-plugin-prettier';
+import pluginVue from 'eslint-plugin-vue';
+import vueParser from 'vue-eslint-parser';
 
 export default [
   {
@@ -11,6 +13,21 @@ export default [
     },
     plugins: {
       prettier: eslintPluginPrettier,
+    },
+  },
+  ...pluginVue.configs['flat/recommended'],
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parser: vueParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      'prettier/prettier': 'error',
+      'vue/multi-word-component-names': 'off',
     },
   },
   {
