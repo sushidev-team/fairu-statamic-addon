@@ -100,11 +100,11 @@
                 <div
                     v-if="loadingList"
                     class="grid items-center justify-center w-full h-full p-8">
-                    <ring-loader
+                    <!-- <ring-loader
                         color="#4a4a4a"
                         class="w-5 h-5"
                         size="24"
-                        v-if="loadingList" />
+                        v-if="loadingList" /> -->
                 </div>
                 <div
                     v-if="!loadingList"
@@ -291,7 +291,6 @@
 </template>
 
 <script>
-import { RingLoader } from "vue-spinners-css";
 import Dropzone from "./Dropzone.vue";
 import BrowserListItem from "./browser/BrowserListItem.vue";
 import InputCheckbox from "./input/InputCheckbox.vue";

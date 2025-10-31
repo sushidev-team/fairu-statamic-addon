@@ -1,25 +1,16 @@
-import vue from '@vitejs/plugin-vue2';
-import laravel from 'laravel-vite-plugin';
-import { defineConfig, loadEnv } from 'vite';
+import laravel from "laravel-vite-plugin";
+import statamic from '@statamic/cms/vite-plugin'; 
+import { defineConfig } from "vite";
 
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
-  const { host, protocol } = new URL(env.APP_URL ?? 'http://localhost');
-
-  return {
-    base: mode === 'production' ? '/vendor/fairu-statamic/build/' : '/',
-    plugins: [
-      laravel({
-        input: ['resources/js/cp.js', 'resources/css/cp.css'],
-        refresh: true,
-        detectTls: protocol.startsWith('https') ? host : null,
-        publicDirectory: 'resources/dist',
-        hotFile: 'resources/dist/hot',
-      }),
-      vue(),
-    ],
-    server: {
-      host,
-    },
-  };
+export default defineConfig({
+  outDir: 'resources/dist',
+  plugins: [
+    laravel({
+      input: ["resources/js/addon.js"],
+      refresh: true,
+      publicDirectory: "resources/dist",
+      hotFile: "resources/dist/hot",
+    }),
+    statamic(),
+  ],
 });

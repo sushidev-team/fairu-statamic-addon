@@ -50,11 +50,11 @@
                 "
                 v-if="assets?.length > 0 || loading || uploading"
                 @click.prevent="openSearch">
-                <ring-loader
+                <!-- <ring-loader
                     color="#4a4a4a"
                     class="w-5 h-5"
                     size="24"
-                    v-if="loading || uploading" />
+                    v-if="loading || uploading" /> -->
                 <span v-if="uploading">{{ percentUploaded }}%</span>
                 <div
                     class="w-full"
@@ -134,7 +134,6 @@
 
 <script>
 import axios from "axios";
-import { RingLoader } from "vue-spinners-css";
 import FairuBrowser from "../FairuBrowser.vue";
 import Dropzone from "../Dropzone.vue";
 import { fairuUpload } from "../../utils/fetches";
@@ -143,7 +142,6 @@ export default {
 	mixins: [Fieldtype],
 
 	components: {
-		RingLoader,
 		FairuBrowser,
 		Dropzone,
 	},
