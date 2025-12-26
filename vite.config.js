@@ -1,5 +1,5 @@
-import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
+import statamic from '@statamic/cms/vite-plugin';
 import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
         publicDirectory: 'resources/dist',
         hotFile: 'resources/dist/hot',
       }),
-      vue(),
+      statamic(),
     ],
     server: {
       host,
