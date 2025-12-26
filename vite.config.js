@@ -1,4 +1,4 @@
-import vue from '@vitejs/plugin-vue2';
+import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
 import { defineConfig, loadEnv } from 'vite';
 
@@ -20,6 +20,16 @@ export default defineConfig(({ mode }) => {
     ],
     server: {
       host,
+    },
+    build: {
+      rollupOptions: {
+        external: ['@statamic/cms'],
+        output: {
+          globals: {
+            '@statamic/cms': 'Statamic',
+          },
+        },
+      },
     },
   };
 });
