@@ -67,6 +67,7 @@ class ServiceProvider extends AddonServiceProvider
             
             View::addNamespace('fairu-statamic', $vendorViewsPath);
         }
+        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'fairu');
         $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'fairu');
         $this->bootAddonConfig();
 
