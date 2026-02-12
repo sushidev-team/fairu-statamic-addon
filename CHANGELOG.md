@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.7](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.10.6...v1.10.7) (2026-02-12)
+
+
+### Bug Fixes
+
+* load views in bootAddon ([f4ad823](https://github.com/sushidev-team/fairu-statamic-addon/commit/f4ad823e26a60abd19fad910a688a6115c8784ea))
+
 ## [1.10.6](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.10.5...v1.10.6) (2025-10-17)
 
 
