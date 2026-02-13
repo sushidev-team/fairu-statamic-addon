@@ -1,5 +1,5 @@
-import vue from '@vitejs/plugin-vue2';
 import laravel from 'laravel-vite-plugin';
+import statamic from '@statamic/cms/vite-plugin';
 import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
@@ -16,10 +16,20 @@ export default defineConfig(({ mode }) => {
         publicDirectory: 'resources/dist',
         hotFile: 'resources/dist/hot',
       }),
-      vue(),
+      statamic(),
     ],
     server: {
       host,
+    },
+    build: {
+      rollupOptions: {
+        external: ['@statamic/cms'],
+        output: {
+          globals: {
+            '@statamic/cms': 'Statamic',
+          },
+        },
+      },
     },
   };
 });

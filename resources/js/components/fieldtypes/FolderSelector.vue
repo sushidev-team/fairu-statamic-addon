@@ -3,7 +3,7 @@
         <ring-loader
             color="#4a4a4a"
             class="w-5 h-5"
-            size="24"
+            :size="24"
             v-if="loading" />
         <div v-else>
             <div
@@ -39,13 +39,16 @@
 </template>
 
 <script>
+import { VueSpinnerRing as RingLoader } from 'vue3-spinners';
 import FairuBrowser from '../FairuBrowser.vue';
 import { fairuGetFolder } from '../../utils/fetches';
+import { FieldtypeMixin as Fieldtype } from '@statamic/cms';
 
 export default {
     mixins: [Fieldtype],
 
     components: {
+        RingLoader,
         FairuBrowser,
     },
     props: {

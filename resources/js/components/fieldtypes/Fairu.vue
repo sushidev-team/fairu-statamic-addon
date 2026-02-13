@@ -41,7 +41,7 @@
                 </div>
             </div>
             <div
-                :id="_uid"
+                :id="componentId"
                 class="flex items-center gap-2 fa-cursor-pointer"
                 :class="
                     multiselect
@@ -134,10 +134,13 @@
 
 <script>
 import axios from "axios";
-import { RingLoader } from "vue-spinners-css";
+import { VueSpinnerRing as RingLoader } from "vue3-spinners";
 import FairuBrowser from "../FairuBrowser.vue";
 import Dropzone from "../Dropzone.vue";
 import { fairuUpload } from "../../utils/fetches";
+import { FieldtypeMixin as Fieldtype } from "@statamic/cms";
+
+let idCounter = 0;
 
 export default {
 	mixins: [Fieldtype],
@@ -158,6 +161,7 @@ export default {
 			uploading: false,
 			percentUploaded: null,
 			metaItemsFetching: new Set(),
+			componentId: `fairu-fieldtype-${++idCounter}`,
 		};
 	},
 
@@ -205,14 +209,14 @@ export default {
 			this.handleUpload(files);
 		},
 		handleUpload(files) {
-			this.$progress.start("upload" + this._uid);
+			this.$progress.start("upload" + this.componentId);
 			this.percentUploaded = 0;
 			this.uploading = true;
 
 			const successCallback = (result) => {
 				this.searchOpen = false;
 				this.uploading = false;
-				this.$progress.complete("upload" + this._uid);
+				this.$progress.complete("upload" + this.componentId);
 				this.$toast.success("Datei erfolgreich hochgeladen.");
 				this.metaItemsFetching.add(result?.data?.map((e) => e.id));
 				this.$nextTick(async () => {
@@ -238,7 +242,7 @@ export default {
 
 			const errorCallback = (err) => {
 				this.uploading = false;
-				this.$progress.complete("upload" + this._uid);
+				this.$progress.complete("upload" + this.componentId);
 				this.$toast.error(err.response.data.message);
 				this.$refs.upload.value = null;
 			};
@@ -318,6 +322,6 @@ export default {
 		this.multiselect = this.config.max_files !== 1;
 		this.assets = await this.loadMetaData(this.value);
 	},
-	beforeDestroy() {},
+	beforeUnmount() {},
 };
 </script>

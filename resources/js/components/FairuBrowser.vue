@@ -1,7 +1,7 @@
 <template>
     <stack @closed="emitClose">
+        <template #default="{ close }">
         <div
-            slot-scope="{ close }"
             class="grid h-full bg-white dark:bg-dark-800 fa-grid-rows-[auto,auto,1fr,auto,auto]">
             <section>
                 <input
@@ -103,7 +103,7 @@
                     <ring-loader
                         color="#4a4a4a"
                         class="w-5 h-5"
-                        size="24"
+                        :size="24"
                         v-if="loadingList" />
                 </div>
                 <div
@@ -287,16 +287,20 @@
                 </div>
             </div>
         </div>
+        </template>
     </stack>
 </template>
 
 <script>
-import { RingLoader } from "vue-spinners-css";
+import { VueSpinnerRing as RingLoader } from "vue3-spinners";
 import Dropzone from "./Dropzone.vue";
 import BrowserListItem from "./browser/BrowserListItem.vue";
 import InputCheckbox from "./input/InputCheckbox.vue";
 import { fairuLoadFolder, fairuUpload } from "../utils/fetches";
 import axios from "axios";
+import { FieldtypeMixin as Fieldtype } from "@statamic/cms";
+
+let idCounter = 0;
 
 export default {
 	mixins: [Fieldtype],
@@ -322,6 +326,7 @@ export default {
 			folderContent: null,
 			createFolderInputVisible: false,
 			previewItem: null,
+			componentId: `fairu-browser-${++idCounter}`,
 		};
 	},
 	props: {
@@ -441,13 +446,13 @@ export default {
 		handleUpload(files) {
 			const errorCallback = (err) => {
 				this.loading = false;
-				this.$progress.complete("upload" + this._uid);
+				this.$progress.complete("upload" + this.componentId);
 				this.$toast.error(err.response.data.message);
 				this.$refs.upload.value = null;
 			};
 
 			const successCallback = (result) => {
-				this.$progress.complete("upload" + this._uid);
+				this.$progress.complete("upload" + this.componentId);
 				this.$toast.success(__("fairu::browser.files_uploaded_successfully"));
 				this.fetchingMetaData = true;
 				this.$nextTick(async () => {
@@ -471,7 +476,7 @@ export default {
 					this.fetchingMetaData = false;
 				});
 			};
-			this.$progress.start("upload" + this._uid);
+			this.$progress.start("upload" + this.componentId);
 			this.percentUploaded = 0;
 			this.loading = true;
 
@@ -632,7 +637,7 @@ export default {
 			await this.loadFolder(null, null);
 		}
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		if (this.searchTimer) {
 			clearTimeout(this.searchTimer);
 			this.searchTimer = null;

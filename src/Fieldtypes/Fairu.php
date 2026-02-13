@@ -64,6 +64,10 @@ class Fairu extends Fieldtype
         }
         if (is_array($data)) {
             return collect($data)->map(function ($item) {
+                // If item is already an array (parsed object), return as-is
+                if (is_array($item)) {
+                    return $item;
+                }
                 if (Str::isUuid($item)) {
                     return $item;
                 }
