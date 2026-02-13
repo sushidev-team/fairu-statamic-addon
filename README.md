@@ -75,6 +75,7 @@ You can fetch metadata by passing `fetchMeta="true"` to the tags, which makes th
 | **⁠format**      | Convert image format               | **✓** |       | **✓**  | **✓**   |
 | **fit**          | cover / contain the image          | **✓** |       | **✓**  | **✓**   |
 | **⁠focal_point** | Focal point for cropping           | **✓** |       | **✓**  | **✓**   |
+| **timestamp**   | Video thumbnail timestamp (HH:MM:SS.mmm) | **✓** | **✓** | **✓**  | **✓**   |
 
 ## {{ fairu }}
 
