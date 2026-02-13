@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.8](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.10.7...v1.10.8) (2026-02-13)
+
+
+### Bug Fixes
+
+* added missing timestamp checks, readme ([015fefb](https://github.com/sushidev-team/fairu-statamic-addon/commit/015fefbfb1ef5b2624eab577f995898ff98cb9b6))
+
 ## [1.10.7](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.10.6...v1.10.7) (2026-02-12)
 
 
