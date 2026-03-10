@@ -15,5 +15,7 @@ return [
     "previous" => "Zurück",
     "search_in_folder" => "Suche in Ordner",
     "select" => "Auswählen",
+    "open" => "Öffnen",
+    "preview" => "Vorschau",
     "upload" => "Hochladen"
 ];

@@ -15,5 +15,7 @@ return [
     "previous" => "Previous",
     "search_in_folder" => "Search in folder",
     "select" => "Select",
+    "open" => "Open",
+    "preview" => "Preview",
     "upload" => "Upload"
 ];

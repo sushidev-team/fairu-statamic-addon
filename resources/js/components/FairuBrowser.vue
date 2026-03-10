@@ -1,13 +1,22 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick, getCurrentInstance } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, getCurrentInstance, defineComponent, h, inject } from 'vue';
 import { toast, progress } from '@statamic/cms/api';
-import { Stack, Button, Input, Checkbox, Pagination, ToggleGroup, ToggleItem } from '@statamic/cms/ui';
+import { Stack, Button, Input, Icon, Checkbox, Pagination, ToggleGroup, ToggleItem, Listing, ListingTable, Panel, DropdownItem } from '@statamic/cms/ui';
 import Dropzone from './Dropzone.vue';
 import BrowserListItem from './browser/BrowserListItem.vue';
 import Folder from './browser/Folder.vue';
 import { fairuLoadFolder, fairuUpload, fairuCreateFolder, fairuLoadFilesMeta } from '../utils/fetches';
 
 const __ = getCurrentInstance().appContext.config.globalProperties.__;
+
+const FairuStackHeader = defineComponent({
+    name: 'StackHeader',
+    setup(_, { slots }) {
+        return () => h('div', {
+            class: 'flex items-center justify-between rounded-t-xl border-b border-gray-300 ps-6 pe-4 py-2 dark:border-gray-950 dark:bg-gray-800',
+        }, slots.default?.());
+    },
+});
 
 const props = defineProps({
     meta: Object,
@@ -73,10 +82,13 @@ function selectItem(asset) {
 }
 
 function sendSelection() {
-    emit(
-        'selected',
-        props.selectionType === 'folder' ? folder.value : assets.value,
-    );
+    if (props.selectionType === 'folder') {
+        emit('selected', folder.value);
+    } else if (props.multiselect) {
+        emit('selected', assets.value);
+    } else {
+        emit('selected', assets.value?.[0] ?? null);
+    }
     nextTick(() => emitClose());
 }
 
@@ -258,11 +270,82 @@ function getExtension(mime) {
     return parts.length === 2 ? parts[1] : 'n/a';
 }
 
-const selectAllChecked = computed(() =>
-    showSelection.value ||
-    folderContent?.value?.data?.every((file) => assets.value.map((e) => e.id).includes(file.id)) ||
-    (props.config.max_files && assets.value?.length >= props.config.max_files)
+const listingColumns = [{ field: 'name', label: __('Name'), sortable: false }];
+
+const folderItems = computed(() =>
+    folderContent.value?.data?.filter((e) => e?.type === 'folder') || []
 );
+
+const fileItems = computed(() =>
+    folderContent.value?.data?.filter((e) => e?.type !== 'folder') || []
+);
+
+const allListingItems = computed(() => {
+    if (showSelection.value) return assets.value;
+
+    const items = [];
+
+    // "Go back" parent folder
+    if (folder.value) {
+        items.push({ id: '__parent__', name: '...', type: 'folder', _isParent: true });
+    }
+
+    // Folders then files
+    items.push(...folderItems.value);
+    items.push(...fileItems.value);
+
+    return items;
+});
+
+const selectedIds = computed(() =>
+    assets.value?.map((a) => a.id) || []
+);
+
+const folderIds = computed(() => {
+    const ids = new Set(folderItems.value.map((f) => f.id));
+    if (folder.value) ids.add('__parent__');
+    return ids;
+});
+
+const maxSelectionsCount = computed(() => {
+    if (!props.multiselect) return 1;
+    return props.config.max_files || Infinity;
+});
+
+function isMediaItem(item) {
+    return item?.mime?.startsWith('image/') || item?.mime?.startsWith('video/');
+}
+
+function thumbnailUrl(item, size = 50) {
+    return `${props.meta.proxy}/${item.id}/thumbnail.webp?width=${size}&height=${size}`;
+}
+
+function getFileIndex(row) {
+    return fileItems.value.findIndex((f) => f.id === row.id);
+}
+
+function handleListingSelections(newSelections) {
+    // Filter out folder IDs — folders are not selectable
+    const fileOnlySelections = newSelections.filter((id) => !folderIds.value.has(id));
+
+    if (!props.multiselect) {
+        const newId = fileOnlySelections.find((id) => !selectedIds.value.includes(id));
+        if (newId) {
+            const item = fileItems.value.find((f) => f.id === newId) ||
+                         assets.value.find((a) => a.id === newId);
+            if (item) selectItem(item);
+        }
+        return;
+    }
+
+    const source = showSelection.value ? assets.value : fileItems.value;
+    const currentFileIds = new Set(source.map((f) => f.id));
+    const assetsFromOtherPages = assets.value.filter((a) => !currentFileIds.has(a.id));
+    const newlySelected = source.filter((f) => fileOnlySelections.includes(f.id));
+
+    assets.value = [...assetsFromOtherPages, ...newlySelected];
+    if (assets.value.length < 1) showSelection.value = false;
+}
 
 const previewImage = computed(() => {
     if (previewItem.value === null || previewItem.value === undefined) return null;
@@ -292,128 +375,213 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <Stack open @closed="emitClose" inset :show-close-button="false">
-        <div class="grid h-full bg-white dark:bg-dark-800" style="grid-template-rows: auto auto 1fr auto auto">
-            <section>
-                <input
-                    class="hidden"
-                    type="file"
-                    ref="uploadInput"
-                    @change="handleFileChange" />
-                <div class="flex gap-2 p-2 bg-white dark:bg-dark-800 border-b border-gray-200 dark:border-zinc-700 justify-stretch">
-                    <div
-                        v-if="createFolderInputVisible"
-                        class="flex flex-grow gap-1">
-                        <Input
-                            size="sm"
-                            icon="asset-folder"
-                            :focus="true"
-                            :placeholder="__('fairu::browser.new_folder_name')"
-                            :model-value="newFolderName"
-                            @update:model-value="newFolderName = $event"
-                            @keyup.enter="handleCreateFolder"
-                            @keyup.esc="closeCreateFolder" />
-                        <Button
-                            variant="primary"
-                            size="sm"
-                            :text="__('fairu::browser.create')"
-                            @click="handleCreateFolder" />
-                        <Button
-                            size="sm"
-                            :text="__('fairu::browser.cancel')"
-                            @click="closeCreateFolder" />
-                    </div>
-                    <div v-if="!createFolderInputVisible" class="flex-1">
-                        <Input
-                            icon="magnifying-glass"
-                            size="sm"
-                            clearable
-                            :placeholder="__('fairu::browser.search_in_folder')"
-                            :model-value="searchQuery"
-                            @update:model-value="searchQuery = $event; handleSearchInput($event)"
-                            @keyup.esc="searchQuery = ''; handleSearchInput('')" />
-                    </div>
+    <Stack open @closed="emitClose" inset :wrap-slot="false">
+        <!-- Custom header with Fairu logo -->
+        <FairuStackHeader>
+            <a href="https://fairu.app" target="_blank" class="flex items-center">
+                <img class="w-16 h-auto" src="../../svg/fairu-logo.svg" alt="Fairu" />
+            </a>
+            <div class="flex items-center gap-2">
+                <input class="hidden" type="file" ref="uploadInput" @change="handleFileChange" />
+                <template v-if="createFolderInputVisible">
+                    <Input
+                        size="sm"
+                        icon="asset-folder"
+                        :focus="true"
+                        :placeholder="__('fairu::browser.new_folder_name')"
+                        :model-value="newFolderName"
+                        @update:model-value="newFolderName = $event"
+                        @keyup.enter="handleCreateFolder"
+                        @keyup.esc="closeCreateFolder" />
                     <Button
-                        v-if="!createFolderInputVisible && selectionType !== 'folder' && canUpload"
+                        variant="primary"
+                        size="sm"
+                        :text="__('fairu::browser.create')"
+                        @click="handleCreateFolder" />
+                    <Button
+                        size="sm"
+                        :text="__('fairu::browser.cancel')"
+                        @click="closeCreateFolder" />
+                </template>
+                <template v-else>
+                    <Input
+                        icon="magnifying-glass"
+                        size="sm"
+                        clearable
+                        :placeholder="__('fairu::browser.search_in_folder')"
+                        :model-value="searchQuery"
+                        @update:model-value="searchQuery = $event; handleSearchInput($event)"
+                        @keyup.esc="searchQuery = ''; handleSearchInput('')" />
+                    <Button
+                        v-if="selectionType !== 'folder' && canUpload"
                         size="sm"
                         icon="upload"
                         :text="__('fairu::browser.upload')"
                         @click="openFile()" />
                     <Button
-                        v-if="!createFolderInputVisible && canUpload"
+                        v-if="canUpload"
                         size="sm"
                         icon="asset-folder"
                         :text="__('fairu::browser.new_folder')"
                         @click="openCreateFolder" />
-                </div>
-            </section>
-            <section>
-                <div class="flex items-center w-full min-h-10 justify-between gap-4 border-b border-gray-200 bg-gray-50 px-3 py-2 text-gray-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400">
-                    <div class="flex gap-2 items-center">
-                        <Checkbox
-                            v-if="multiselect"
-                            solo
-                            size="sm"
-                            :model-value="selectAllChecked"
-                            @update:model-value="toggleCurrentSelection" />
+                </template>
+                <Button icon="x" variant="ghost" class="-me-2" @click="emitClose" />
+            </div>
+        </FairuStackHeader>
+
+        <!-- Content area -->
+        <dropzone
+            :enabled="canUpload"
+            @dropped="handleFileDrop"
+            class="flex-1 overflow-y-auto p-4 pb-8">
+            <div
+                v-if="loadingList"
+                class="grid items-center justify-center w-full h-full p-8">
+                <svg class="animate-spin size-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+            </div>
+
+            <!-- LIST MODE -->
+            <Listing
+                v-if="!loadingList && displayType === 'list'"
+                :items="allListingItems"
+                :columns="listingColumns"
+                :selections="multiselect ? selectedIds : undefined"
+                :max-selections="multiselect ? maxSelectionsCount : undefined"
+                :allow-search="false"
+                :allow-customizing-columns="false"
+                :allow-bulk-actions="false"
+                :allow-presets="false"
+                :sortable="false"
+                :per-page="999"
+                @update:selections="handleListingSelections"
+                v-slot="{ items }">
+                <Panel v-if="items.length" class="relative">
+                    <!-- Toolbar overlaid on the table header row -->
+                    <div class="absolute top-1.75 right-1.75 z-10 flex items-center gap-2 px-3 h-[2.375rem]">
                         <Button
-                            v-if="assets?.length > 0"
-                            size="2xs"
-                            :variant="showSelection ? 'primary' : 'default'"
+                            v-if="multiselect && assets?.length > 0"
+                            size="xs"
+                            :variant="showSelection ? 'filled' : 'ghost'"
                             @click="toggleShowSelection">
                             {{ __('fairu::browser.only_selection') }} ({{ assets?.length }})
                         </Button>
-                        <Button
-                            v-if="assets?.length > 0"
-                            size="2xs"
-                            icon="x"
-                            :text="__('fairu::browser.clear_selection')"
-                            @click="clearSelection" />
+                        <ToggleGroup
+                            variant="ghost"
+                            size="xs"
+                            :model-value="displayType"
+                            @update:model-value="displayType = $event">
+                            <ToggleItem icon="layout-list" value="list" />
+                            <ToggleItem icon="layout-grid" value="tiles" />
+                        </ToggleGroup>
                     </div>
-                    <ToggleGroup
-                        variant="ghost"
-                        size="sm"
-                        :model-value="displayType"
-                        @update:model-value="displayType = $event">
-                        <ToggleItem icon="layout-list" value="list" />
-                        <ToggleItem icon="layout-grid" value="tiles" />
-                    </ToggleGroup>
-                </div>
-            </section>
-            <dropzone
-                :enabled="canUpload"
-                @dropped="handleFileDrop"
-                class="relative overflow-y-auto size-full">
+                    <ListingTable>
+                        <template #cell-name="{ row, value }">
+                            <!-- Folder row -->
+                            <button
+                                v-if="row.type === 'folder'"
+                                class="flex items-center gap-2 w-full cursor-pointer select-none -my-3 py-3"
+                                @click.stop="selectFolder(row._isParent ? folder?.parent_id : row.id)">
+                                <Icon name="folder" class="size-5 text-gray-500" />
+                                <span>{{ value }}</span>
+                            </button>
+                            <!-- File row -->
+                            <button
+                                v-else-if="!multiselect"
+                                class="flex items-center gap-2 w-full cursor-pointer select-none -my-3 py-3"
+                                @click.stop="selectItem(row)">
+                                <div class="shrink-0 size-7 rounded-sm overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                    <img
+                                        v-if="meta.proxy && row?.blocked != true && isMediaItem(row)"
+                                        draggable="false"
+                                        :src="thumbnailUrl(row)"
+                                        class="size-full object-cover" />
+                                    <i v-else class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-base">description</i>
+                                </div>
+                                <span class="truncate">{{ value }}</span>
+                            </button>
+                            <!-- File row (multiselect) -->
+                            <div v-else class="flex items-center gap-2 w-full select-none cursor-pointer -my-3 py-3">
+                                <div class="shrink-0 size-7 rounded-sm overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                    <img
+                                        v-if="meta.proxy && row?.blocked != true && isMediaItem(row)"
+                                        draggable="false"
+                                        :src="thumbnailUrl(row)"
+                                        class="size-full object-cover" />
+                                    <i v-else class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-base">description</i>
+                                </div>
+                                <span class="truncate">{{ value }}</span>
+                            </div>
+                        </template>
+                        <template #prepended-row-actions="{ row }">
+                            <!-- Folder actions -->
+                            <DropdownItem
+                                v-if="row.type === 'folder'"
+                                :text="__('fairu::browser.open')"
+                                icon="folder"
+                                @click="selectFolder(row._isParent ? folder?.parent_id : row.id)" />
+                            <!-- File actions -->
+                            <template v-else>
+                                <DropdownItem
+                                    :text="__('fairu::browser.preview')"
+                                    icon="eye"
+                                    @click="setPreview(getFileIndex(row))" />
+                                <DropdownItem
+                                    :text="__('fairu::browser.edit_in_fairu')"
+                                    icon="external-link"
+                                    :href="meta.file + '/' + row.id"
+                                    target="_blank" />
+                            </template>
+                        </template>
+                    </ListingTable>
+                </Panel>
+            </Listing>
+
+            <!-- TILES MODE (with its own toolbar) -->
+            <template v-if="!loadingList && displayType === 'tiles'">
+                <Panel class="relative">
+                    <!-- Toolbar overlaid at top-right -->
+                    <div class="flex items-center justify-between gap-2 px-3 py-1.5">
+                        <div class="flex gap-2 items-center">
+                            <Button
+                                v-if="multiselect && assets?.length > 0"
+                                size="xs"
+                                :variant="showSelection ? 'filled' : 'ghost'"
+                                @click="toggleShowSelection">
+                                {{ __('fairu::browser.only_selection') }} ({{ assets?.length }})
+                            </Button>
+                        </div>
+                        <ToggleGroup
+                            variant="ghost"
+                            size="xs"
+                            :model-value="displayType"
+                            @update:model-value="displayType = $event">
+                            <ToggleItem icon="layout-list" value="list" />
+                            <ToggleItem icon="layout-grid" value="tiles" />
+                        </ToggleGroup>
+                    </div>
                 <div
-                    v-if="loadingList"
-                    class="grid items-center justify-center w-full h-full p-8">
-                    <svg class="animate-spin size-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                </div>
-                <div
-                    v-if="!loadingList"
-                    :class="displayType === 'tiles' ? 'grid p-3 gap-4' : ''"
-                    :style="displayType === 'tiles' ? 'grid-template-columns: repeat(auto-fill, minmax(230px, 1fr))' : ''">
+                    class="grid gap-4"
+                    style="grid-template-columns: repeat(auto-fill, minmax(230px, 1fr))">
                     <Folder
                         custom
                         name="..."
                         @click="selectFolder(folder?.parent_id)"
                         v-if="folder"
-                        :displayType="displayType" />
-
+                        displayType="tiles" />
                     <Folder
                         v-if="!showSelection"
-                        v-for="(item, index) in folderContent?.data?.filter((e) => e?.type === 'folder')"
+                        v-for="(item, index) in folderItems"
                         :key="item.id + index"
                         :asset="item"
-                        :displayType="displayType"
+                        displayType="tiles"
                         @click="(asset) => selectFolder(asset.id)" />
                     <browser-list-item
                         v-for="(item, index) in showSelection
                             ? assets
-                            : folderContent?.data?.filter((e) => e?.type !== 'folder')"
+                            : fileItems"
                         :key="item.id + index"
                         :asset="item"
                         :meta="meta"
@@ -426,111 +594,97 @@ onBeforeUnmount(() => {
                         "
                         :selected="isSelected(item)"
                         :multiselect="multiselect"
-                        :displayType="displayType"
+                        displayType="tiles"
                         @change="multiselect ? toggleItemSelection(item) : selectItem(item)"
                         @preview="setPreview(index)" />
                 </div>
-                <div
-                    class="z-10 grid fixed inset-0 size-full bg-white/95"
-                    style="grid-template-rows: auto 1fr"
-                    v-if="previewImage">
-                    <div class="flex h-min max-h-screen w-full items-center justify-end gap-4 p-4">
-                        <div class="text-lg text-gray-900">
-                            {{ (previewItem ?? 0) + 1 }}/{{ folderContent?.data?.filter((e) => e.type !== 'folder')?.length }}
-                        </div>
-                        <Button
-                            icon="x"
-                            variant="ghost"
-                            @click="previewItem = null" />
+                </Panel>
+            </template>
+
+            <!-- Preview overlay -->
+            <div
+                class="z-10 grid fixed inset-0 size-full bg-white/95"
+                style="grid-template-rows: auto 1fr"
+                v-if="previewImage">
+                <div class="flex h-min max-h-screen w-full items-center justify-end gap-4 p-4">
+                    <div class="text-lg text-gray-900">
+                        {{ (previewItem ?? 0) + 1 }}/{{ folderContent?.data?.filter((e) => e.type !== 'folder')?.length }}
                     </div>
-                    <div class="grid h-full min-h-0 items-center pb-10">
-                        <div class="bg-white rounded-lg overflow-hidden mx-auto grid size-full min-h-0 max-w-screen-xl shadow-lg" style="max-height: 70vh; grid-template-rows: 1fr auto">
-                            <div class="relative size-full min-h-0">
-                                <img
+                    <Button
+                        icon="x"
+                        variant="ghost"
+                        @click="previewItem = null" />
+                </div>
+                <div class="grid h-full min-h-0 items-center pb-10">
+                    <div class="bg-white rounded-lg overflow-hidden mx-auto grid size-full min-h-0 max-w-screen-xl shadow-lg" style="max-height: 70vh; grid-template-rows: 1fr auto">
+                        <div class="relative size-full min-h-0">
+                            <img
+                                v-if="
+                                    meta.proxy &&
+                                    previewImage?.blocked != true &&
+                                    (previewImage?.mime?.startsWith('image/') ||
+                                        previewImage?.mime?.startsWith('video/'))
+                                "
+                                draggable="false"
+                                :src="`${meta.proxy}/${previewImage.id}/thumbnail.webp?width=1280`"
+                                @click="multiselect ? toggleItemSelection(previewImage) : selectItem(previewImage)"
+                                class="size-full object-contain" />
+                            <Checkbox
+                                v-if="multiselect"
+                                solo
+                                class="absolute left-0 top-0 m-3"
+                                :model-value="isSelected(previewImage)"
+                                @update:model-value="toggleItemSelection(previewImage)" />
+                            <div class="grid size-full place-items-center">
+                                <div
+                                    class="whitespace-pre-wrap text-gray-600"
                                     v-if="
-                                        meta.proxy &&
-                                        previewImage?.blocked != true &&
-                                        (previewImage?.mime?.startsWith('image/') ||
-                                            previewImage?.mime?.startsWith('video/'))
-                                    "
-                                    draggable="false"
-                                    :src="`${meta.proxy}/${previewImage.id}/thumbnail.webp?width=1280`"
-                                    @click="multiselect ? toggleItemSelection(previewImage) : selectItem(previewImage)"
-                                    class="size-full object-contain" />
-                                <Checkbox
-                                    v-if="multiselect"
-                                    solo
-                                    class="absolute left-0 top-0 m-3"
-                                    :model-value="isSelected(previewImage)"
-                                    @update:model-value="toggleItemSelection(previewImage)" />
-                                <div class="grid size-full place-items-center">
-                                    <div
-                                        class="whitespace-pre-wrap text-gray-600"
-                                        v-if="
-                                            !previewImage?.mime?.startsWith('image/') &&
-                                            !previewImage?.mime?.startsWith('video/')
-                                        ">
-                                        <i class="material-symbols-outlined pointer-events-none text-gray-900 dark:!text-gray-600" style="font-size: 200px">description</i>
-                                    </div>
+                                        !previewImage?.mime?.startsWith('image/') &&
+                                        !previewImage?.mime?.startsWith('video/')
+                                    ">
+                                    <i class="material-symbols-outlined pointer-events-none text-gray-900 dark:!text-gray-600" style="font-size: 200px">description</i>
                                 </div>
-                                <Button
-                                    class="absolute left-8 top-1/2 z-10 -translate-y-1/2"
-                                    icon="chevron-left"
-                                    round
-                                    @click.stop.prevent="navigatePreview(-1)" />
-                                <Button
-                                    class="absolute right-8 top-1/2 z-10 -translate-y-1/2"
-                                    icon="chevron-right"
-                                    round
-                                    @click.stop.prevent="navigatePreview(1)" />
                             </div>
-                            <div class="flex items-center justify-between gap-2 grow border-t border-gray-100 bg-gray-100/50 px-6 py-3 text-base">
-                                <div class="font-normal">{{ previewImage.name }}</div>
-                                <div class="text-xs uppercase tracking-wider text-gray-500">{{ getExtension(previewImage.mime) }}</div>
-                            </div>
+                            <Button
+                                class="absolute left-8 top-1/2 z-10 -translate-y-1/2"
+                                icon="chevron-left"
+                                round
+                                @click.stop.prevent="navigatePreview(-1)" />
+                            <Button
+                                class="absolute right-8 top-1/2 z-10 -translate-y-1/2"
+                                icon="chevron-right"
+                                round
+                                @click.stop.prevent="navigatePreview(1)" />
+                        </div>
+                        <div class="flex items-center justify-between gap-2 grow border-t border-gray-100 bg-gray-100/50 px-6 py-3 text-base">
+                            <div class="font-normal">{{ previewImage.name }}</div>
+                            <div class="text-xs uppercase tracking-wider text-gray-500">{{ getExtension(previewImage.mime) }}</div>
                         </div>
                     </div>
                 </div>
-            </dropzone>
-            <div>
-                <a
-                    class="flex items-center gap-1 px-3 py-1.5 text-2xs"
-                    href="https://fairu.app"
-                    style="color: #666">
-                    <span
-                        class="uppercase"
-                        style="letter-spacing: 0.1rem">
-                        Powered by
-                    </span>
-                    <img
-                        class="w-12 h-auto ml-1"
-                        src="../../svg/fairu-logo.svg"
-                        alt="Fairu Asset Service" />
-                </a>
             </div>
-            <div class="flex flex-wrap items-center justify-between gap-4 px-3 py-3 border-t border-gray-100 dark:border-dark-600 dark:bg-dark-900 bg-slate-50">
-                <Pagination
-                    v-if="folderContent && !showSelection"
-                    :resource-meta="folderContent"
-                    :per-page="perPage"
-                    :scroll-to-top="false"
-                    :show-per-page-selector="false"
-                    :show-totals="true"
-                    :show-page-links="true"
-                    @page-selected="handlePageSelected" />
-                <div v-else></div>
-                <div class="flex gap-3">
-                    <Button
-                        v-if="!createFolderInputVisible"
-                        :text="__('fairu::browser.cancel')"
-                        @click="emitClose" />
-                    <Button
-                        v-if="!createFolderInputVisible"
-                        variant="primary"
-                        :text="__('fairu::browser.select')"
-                        @click="sendSelection" />
-                </div>
-            </div>
-        </div>
+        </dropzone>
+
+        <!-- Footer -->
+        <template #footer-start>
+            <Pagination
+                v-if="folderContent && !showSelection"
+                :resource-meta="folderContent"
+                :per-page="perPage"
+                :scroll-to-top="false"
+                :show-per-page-selector="false"
+                :show-totals="true"
+                :show-page-links="true"
+                @page-selected="handlePageSelected" />
+        </template>
+        <template #footer-end>
+            <Button
+                :text="__('fairu::browser.cancel')"
+                @click="emitClose" />
+            <Button
+                variant="primary"
+                :text="__('fairu::browser.select')"
+                @click="sendSelection" />
+        </template>
     </Stack>
 </template>
