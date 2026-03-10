@@ -433,7 +433,7 @@ onBeforeUnmount(() => {
         <dropzone
             :enabled="canUpload"
             @dropped="handleFileDrop"
-            class="flex-1 overflow-y-auto p-4 pb-8">
+            class="flex-1 overflow-y-auto p-4">
             <div
                 v-if="loadingList"
                 class="grid items-center justify-center w-full h-full p-8">
@@ -458,7 +458,7 @@ onBeforeUnmount(() => {
                 :per-page="999"
                 @update:selections="handleListingSelections"
                 v-slot="{ items }">
-                <Panel v-if="items.length" class="relative">
+                <Panel v-if="items.length" class="relative !mb-0">
                     <!-- Toolbar overlaid on the table header row -->
                     <div class="absolute top-1.75 right-1.75 z-10 flex items-center gap-2 px-3 h-[2.375rem]">
                         <Button
@@ -537,11 +537,12 @@ onBeforeUnmount(() => {
                         </template>
                     </ListingTable>
                 </Panel>
+                <div class="h-4" aria-hidden="true" />
             </Listing>
 
             <!-- TILES MODE (with its own toolbar) -->
             <template v-if="!loadingList && displayType === 'tiles'">
-                <Panel class="relative">
+                <Panel class="relative !mb-0">
                     <!-- Toolbar overlaid at top-right -->
                     <div class="flex items-center justify-between gap-2 px-3 py-1.5">
                         <div class="flex gap-2 items-center">
@@ -599,6 +600,7 @@ onBeforeUnmount(() => {
                         @preview="setPreview(index)" />
                 </div>
                 </Panel>
+                <div class="h-4" aria-hidden="true" />
             </template>
 
             <!-- Preview overlay -->
