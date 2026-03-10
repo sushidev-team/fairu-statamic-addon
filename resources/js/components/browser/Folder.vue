@@ -1,16 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-
-const displayTypeStyles = {
-    list: {
-        root: 'flex items-center w-full gap-1 px-2 py-1 text-sm min-h-12 last:border-b-none border-b border-slate-100 hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-700',
-        icon: 'text-gray-700 material-symbols-outlined px-1 text-2xl',
-    },
-    tiles: {
-        root: 'size-full flex flex-col justify-center text-center min-h-48 aspect-square border rounded-lg',
-        icon: 'text-gray-700 material-symbols-outlined text-6xl',
-    },
-};
+import { Icon } from '@statamic/cms/ui';
 
 const props = defineProps({
     asset: Object,
@@ -21,7 +11,7 @@ const props = defineProps({
 
 const emit = defineEmits(['click']);
 
-const classes = computed(() => displayTypeStyles[props.displayType ?? 'list']);
+const isList = computed(() => (props.displayType ?? 'list') === 'list');
 
 function handleClick() {
     emit('click', props.asset);
@@ -31,9 +21,13 @@ function handleClick() {
 <template>
     <button
         v-if="asset?.type === 'folder' || custom"
-        :class="classes.root"
-        @click="handleClick">
-        <i :class="classes.icon">folder</i>
-        {{ name ?? asset?.name }}
+        @click="handleClick"
+        :class="isList
+            ? 'flex items-center w-full gap-2 sm:gap-3 p-3 text-sm bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-900 border-b dark:border-gray-600 last:border-b-0 cursor-pointer'
+            : 'size-full flex flex-col items-center justify-center text-center min-h-48 aspect-square border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer'">
+        <Icon name="folder" :class="isList ? 'size-5 text-gray-500' : 'size-12 text-gray-400'" />
+        <span :class="isList ? 'text-sm text-gray-600 dark:text-gray-400' : 'text-sm text-gray-600 mt-2'">
+            {{ name ?? asset?.name }}
+        </span>
     </button>
 </template>

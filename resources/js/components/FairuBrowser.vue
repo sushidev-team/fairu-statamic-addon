@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, getCurrentInstance } from 'vue';
 import { toast, progress } from '@statamic/cms/api';
-import { Stack, Button, Input, Checkbox, Select } from '@statamic/cms/ui';
+import { Stack, Button, Input, Checkbox, Pagination, ToggleGroup, ToggleItem } from '@statamic/cms/ui';
 import Dropzone from './Dropzone.vue';
 import BrowserListItem from './browser/BrowserListItem.vue';
 import Folder from './browser/Folder.vue';
@@ -31,7 +31,7 @@ const loading = ref(false);
 const folder = ref(null);
 const page = ref(1);
 const displayType = ref('list');
-const lastPage = ref(1);
+const perPage = ref(25);
 const loadingList = ref(false);
 const showSelection = ref(false);
 const percentUploaded = ref(0);
@@ -40,10 +40,6 @@ const createFolderInputVisible = ref(false);
 const newFolderName = ref('');
 const previewItem = ref(null);
 
-const displayTypeOptions = [
-    { value: 'list', label: __('fairu::browser.display_types.list') },
-    { value: 'tiles', label: __('fairu::browser.display_types.tiles') },
-];
 
 let searchTimer = null;
 
@@ -208,17 +204,7 @@ function handleSearchInput(value) {
     }, 250);
 }
 
-function nextPage() {
-    page.value++;
-    loadFolderContent(searchQuery.value);
-}
-
-function previousPage() {
-    page.value--;
-    loadFolderContent(searchQuery.value);
-}
-
-function goToPage(p) {
+function handlePageSelected(p) {
     page.value = p;
     loadFolderContent(searchQuery.value);
 }
@@ -234,7 +220,6 @@ async function loadFolderContent(search, folderId) {
         successCallback: (result) => {
             folder.value = result.data.entry;
             folderContent.value = result.data.entries;
-            lastPage.value = result.data.entries?.last_page;
             loadingList.value = false;
         },
         errorCallback: () => {
@@ -321,9 +306,13 @@ onBeforeUnmount(() => {
                         class="flex flex-grow gap-1">
                         <Input
                             size="sm"
+                            icon="asset-folder"
+                            :focus="true"
                             :placeholder="__('fairu::browser.new_folder_name')"
                             :model-value="newFolderName"
-                            @update:model-value="newFolderName = $event" />
+                            @update:model-value="newFolderName = $event"
+                            @keyup.enter="handleCreateFolder"
+                            @keyup.esc="closeCreateFolder" />
                         <Button
                             variant="primary"
                             size="sm"
@@ -334,13 +323,16 @@ onBeforeUnmount(() => {
                             :text="__('fairu::browser.cancel')"
                             @click="closeCreateFolder" />
                     </div>
-                    <Input
-                        v-if="!createFolderInputVisible"
-                        size="sm"
-                        icon="search"
-                        :placeholder="__('fairu::browser.search_in_folder')"
-                        :model-value="searchQuery"
-                        @update:model-value="searchQuery = $event; handleSearchInput($event)" />
+                    <div v-if="!createFolderInputVisible" class="flex-1">
+                        <Input
+                            icon="magnifying-glass"
+                            size="sm"
+                            clearable
+                            :placeholder="__('fairu::browser.search_in_folder')"
+                            :model-value="searchQuery"
+                            @update:model-value="searchQuery = $event; handleSearchInput($event)"
+                            @keyup.esc="searchQuery = ''; handleSearchInput('')" />
+                    </div>
                     <Button
                         v-if="!createFolderInputVisible && selectionType !== 'folder' && canUpload"
                         size="sm"
@@ -350,7 +342,7 @@ onBeforeUnmount(() => {
                     <Button
                         v-if="!createFolderInputVisible && canUpload"
                         size="sm"
-                        icon="create-new-folder"
+                        icon="asset-folder"
                         :text="__('fairu::browser.new_folder')"
                         @click="openCreateFolder" />
                 </div>
@@ -378,11 +370,14 @@ onBeforeUnmount(() => {
                             :text="__('fairu::browser.clear_selection')"
                             @click="clearSelection" />
                     </div>
-                    <Select
-                        size="xs"
-                        :options="displayTypeOptions"
+                    <ToggleGroup
+                        variant="ghost"
+                        size="sm"
                         :model-value="displayType"
-                        @update:model-value="displayType = $event" />
+                        @update:model-value="displayType = $event">
+                        <ToggleItem icon="layout-list" value="list" />
+                        <ToggleItem icon="layout-grid" value="tiles" />
+                    </ToggleGroup>
                 </div>
             </section>
             <dropzone
@@ -399,7 +394,7 @@ onBeforeUnmount(() => {
                 </div>
                 <div
                     v-if="!loadingList"
-                    :class="displayType === 'tiles' ? 'grid p-3 gap-4' : 'px-2 group'"
+                    :class="displayType === 'tiles' ? 'grid p-3 gap-4' : ''"
                     :style="displayType === 'tiles' ? 'grid-template-columns: repeat(auto-fill, minmax(230px, 1fr))' : ''">
                     <Folder
                         custom
@@ -513,36 +508,17 @@ onBeforeUnmount(() => {
                         alt="Fairu Asset Service" />
                 </a>
             </div>
-            <div class="flex flex-wrap justify-between gap-4 px-3 py-3 border-t border-gray-100 dark:border-dark-600 dark:bg-dark-900 bg-slate-50">
-                <div>
-                    <div
-                        class="flex items-center justify-end gap-1"
-                        v-if="!showSelection">
-                        <Button
-                            size="sm"
-                            icon="chevron-double-left"
-                            icon-only
-                            :disabled="page <= 1"
-                            @click.prevent="goToPage(1)" />
-                        <Button
-                            size="sm"
-                            :text="__('fairu::browser.previous')"
-                            :disabled="page <= 1"
-                            @click.prevent="previousPage" />
-                        <div class="px-2 text-sm">{{ page }} / {{ lastPage || 1 }}</div>
-                        <Button
-                            size="sm"
-                            :text="__('fairu::browser.next')"
-                            :disabled="page >= lastPage"
-                            @click.prevent="nextPage" />
-                        <Button
-                            size="sm"
-                            icon="chevron-double-right"
-                            icon-only
-                            :disabled="page >= lastPage"
-                            @click.prevent="goToPage(lastPage)" />
-                    </div>
-                </div>
+            <div class="flex flex-wrap items-center justify-between gap-4 px-3 py-3 border-t border-gray-100 dark:border-dark-600 dark:bg-dark-900 bg-slate-50">
+                <Pagination
+                    v-if="folderContent && !showSelection"
+                    :resource-meta="folderContent"
+                    :per-page="perPage"
+                    :scroll-to-top="false"
+                    :show-per-page-selector="false"
+                    :show-totals="true"
+                    :show-page-links="true"
+                    @page-selected="handlePageSelected" />
+                <div v-else></div>
                 <div class="flex gap-3">
                     <Button
                         v-if="!createFolderInputVisible"
