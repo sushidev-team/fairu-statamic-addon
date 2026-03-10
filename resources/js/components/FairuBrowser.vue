@@ -270,6 +270,7 @@ function getExtension(mime) {
     return parts.length === 2 ? parts[1] : 'n/a';
 }
 
+const isFolderMode = computed(() => props.selectionType === 'folder');
 const listingColumns = [{ field: 'name', label: __('Name'), sortable: false }];
 
 const folderItems = computed(() =>
@@ -358,8 +359,9 @@ onMounted(async () => {
         props.config.max_files === 1
             ? []
             : [...(props.initialAssets?.length > 0 ? props.initialAssets : [])];
+    const startFolder = props.config.folder || props.meta?.folder || null;
     try {
-        await loadFolderContent(null, props.config.folder);
+        await loadFolderContent(null, startFolder);
     } catch (error) {
         toast.error(__('fairu::browser.errors.error_loading_folder'));
         await loadFolderContent(null, null);
@@ -487,7 +489,21 @@ onBeforeUnmount(() => {
                                 <Icon name="folder" class="size-5 text-gray-500" />
                                 <span>{{ value }}</span>
                             </button>
-                            <!-- File row -->
+                            <!-- File row (disabled in folder mode) -->
+                            <div
+                                v-else-if="isFolderMode"
+                                class="flex items-center gap-2 w-full -my-3 py-3 opacity-40 pointer-events-none">
+                                <div class="shrink-0 size-7 rounded-sm overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                    <img
+                                        v-if="meta.proxy && row?.blocked != true && isMediaItem(row)"
+                                        draggable="false"
+                                        :src="thumbnailUrl(row)"
+                                        class="size-full object-cover" />
+                                    <i v-else class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-base">description</i>
+                                </div>
+                                <span class="truncate">{{ value }}</span>
+                            </div>
+                            <!-- File row (single select) -->
                             <button
                                 v-else-if="!multiselect"
                                 class="flex items-center gap-2 w-full cursor-pointer select-none -my-3 py-3"
@@ -523,7 +539,7 @@ onBeforeUnmount(() => {
                                 icon="folder"
                                 @click="selectFolder(row._isParent ? folder?.parent_id : row.id)" />
                             <!-- File actions -->
-                            <template v-else>
+                            <template v-else-if="!isFolderMode">
                                 <DropdownItem
                                     :text="__('fairu::browser.preview')"
                                     icon="eye"

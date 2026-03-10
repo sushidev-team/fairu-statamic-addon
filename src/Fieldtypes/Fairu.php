@@ -87,7 +87,11 @@ class Fairu extends Fieldtype
 
     public function preload()
     {
-        return ['proxy' => config('statamic.fairu.url_proxy'), 'file' => config('statamic.fairu.url') . '/files'];
+        return [
+            'proxy' => config('statamic.fairu.url_proxy'),
+            'file' => config('statamic.fairu.url') . '/files',
+            'folder' => $this->config('folder'),
+        ];
     }
 
     public function getItemData($items)
