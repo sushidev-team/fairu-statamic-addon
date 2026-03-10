@@ -12,11 +12,11 @@
     }
   },
   "require": {
-    "statamic/cms": "^5.51",
+    "statamic/cms": "^6.0",
     "laravel/prompts": "^0.3.5"
   },
   "require-dev": {
-    "orchestra/testbench": "^9.0"
+    "orchestra/testbench": "^10.0"
   },
   "config": {
     "allow-plugins": {

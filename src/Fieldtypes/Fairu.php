@@ -87,7 +87,7 @@ class Fairu extends Fieldtype
 
     public function preload()
     {
-        return ['proxy' => config('fairu.url_proxy'), 'file' => config('fairu.url') . '/files'];
+        return ['proxy' => config('statamic.fairu.url_proxy'), 'file' => config('statamic.fairu.url') . '/files'];
     }
 
     public function getItemData($items)
@@ -179,7 +179,7 @@ class Fairu extends Fieldtype
         $cacheKey = md5(json_encode($value));
         $ids = $this->resolveIds($value);
 
-        $files = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('fairu.caching_meta'), function () use ($ids) {
+        $files = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids) {
             return collect($this->getFiles($ids, true))->map(function ($asset) {
 
                 $url = $this->buildFileUrl(

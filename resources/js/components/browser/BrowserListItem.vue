@@ -1,14 +1,63 @@
+<script setup>
+import { computed } from 'vue';
+import { Checkbox } from '@statamic/cms/ui';
+
+const displayTypeStyles = {
+    list: {
+        root: 'flex items-center gap-2 px-2 py-1 min-h-12 select-none last:border-b-none border-b border-slate-100 hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-700',
+        imageWrapper: 'flex items-center justify-center shrink-0 overflow-hidden bg-gray-300 rounded-full size-8',
+        image: 'object-cover',
+        checkbox: 'mr-1.5',
+        actions: 'flex shrink-0 gap-1',
+        action: 'text-lg text-gray-300 material-symbols-outlined pointer-events-none dark:!text-gray-600 dark:hover:!text-blue-500',
+    },
+    tiles: {
+        root: 'size-full relative min-h-48 aspect-square group',
+        imageWrapper: 'rounded-lg overflow-hidden size-full bg-gray-100',
+        image: 'size-full object-cover',
+        checkbox: 'm-4 absolute z-10 left-0 top-0',
+        actions:
+            'flex w-auto absolute right-2 bottom-2 justify-end px-1 bg-gray-900/0 rounded-xl group-hover:bg-gray-900/30 transition-all duration-300',
+        action: 'text-xl p-1.5 text-gray-300 material-symbols-outlined pointer-events-none dark:text-gray-600 dark:hover:text-blue-500 opacity-60 group-hover:opacity-100 transition-opacity duration-300',
+    },
+};
+
+const props = defineProps({
+    asset: Object,
+    meta: Object,
+    displayType: String,
+    selected: Boolean,
+    multiselect: Boolean,
+    disabled: Boolean,
+});
+
+const emit = defineEmits(['change', 'preview']);
+
+function toggleSelection() {
+    if (props.disabled) return;
+    emit('change', { asset: props.asset, selected: !props.selected });
+}
+
+function emitPreview() {
+    emit('preview');
+}
+
+const classes = computed(() => displayTypeStyles[props.displayType ?? 'list']);
+const imageSize = computed(() => (props.displayType === 'tiles' ? 350 : 34));
+</script>
+
 <template>
     <div
-        :class="[classes.root, { 'fa-opacity-50': disabled }]"
+        :class="[classes.root, { 'opacity-50': disabled }]"
         @click="toggleSelection"
         v-if="asset.type !== 'folder'">
-        <div class="flex items-center gap-1 cursor-pointer grow fa-size-full">
-            <input-checkbox
+        <div class="flex items-center gap-1 cursor-pointer grow min-w-0">
+            <Checkbox
                 v-if="multiselect"
+                solo
+                size="sm"
                 :class="classes.checkbox"
-                :id="asset?.id"
-                :checked="selected"
+                :model-value="selected"
                 :disabled="disabled" />
             <div :class="classes.imageWrapper">
                 <img
@@ -21,18 +70,15 @@
                     :src="`${meta.proxy}/${asset.id}/thumbnail.webp?width=${imageSize}&height=${imageSize}`"
                     :class="classes.image" />
                 <div
-                    class="items-end content-center fa-grid fa-size-full fa-justify-center fa-p-8 fa-text-center fa-text-gray-600"
+                    class="items-end content-center grid size-full justify-center p-8 text-center text-gray-600"
                     style="font-size: 8px"
                     v-if="!asset?.mime?.startsWith('image/') && !asset?.mime?.startsWith('video/')">
-                    <i
-                        class="material-symbols-outlined fa-pointer-events-none fa-text-[150px] fa-text-gray-900 dark:!fa-text-gray-600 dark:hover:!fa-text-blue-500"
-                        >description</i
-                    >
-                    <div class="fa-text-base fa-text-gray-800">{{ asset?.name }}</div>
+                    <i class="material-symbols-outlined pointer-events-none text-gray-900 dark:!text-gray-600" style="font-size: 150px">description</i>
+                    <div class="text-base text-gray-800">{{ asset?.name }}</div>
                 </div>
             </div>
             <div
-                class="flex items-center gap-2 text-sm grow"
+                class="flex items-center gap-2 text-sm grow min-w-0 truncate"
                 v-if="displayType !== 'tiles'">
                 {{ asset.name }}
             </div>
@@ -40,82 +86,17 @@
         <div :class="classes.actions">
             <button
                 @click.stop="emitPreview"
-                title="Open in preview"
-                ><i :class="classes.action">visibility</i></button
-            >
+                title="Open in preview">
+                <i :class="classes.action">visibility</i>
+            </button>
             <a
                 @click.stop
                 :href="meta.file + '/' + asset.id"
                 target="_blank"
                 :title="__('fairu::browser.edit_in_fairu')"
-                class="flex gap-1 text-xs cursor-pointer"
-                ><i :class="classes.action">open_in_new</i>
+                class="flex gap-1 text-xs cursor-pointer">
+                <i :class="classes.action">open_in_new</i>
             </a>
         </div>
     </div>
 </template>
-
-<script>
-const displayTypeStyles = {
-    list: {
-        root: 'grid items-center gap-2 px-2 py-1 fa-min-h-12 fa-select-none fa-grid-cols-[1fr,auto] last:fa-border-b-none fa-border-b fa-border-slate-100 hover:fa-bg-gray-50 dark:fa-border-zinc-700 dark:hover:fa-bg-zinc-700',
-        imageWrapper: 'flex items-center justify-center flex-none overflow-hidden bg-gray-300 rounded-full fa-size-8',
-        image: 'object-cover',
-        checkbox: 'fa-mr-1.5',
-        actions: 'flex gap-1',
-        action: 'text-lg text-gray-300 material-symbols-outlined fa-pointer-events-none dark:!fa-text-gray-600 dark:hover:!fa-text-blue-500',
-    },
-    tiles: {
-        root: 'fa-size-full relative fa-min-h-48 fa-aspect-square fa-group',
-        imageWrapper: 'fa-rounded-lg overflow-hidden fa-size-full fa-bg-gray-100',
-        image: 'fa-size-full object-cover',
-        checkbox: 'fa-m-4 absolute z-10 left-0 top-0',
-        actions:
-            'fa-flex fa-w-auto fa-absolute fa-right-2 fa-bottom-2 fa-justify-end fa-px-1 fa-bg-gray-900/0 fa-rounded-xl group-hover:fa-bg-gray-900/30 fa-transition-all fa-duration-300',
-        action: 'fa-text-xl fa-p-1.5 text-gray-300 material-symbols-outlined fa-pointer-events-none dark:fa-text-gray-600 dark:hover:fa-text-blue-500 fa-opacity-60 group-hover:fa-opacity-100 fa-transition-opacity fa-duration-300',
-    },
-};
-
-export default {
-    components: {},
-
-    data() {
-        return {};
-    },
-    props: {
-        asset: null,
-        meta: null,
-        displayType: String,
-        selected: Boolean,
-        multiselect: Boolean,
-        disabled: Boolean,
-    },
-    methods: {
-        toggleSelection() {
-            if (this.disabled) return;
-            this.$emit('change', { asset: this.asset, selected: !this.selected });
-        },
-        getExtension(mime) {
-            const parts = mime.split('/');
-            if (parts.length == 2) {
-                return parts[1];
-            }
-            return 'n/a';
-        },
-        emitPreview() {
-            this.$emit('preview');
-        },
-    },
-
-    computed: {
-        classes() {
-            return displayTypeStyles[this.displayType ?? 'list'];
-        },
-        imageSize() {
-            return this.displayType === 'tiles' ? 350 : 34;
-        },
-    },
-
-    mounted() {},
-};
-</script>
