@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.0.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.10.8...v2.0.0) (2026-03-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* statamic v6 base implementation
+
+### Features
+
+* FolderSelector layout, fix for starting folder ([7b1050c](https://github.com/sushidev-team/fairu-statamic-addon/commit/7b1050cbdfce546d1296deb2336ecc8d8a851d31))
+* moved several components to statamic v6 internal ui components ([06c2b85](https://github.com/sushidev-team/fairu-statamic-addon/commit/06c2b850f408e883afcdb318a59730b601aededa))
+* statamic v6 base implementation ([933841d](https://github.com/sushidev-team/fairu-statamic-addon/commit/933841d5bdf79b509cb77199f1e43f0c9fdc4fbd))
+
+
+### Bug Fixes
+
+* addressed PR comments ([373a113](https://github.com/sushidev-team/fairu-statamic-addon/commit/373a113bcbda7d6eef68498e325d226eb3c066e6))
+* authors ([f04fa76](https://github.com/sushidev-team/fairu-statamic-addon/commit/f04fa76fd004ca9a4b69d8d5544e548f093a725c))
+* **FairuBrowser:** layout structure ([fb8b2b0](https://github.com/sushidev-team/fairu-statamic-addon/commit/fb8b2b053f44897927c97dd84aac53488dbe148d))
+* listing element spacing ([5d6f387](https://github.com/sushidev-team/fairu-statamic-addon/commit/5d6f3874e7a102fb4921f4f1e4974ea66bf656b5))
+
 ## [1.10.8](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.10.7...v1.10.8) (2026-02-13)
 
 
