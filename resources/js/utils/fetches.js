@@ -63,7 +63,11 @@ export async function fairuUpload({ files, folder, onUploadProgressCallback = ()
 
         for (const [index, entry] of entries.entries()) {
             try {
-                await fetch(entry.storage_upload_path?.toString() || '/', {
+                if (!entry.storage_upload_path) {
+                    throw new Error(`Missing storage_upload_path for file: ${entry.filename}`);
+                }
+
+                const putRes = await fetch(entry.storage_upload_path.toString(), {
                     method: 'PUT',
                     headers: {
                         'x-amz-acl': 'public-read',
@@ -72,32 +76,39 @@ export async function fairuUpload({ files, folder, onUploadProgressCallback = ()
                     body: filesArray[index] || null,
                 });
 
+                if (!putRes.ok) {
+                    throw new Error(`PUT failed with HTTP ${putRes.status} for file: ${entry.filename}`);
+                }
+
                 counter++;
                 onUploadProgressCallback({ loaded: counter, total: entries.length });
-
-                if (counter === entries.length) {
-                    const metaRes = await fetch('/fairu/upload-meta-bulk', {
-                        method: 'POST',
-                        headers: headers(),
-                        body: JSON.stringify({
-                            files: entries.map((e) => ({
-                                path: e.storage_path,
-                                name: e.filename,
-                                parent_id: folder,
-                                fingerprint: e.fingerprint?.toString(),
-                            })),
-                        }),
-                    });
-
-                    if (!metaRes.ok) throw new Error(`HTTP ${metaRes.status}`);
-                    const metaData = await metaRes.json();
-                    successCallback?.({ data: metaData });
-                }
             } catch (err) {
                 console.error(err);
                 errorCallback?.(err);
                 return;
             }
+        }
+
+        try {
+            const metaRes = await fetch('/fairu/upload-meta-bulk', {
+                method: 'POST',
+                headers: headers(),
+                body: JSON.stringify({
+                    files: entries.map((e) => ({
+                        path: e.storage_path,
+                        name: e.filename,
+                        parent_id: folder,
+                        fingerprint: e.fingerprint?.toString(),
+                    })),
+                }),
+            });
+
+            if (!metaRes.ok) throw new Error(`HTTP ${metaRes.status}`);
+            const metaData = await metaRes.json();
+            successCallback?.({ data: metaData });
+        } catch (err) {
+            console.error(err);
+            errorCallback?.(err);
         }
     } catch (err) {
         console.error(err);

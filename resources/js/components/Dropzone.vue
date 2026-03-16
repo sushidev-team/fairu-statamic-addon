@@ -14,6 +14,7 @@ function addNativeFileFieldSelections(e) {
     const files = e.target.files;
     if (files?.length) {
         emit('dropped', files);
+        e.target.value = '';
     }
 }
 

@@ -50,7 +50,7 @@ function emitChange() {
             v-if="label">
             <label
                 :for="id"
-                class="font-medium select-none text-gray-900">
+                class="font-medium select-none text-gray-900 dark:text-gray-100">
                 {{ label }}
             </label>
         </div>

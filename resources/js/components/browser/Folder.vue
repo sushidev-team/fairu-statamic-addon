@@ -20,6 +20,7 @@ function handleClick() {
 
 <template>
     <button
+        type="button"
         v-if="asset?.type === 'folder' || custom"
         @click="handleClick"
         :class="isList

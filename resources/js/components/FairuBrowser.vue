@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick, getCurrentInstance, defineComponent, h, inject } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, getCurrentInstance, defineComponent, h } from 'vue';
 import { toast, progress } from '@statamic/cms/api';
 import { Stack, Button, Input, Icon, Checkbox, Pagination, ToggleGroup, ToggleItem, Listing, ListingTable, Panel, DropdownItem } from '@statamic/cms/ui';
 import Dropzone from './Dropzone.vue';
@@ -127,7 +127,9 @@ function toggleCurrentSelection() {
     } else {
         const newItems = folderFiles.filter((file) => !assets.value.some((e) => e.id === file.id));
         if (!newItems.length) return;
-        const remainingSlots = Math.max(0, props.config.max_files - assets.value.length);
+        const remainingSlots = Number.isFinite(props.config.max_files)
+            ? Math.max(0, props.config.max_files - assets.value.length)
+            : newItems.length;
         assets.value.push(...newItems.slice(0, remainingSlots));
     }
 }
@@ -174,7 +176,9 @@ function handleUploadFiles(files) {
 
             if (props.multiselect) {
                 if (fetchedAssets?.length > 0) {
-                    const remainingSlots = Math.max(0, props.config.max_files - assets.value.length);
+                    const remainingSlots = Number.isFinite(props.config.max_files)
+                        ? Math.max(0, props.config.max_files - assets.value.length)
+                        : fetchedAssets.length;
                     assets.value.push(...fetchedAssets.slice(0, remainingSlots));
                 }
                 await loadFolderContent();
@@ -234,12 +238,13 @@ async function loadFolderContent(search, folderId) {
             folderContent.value = result.data.entries;
             loadingList.value = false;
         },
-        errorCallback: () => {
-            if (folderId && retriesAvailable >= 0) {
+        errorCallback: async () => {
+            if (folderId && retriesAvailable > 0) {
                 retriesAvailable -= 1;
-                toast.error(__('fairu::browser.errors.error_accessing_folder'));
-                loadFolderContent(search);
+                await loadFolderContent(search, folderId);
+                return;
             }
+            toast.error(__('fairu::browser.errors.error_accessing_folder'));
             folderContent.value = null;
             folder.value = null;
             loadingList.value = false;
@@ -495,7 +500,7 @@ onBeforeUnmount(() => {
                                 class="flex items-center gap-2 w-full -my-3 py-3 opacity-40 pointer-events-none">
                                 <div class="shrink-0 size-7 rounded-sm overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                                     <img
-                                        v-if="meta.proxy && row?.blocked != true && isMediaItem(row)"
+                                        v-if="meta.proxy && row?.blocked !== true && isMediaItem(row)"
                                         draggable="false"
                                         :src="thumbnailUrl(row)"
                                         class="size-full object-cover" />
@@ -510,7 +515,7 @@ onBeforeUnmount(() => {
                                 @click.stop="selectItem(row)">
                                 <div class="shrink-0 size-7 rounded-sm overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                                     <img
-                                        v-if="meta.proxy && row?.blocked != true && isMediaItem(row)"
+                                        v-if="meta.proxy && row?.blocked !== true && isMediaItem(row)"
                                         draggable="false"
                                         :src="thumbnailUrl(row)"
                                         class="size-full object-cover" />
@@ -522,7 +527,7 @@ onBeforeUnmount(() => {
                             <div v-else class="flex items-center gap-2 w-full select-none cursor-pointer -my-3 py-3">
                                 <div class="shrink-0 size-7 rounded-sm overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                                     <img
-                                        v-if="meta.proxy && row?.blocked != true && isMediaItem(row)"
+                                        v-if="meta.proxy && row?.blocked !== true && isMediaItem(row)"
                                         draggable="false"
                                         :src="thumbnailUrl(row)"
                                         class="size-full object-cover" />
@@ -639,7 +644,7 @@ onBeforeUnmount(() => {
                             <img
                                 v-if="
                                     meta.proxy &&
-                                    previewImage?.blocked != true &&
+                                    previewImage?.blocked !== true &&
                                     (previewImage?.mime?.startsWith('image/') ||
                                         previewImage?.mime?.startsWith('video/'))
                                 "

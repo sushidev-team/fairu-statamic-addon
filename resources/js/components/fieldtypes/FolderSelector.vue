@@ -27,7 +27,7 @@ function clearFolder() {
 
 const browserConfig = computed(() => ({
     ...props.config,
-    folder: folder.value?.id ?? null,
+    folder: folder.value?.id ?? props.config.folder ?? null,
 }));
 
 onMounted(async () => {

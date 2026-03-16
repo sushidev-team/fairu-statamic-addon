@@ -89,7 +89,8 @@ function handleUpload(files) {
                 const fetchedAssets = await loadMetaData(newIds);
                 if (multiselect.value) {
                     if (fetchedAssets?.length > 0) {
-                        const remainingSlots = Math.max(0, props.config.max_files - assets.value.length);
+                        const maxFiles = Number.isFinite(props.config.max_files) ? props.config.max_files : Infinity;
+                        const remainingSlots = Math.max(0, maxFiles - assets.value.length);
                         assets.value.push(...fetchedAssets.slice(0, remainingSlots));
                     }
                 } else {
@@ -152,7 +153,7 @@ onMounted(async () => {
             :multiselect="multiselect"
             :initialAssets="assets"
             :meta="meta"
-            :config="config"
+            :config="props.config"
             :canUpload="canUpload" />
         <dropzone
             :enabled="canUpload"
@@ -203,9 +204,9 @@ onMounted(async () => {
                 <!-- Min/Max info -->
                 <div
                     class="px-3 py-1.5 text-xs text-gray-400 dark:text-gray-500 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900"
-                    v-if="(config.max_files && config.max_files !== 1) || config.min_files">
-                    <span v-if="config.min_files" class="mr-3">{{ __('fairu::fieldtype.rules.min') }}: {{ config.min_files }}</span>
-                    <span v-if="config.max_files">{{ __('fairu::fieldtype.rules.max') }}: {{ config.max_files }}</span>
+                    v-if="(props.config.max_files && props.config.max_files !== 1) || props.config.min_files">
+                    <span v-if="props.config.min_files" class="mr-3">{{ __('fairu::fieldtype.rules.min') }}: {{ props.config.min_files }}</span>
+                    <span v-if="props.config.max_files">{{ __('fairu::fieldtype.rules.max') }}: {{ props.config.max_files }}</span>
                 </div>
                 <!-- Asset rows -->
                 <div

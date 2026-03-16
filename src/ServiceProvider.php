@@ -44,7 +44,7 @@ class ServiceProvider extends AddonServiceProvider
                 File::makeDirectory($vendorViewsPath, 0755, true);
             }
 
-            View::addNamespace('fairu-statamic', $vendorViewsPath);
+            View::addNamespace('fairu', $vendorViewsPath);
         }
 
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'fairu');

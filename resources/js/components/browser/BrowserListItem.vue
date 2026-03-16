@@ -46,7 +46,7 @@ const isMedia = computed(() =>
                 :disabled="disabled" />
             <div class="shrink-0 size-7 rounded-sm overflow-hidden bg-gray-100 flex items-center justify-center">
                 <img
-                    v-if="meta.proxy && asset?.blocked != true && isMedia"
+                    v-if="meta.proxy && asset?.blocked !== true && isMedia"
                     draggable="false"
                     :src="`${meta.proxy}/${asset.id}/thumbnail.webp?width=${imageSize}&height=${imageSize}`"
                     class="size-full object-cover" />
@@ -65,6 +65,13 @@ const isMedia = computed(() =>
                     :title="__('fairu::browser.preview')"
                     @click.stop="emitPreview" />
                 <Dropdown placement="left-start">
+                    <template #trigger>
+                        <Button
+                            icon="dots-vertical"
+                            variant="ghost"
+                            size="xs"
+                            round />
+                    </template>
                     <DropdownMenu>
                         <DropdownItem
                             :text="__('fairu::browser.preview')"
@@ -95,7 +102,7 @@ const isMedia = computed(() =>
                 :disabled="disabled" />
             <div class="rounded-lg overflow-hidden size-full bg-gray-100">
                 <img
-                    v-if="meta.proxy && asset?.blocked != true && isMedia"
+                    v-if="meta.proxy && asset?.blocked !== true && isMedia"
                     draggable="false"
                     :src="`${meta.proxy}/${asset.id}/thumbnail.webp?width=${imageSize}&height=${imageSize}`"
                     class="size-full object-cover" />
