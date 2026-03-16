@@ -1,6 +1,15 @@
 {
   "name": "sushidev/fairu-statamic",
   "type": "statamic-addon",
+  "authors": [
+    {
+      "name": "Sushi Dev Team",
+      "email": "support@sushi.dev"
+    }
+  ],
+  "support": {
+    "email": "support@sushi.dev"
+  },
   "autoload": {
     "psr-4": {
       "Sushidev\\Fairu\\": "src"
@@ -12,11 +21,11 @@
     }
   },
   "require": {
-    "statamic/cms": "^5.51",
+    "statamic/cms": "^6.0",
     "laravel/prompts": "^0.3.5"
   },
   "require-dev": {
-    "orchestra/testbench": "^9.0"
+    "orchestra/testbench": "^10.0"
   },
   "config": {
     "allow-plugins": {
@@ -26,7 +35,7 @@
   "extra": {
     "statamic": {
       "name": "Fairu",
-      "description": "Fairu addon"
+      "description": "Addon for Fairu asset management & delivery"
     },
     "laravel": {
       "providers": [

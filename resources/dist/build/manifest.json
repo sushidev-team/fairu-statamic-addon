@@ -1,15 +1,19 @@
 {
   "resources/css/cp.css": {
-    "file": "assets/cp-WoZRTe5I.css",
+    "file": "assets/cp-BeE_p54C.css",
     "src": "resources/css/cp.css",
-    "isEntry": true
+    "isEntry": true,
+    "name": "cp",
+    "names": [
+      "cp.css"
+    ]
   },
   "resources/fonts/MaterialSymbolsOutlined-Regular.ttf": {
     "file": "assets/MaterialSymbolsOutlined-Regular-DQJClE0Y.ttf",
     "src": "resources/fonts/MaterialSymbolsOutlined-Regular.ttf"
   },
   "resources/js/cp.js": {
-    "file": "assets/cp-DRMgLMIQ.js",
+    "file": "assets/cp-BF8Z81hd.js",
     "name": "cp",
     "src": "resources/js/cp.js",
     "isEntry": true,
