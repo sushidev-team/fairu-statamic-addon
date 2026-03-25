@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.0.0...v2.0.1) (2026-03-25)
+
+
+### Bug Fixes
+
+* upgraded statamic cms ([d32dcc6](https://github.com/sushidev-team/fairu-statamic-addon/commit/d32dcc65d9b5db8e0d36bfcb6841b24067da5efc))
+
 ## [2.0.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v1.10.8...v2.0.0) (2026-03-16)
 
 
