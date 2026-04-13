@@ -133,15 +133,20 @@ class Fairu extends Fieldtype
     public function fieldRules()
     {
         $classes = [
+            'image' => ImageRule::class,
+            'max_filesize' => MaxFilesizeRule::class,
             'mimes' => MimesRule::class,
             'mimetypes' => MimetypesRule::class,
+            'min_filesize' => MinFilesizeRule::class,
         ];
 
         return collect(parent::fieldRules())->map(function ($rule) use ($classes) {
             $name = Str::before($rule, ':');
 
             if ($class = Arr::get($classes, $name)) {
-                $parameters = explode(',', Str::after($rule, ':'));
+                $parameters = Str::contains($rule, ':')
+                    ? explode(',', Str::after($rule, ':'))
+                    : [];
 
                 return new $class($parameters);
             }
