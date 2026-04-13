@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.2](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.0.1...v2.0.2) (2026-04-13)
+
+
+### Bug Fixes
+
+* added new custom rules for image, max/min filesize ([108664f](https://github.com/sushidev-team/fairu-statamic-addon/commit/108664f23bd0d717a70c2c22b08f9b21473fc799))
+* custom mimes / mimetypes rule ([c1dd28f](https://github.com/sushidev-team/fairu-statamic-addon/commit/c1dd28f7f4388afd1d01f55e08379d842ec0c9ca))
+
 ## [2.0.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.0.0...v2.0.1) (2026-03-25)
 
 
