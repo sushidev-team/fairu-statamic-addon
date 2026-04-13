@@ -2,6 +2,7 @@
 
 namespace Sushidev\Fairu\Fieldtypes;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Statamic\Fields\Fieldtype;
 use Statamic\Exceptions\AssetContainerNotFoundException;
@@ -127,6 +128,26 @@ class Fairu extends Fieldtype
         }
 
         return $rules;
+    }
+
+    public function fieldRules()
+    {
+        $classes = [
+            'mimes' => MimesRule::class,
+            'mimetypes' => MimetypesRule::class,
+        ];
+
+        return collect(parent::fieldRules())->map(function ($rule) use ($classes) {
+            $name = Str::before($rule, ':');
+
+            if ($class = Arr::get($classes, $name)) {
+                $parameters = explode(',', Str::after($rule, ':'));
+
+                return new $class($parameters);
+            }
+
+            return $rule;
+        })->all();
     }
 
     protected function container() {}
