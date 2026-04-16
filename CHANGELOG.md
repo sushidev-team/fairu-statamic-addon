@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.0.2...v2.1.0) (2026-04-16)
+
+
+### Features
+
+* optimized setup command for failed files ([bb6e583](https://github.com/sushidev-team/fairu-statamic-addon/commit/bb6e5839111f008ccb9bb95134a76252b9b6f6ea))
+
 ## [2.0.2](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.0.1...v2.0.2) (2026-04-13)
 
 
