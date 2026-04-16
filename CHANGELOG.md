@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.2](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.1.1...v2.1.2) (2026-04-16)
+
+
+### Bug Fixes
+
+* error on setup command ([f3e1d45](https://github.com/sushidev-team/fairu-statamic-addon/commit/f3e1d451f1414fdd42ad9c6b4a011b229a810358))
+
 ## [2.1.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.1.0...v2.1.1) (2026-04-16)
 
 
