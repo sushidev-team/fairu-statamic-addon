@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.1.0...v2.1.1) (2026-04-16)
+
+
+### Bug Fixes
+
+* added more blueprint paths for field migration step ([eb4f5e8](https://github.com/sushidev-team/fairu-statamic-addon/commit/eb4f5e893d043a4b0ee34541deceb0d7edbd15fd))
+* error on setup command ([7e86efe](https://github.com/sushidev-team/fairu-statamic-addon/commit/7e86efe885472e1c058f5851d14b4d3b672f38e9))
+
 ## [2.1.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.0.2...v2.1.0) (2026-04-16)
 
 
