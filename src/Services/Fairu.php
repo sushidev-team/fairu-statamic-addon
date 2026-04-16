@@ -93,6 +93,7 @@ class Fairu
 
             return $result?->json();
         } catch (Throwable $ex) {
+            Log::error('Fairu createFile failed for ' . data_get($file, 'filename') . ': ' . $ex->getMessage());
             return null;
         }
     }

@@ -6,6 +6,7 @@ use Error;
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Asset;
 use Statamic\Facades\AssetContainer as FacadesAssetContainer;
@@ -17,9 +18,15 @@ use Statamic\Fieldtypes\Bard\Augmentor;
 use Illuminate\Support\Str;
 
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\error;
+use function Laravel\Prompts\info;
+use function Laravel\Prompts\note;
+use function Laravel\Prompts\outro;
 use function Laravel\Prompts\progress;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\spin;
+use function Laravel\Prompts\table;
+use function Laravel\Prompts\warning;
 
 use Ramsey\Uuid\Uuid;
 use Statamic\Contracts\Assets\Asset as AssetsAsset;
@@ -41,7 +48,7 @@ class Setup extends Command
         try {
             $this->checkConnection();
         } catch (Throwable $ex) {
-            $this->error($ex->getMessage());
+            error($ex->getMessage());
             exit;
         }
         $this->importFiles();
@@ -70,8 +77,8 @@ class Setup extends Command
         }
 
         // Output some information about the keys
-        $this->info("Your api keys are valid and we could recieve the following user data associated with the api.");
-        $this->table(['id', 'email'], [Arr::only($result, ['id', 'email'])]);
+        info('Your api keys are valid and we could receive the following user data associated with the api.');
+        table(['id', 'email'], [Arr::only($result, ['id', 'email'])]);
 
         $continue = confirm("Want to continue with the import of your files to fairu?");
 
@@ -99,7 +106,7 @@ class Setup extends Command
         $folderList = FacadesAssetContainer::find($assetContainer)?->folders();
 
         if ($assets?->count() == 0) {
-            $this->error('No assets found.');
+            error('No assets found.');
             return;
         }
 
@@ -135,27 +142,38 @@ class Setup extends Command
                 hint: 'This may take some time, because we are creating this folders in fairu.'
             );
         } catch (Throwable $ex) {
-            $this->error("Seems like there is an error while creating the folders: " . $ex->getMessage());
+            error('Seems like there is an error while creating the folders: ' . $ex->getMessage());
         }
 
         // 4) Upload files
         $list = [];
+        $failed = [];
         progress(
             label: 'Upload files to fairu...',
             steps: $assets,
-            callback: function ($asset, $progress) use ($folders, &$list) {
+            callback: function ($asset, $progress) use ($folders, &$list, &$failed) {
                 $uuid = (new ServicesFairu($this->connection))->convertToUuid($asset->url());
-                $this->importAssetToFairu($asset, $uuid, $folders, $progress);
+                $success = $this->importAssetToFairu($asset, $uuid, $folders, $progress);
 
-                $list[] = [
+                $entry = [
                     'id' => $asset->id,
                     'path' => $asset->path,
                     'fairu' => $uuid,
                     'url' => $asset->url(),
+                    'asset' => $asset,
                 ];
+
+                if ($success) {
+                    $list[] = $entry;
+                } else {
+                    $failed[] = $entry;
+                }
             },
             hint: 'This may take some time, because we are uploading the files to fairu.'
         );
+
+        $this->reportUploadResults($list, $failed);
+        $this->retryFailedUploads($folders, $list, $failed);
 
         // 5) Replace
 
@@ -178,20 +196,21 @@ class Setup extends Command
         );
 
         if ($restart == false) {
-            $this->info("Setup for has been finished. Open https://docs.fairu.app/docs/statamic for further instructions.");
+            outro('Setup has been finished. Open https://docs.fairu.app/docs/statamic for further instructions.');
             return;
         }
 
         return $this->importFiles();
     }
 
-    protected function importAssetToFairu(AssetsAsset $asset, string $uuid, array $folders, $progress)
+    protected function importAssetToFairu(AssetsAsset $asset, string $uuid, array $folders, $progress): bool
     {
 
         $folder = (new ServicesImport)->getFolderPath($asset->path);
         $folderId = data_get(collect($folders)->where('path', $folder)->first(), 'id');
 
         $fileContent = $asset->contents();
+        $mimeType = $asset->mimeType() ?: 'application/octet-stream';
 
         $fairuAssetEntry = [
             'id' => $uuid,
@@ -203,33 +222,144 @@ class Setup extends Command
             'copyright' => data_get($asset->data(), config('statamic.fairu.migration.copyright'))
         ];
 
-        $caption = Str::replace(["\n", '<br>', "\r", "\t", '|', ''], '', (new Augmentor(new FieldtypesBard))->augment(data_get($asset->data(), config('statamic.fairu.migration.caption'))));
-        $description = Str::replace(["\n", '<br>', "\r", "\t", '|', ''], '', (new Augmentor(new FieldtypesBard))->augment(data_get($asset->data(), config('statamic.fairu.migration.description'))));
+        data_set($fairuAssetEntry, 'caption', $this->augmentBardField($asset, config('statamic.fairu.migration.caption')));
+        data_set($fairuAssetEntry, 'description', $this->augmentBardField($asset, config('statamic.fairu.migration.description')));
 
-        data_set($fairuAssetEntry, 'caption', $caption);
-        data_set($fairuAssetEntry, 'description', $description);
-
-        $progress
-            ->label("Create file entry " . $asset->basename());
+        $progress->label("Create file entry " . $asset->basename());
 
         $result = (new ServicesFairu($this->connection))->createFile($fairuAssetEntry);
 
         if ($result == null) {
-            $progress
-                ->label("Failed uploading " . $asset->basename());
+            $progress->label("Failed uploading " . $asset->basename());
+            Log::warning('Fairu: createFile returned null for ' . $asset->path());
+            return false;
+        }
+
+        $progress->label("Uploading " . $asset->basename());
+
+        try {
+            $response = Http::withHeaders([
+                'x-amz-acl' => 'public-read',
+            ])->send('PUT', data_get($result, 'upload_url'), [
+                'body' => $fileContent,
+                'headers' => ['Content-Type' => $mimeType],
+            ]);
+        } catch (Throwable $ex) {
+            Log::error('Fairu: S3 upload failed for ' . $asset->path() . ': ' . $ex->getMessage());
+            return false;
+        }
+
+        if (!$response->successful()) {
+            Log::error(sprintf(
+                'Fairu: S3 upload returned status %d for %s. Body: %s',
+                $response->status(),
+                $asset->path(),
+                substr((string) $response->body(), 0, 500)
+            ));
+            return false;
+        }
+
+        $syncResponse = Http::get(data_get($result, 'sync_url'));
+
+        if (!$syncResponse->successful()) {
+            Log::error(sprintf(
+                'Fairu: sync_url returned status %d for %s',
+                $syncResponse->status(),
+                $asset->path()
+            ));
+            return false;
+        }
+
+        return true;
+    }
+
+    protected function augmentBardField(AssetsAsset $asset, ?string $handle): ?string
+    {
+        if ($handle === null) {
             return null;
         }
 
-        $progress
-            ->label("Uploading " . $asset->basename());
+        $value = data_get($asset->data(), $handle);
 
-        $response = Http::withHeaders([
-            "x-amz-acl" => "public-read",
-            'Content-Type' => $asset->mime_type,
-        ])->withBody($fileContent, $asset->mime_type)->put(data_get($result, 'upload_url'));
+        if ($value === null || $value === '') {
+            return null;
+        }
 
-        if ($response->status() == 200) {
-            Http::get(data_get($result, 'sync_url'));
+        try {
+            $augmented = (new Augmentor(new FieldtypesBard))->augment($value);
+        } catch (Throwable $ex) {
+            Log::warning('Fairu: Bard augmentation failed for ' . $asset->path() . ' field "' . $handle . '": ' . $ex->getMessage());
+            return is_string($value) ? $value : null;
+        }
+
+        if (!is_string($augmented)) {
+            return null;
+        }
+
+        return Str::replace(["\n", '<br>', "\r", "\t", '|'], '', $augmented);
+    }
+
+    protected function reportUploadResults(array $list, array $failed): void
+    {
+        if (count($failed) === 0) {
+            info(sprintf('%d file(s) uploaded successfully.', count($list)));
+            return;
+        }
+
+        warning(sprintf(
+            '%d of %d file(s) failed to upload:',
+            count($failed),
+            count($list) + count($failed)
+        ));
+        table(
+            ['path', 'url'],
+            array_map(fn($f) => Arr::only($f, ['path', 'url']), $failed)
+        );
+        note('Check laravel.log for detailed error messages.');
+    }
+
+    protected function retryFailedUploads(array $folders, array &$list, array &$failed): void
+    {
+        while (count($failed) > 0) {
+
+            $retry = confirm(
+                label: sprintf('Retry uploading %d failed file(s)?', count($failed)),
+                default: true,
+                yes: 'Yes',
+                no: 'No',
+            );
+
+            if ($retry === false) {
+                return;
+            }
+
+            $toRetry = $failed;
+            $failed = [];
+
+            progress(
+                label: 'Retrying failed uploads...',
+                steps: $toRetry,
+                callback: function ($entry, $progress) use ($folders, &$list, &$failed) {
+                    $asset = data_get($entry, 'asset');
+                    $uuid = data_get($entry, 'fairu');
+
+                    if ($asset === null) {
+                        $failed[] = $entry;
+                        return;
+                    }
+
+                    $success = $this->importAssetToFairu($asset, $uuid, $folders, $progress);
+
+                    if ($success) {
+                        $list[] = $entry;
+                    } else {
+                        $failed[] = $entry;
+                    }
+                },
+                hint: 'Retrying previously failed uploads.'
+            );
+
+            $this->reportUploadResults($list, $failed);
         }
     }
 
@@ -252,7 +382,7 @@ class Setup extends Command
 
                 if (strpos($content, $oldType) !== false) {
                     $updatedContent = str_replace($oldType, $newType, $content);
-                    $this->info("Replace file name $file");
+                    note("Replaced file: $file");
                     file_put_contents($file, $updatedContent);
                 }
             }
