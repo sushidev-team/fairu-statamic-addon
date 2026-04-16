@@ -10,10 +10,13 @@ use Illuminate\Support\Facades\Log;
 use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Asset;
 use Statamic\Facades\AssetContainer as FacadesAssetContainer;
+use Statamic\Facades\Blueprint as FacadesBlueprint;
+use Statamic\Facades\Fieldset as FacadesFieldset;
 use Sushidev\Fairu\Services\Fairu as ServicesFairu;
 use Sushidev\Fairu\Services\Import as ServicesImport;
 use Statamic\Fieldtypes\Bard as FieldtypesBard;
 use Statamic\Fieldtypes\Bard\Augmentor;
+use Symfony\Component\Finder\Finder;
 
 use Illuminate\Support\Str;
 
@@ -365,27 +368,54 @@ class Setup extends Command
 
     public function replaceFields()
     {
-
-        $directories = [
-            base_path('resources/blueprints'),
-            base_path('resources/fieldsets')
-        ];
-
         $oldType = 'type: assets';
         $newType = 'type: fairu';
 
+        $directories = array_values(array_unique(array_filter([
+            FacadesBlueprint::directory(),
+            FacadesFieldset::directory(),
+            base_path('resources/blueprints'),
+            base_path('resources/fieldsets'),
+            base_path('content/globals'),
+        ])));
+
+        $summary = [];
+
         foreach ($directories as $dir) {
-            $files = glob($dir . '/*.yaml');
-
-            foreach ($files as $file) {
-                $content = file_get_contents($file);
-
-                if (strpos($content, $oldType) !== false) {
-                    $updatedContent = str_replace($oldType, $newType, $content);
-                    note("Replaced file: $file");
-                    file_put_contents($file, $updatedContent);
-                }
+            if (!is_dir($dir)) {
+                continue;
             }
+
+            $scanned = 0;
+            $changed = 0;
+            $occurrences = 0;
+
+            $finder = (new Finder)->files()->in($dir)->name('*.yaml');
+
+            foreach ($finder as $file) {
+                $scanned++;
+                $path = $file->getRealPath();
+                $content = file_get_contents($path);
+                $count = substr_count($content, $oldType);
+
+                if ($count === 0) {
+                    continue;
+                }
+
+                file_put_contents($path, str_replace($oldType, $newType, $content));
+                $changed++;
+                $occurrences += $count;
+                note("Replaced file: $path ($count)");
+            }
+
+            $summary[] = [
+                'directory' => $dir,
+                'scanned' => $scanned,
+                'changed' => $changed,
+                'replacements' => $occurrences,
+            ];
         }
+
+        table(['Directory', 'Scanned', 'Changed', 'Replacements'], $summary);
     }
 }
