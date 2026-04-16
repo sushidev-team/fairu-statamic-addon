@@ -57,6 +57,37 @@ class Fairu
         return $result->json();
     }
 
+    public function getExistingFileIds(array $ids, int $chunkSize = 200): array
+    {
+        $ids = array_values(array_filter($ids));
+
+        if (empty($ids)) {
+            return [];
+        }
+
+        $existing = [];
+
+        foreach (array_chunk($ids, $chunkSize) as $chunk) {
+            try {
+                $response = $this->getFiles($chunk);
+            } catch (Throwable $ex) {
+                Log::warning('Fairu: getExistingFileIds chunk failed: ' . $ex->getMessage());
+                continue;
+            }
+
+            $items = data_get($response, 'data', $response) ?? [];
+
+            foreach ((array) $items as $item) {
+                $id = data_get($item, 'id');
+                if (is_string($id) && $id !== '') {
+                    $existing[] = $id;
+                }
+            }
+        }
+
+        return array_values(array_unique($existing));
+    }
+
     public function getScopeFromEndpoint(): ?array
     {
 

@@ -133,30 +133,47 @@ class Setup extends Command
             callback: fn() => (new ServicesImport)->buildFlatFolderListByFolderArray($folderList->toArray())
         );
 
-        try {
-
-            // 3) Create folder entries in fairu
-            progress(
-                label: 'Creating folders in fairu...',
-                steps: $folders,
-                callback: function ($folder, $progress) {
+        // 3) Create folder entries in fairu (per-folder fault tolerance)
+        progress(
+            label: 'Creating folders in fairu...',
+            steps: $folders,
+            callback: function ($folder, $progress) {
+                try {
                     (new ServicesFairu($this->connection))->createFolder($folder);
-                },
-                hint: 'This may take some time, because we are creating this folders in fairu.'
-            );
-        } catch (Throwable $ex) {
-            error('Seems like there is an error while creating the folders: ' . $ex->getMessage());
+                } catch (Throwable $ex) {
+                    Log::warning('Fairu: createFolder failed for "' . data_get($folder, 'path') . '": ' . $ex->getMessage());
+                }
+            },
+            hint: 'This may take some time, because we are creating this folders in fairu.'
+        );
+
+        // 4) Check which files already exist on fairu so we can resume
+        $uuidMap = [];
+        $fairuService = new ServicesFairu($this->connection);
+
+        foreach ($assets as $asset) {
+            $uuidMap[$asset->id()] = $fairuService->convertToUuid($asset->url());
         }
 
-        // 4) Upload files
+        $existingIds = spin(
+            message: 'Checking which files already exist on fairu...',
+            callback: fn() => $fairuService->getExistingFileIds(array_values($uuidMap))
+        );
+        $existingIdSet = array_flip($existingIds);
+
+        if (count($existingIds) > 0) {
+            info(sprintf('%d of %d file(s) already exist on fairu and will be skipped.', count($existingIds), count($uuidMap)));
+        }
+
+        // 5) Upload files
         $list = [];
         $failed = [];
+        $skipped = [];
         progress(
             label: 'Upload files to fairu...',
             steps: $assets,
-            callback: function ($asset, $progress) use ($folders, &$list, &$failed) {
-                $uuid = (new ServicesFairu($this->connection))->convertToUuid($asset->url());
-                $success = $this->importAssetToFairu($asset, $uuid, $folders, $progress);
+            callback: function ($asset, $progress) use ($folders, $uuidMap, $existingIdSet, &$list, &$failed, &$skipped) {
+                $uuid = $uuidMap[$asset->id()] ?? (new ServicesFairu($this->connection))->convertToUuid($asset->url());
 
                 $entry = [
                     'id' => $asset->id,
@@ -166,6 +183,20 @@ class Setup extends Command
                     'asset' => $asset,
                 ];
 
+                if (isset($existingIdSet[$uuid])) {
+                    $progress->label('Skipping (already on fairu) ' . $asset->basename());
+                    $skipped[] = $entry;
+                    $list[] = $entry;
+                    return;
+                }
+
+                try {
+                    $success = $this->importAssetToFairu($asset, $uuid, $folders, $progress);
+                } catch (Throwable $ex) {
+                    Log::error('Fairu: unexpected error importing ' . $asset->path() . ': ' . $ex->getMessage());
+                    $success = false;
+                }
+
                 if ($success) {
                     $list[] = $entry;
                 } else {
@@ -174,6 +205,10 @@ class Setup extends Command
             },
             hint: 'This may take some time, because we are uploading the files to fairu.'
         );
+
+        if (count($skipped) > 0) {
+            info(sprintf('%d file(s) skipped (already present on fairu).', count($skipped)));
+        }
 
         $this->reportUploadResults($list, $failed);
         $this->retryFailedUploads($folders, $list, $failed);
@@ -282,24 +317,24 @@ class Setup extends Command
             return null;
         }
 
-        $value = data_get($asset->data(), $handle);
-
-        if ($value === null || $value === '') {
-            return null;
-        }
-
         try {
+            $value = data_get($asset->data(), $handle);
+
+            if ($value === null || $value === '') {
+                return null;
+            }
+
             $augmented = (new Augmentor(new FieldtypesBard))->augment($value);
+
+            if (!is_string($augmented)) {
+                return is_string($value) ? $value : null;
+            }
+
+            return Str::replace(["\n", '<br>', "\r", "\t", '|'], '', $augmented);
         } catch (Throwable $ex) {
             Log::warning('Fairu: Bard augmentation failed for ' . $asset->path() . ' field "' . $handle . '": ' . $ex->getMessage());
-            return is_string($value) ? $value : null;
-        }
-
-        if (!is_string($augmented)) {
             return null;
         }
-
-        return Str::replace(["\n", '<br>', "\r", "\t", '|'], '', $augmented);
     }
 
     protected function reportUploadResults(array $list, array $failed): void
@@ -351,7 +386,12 @@ class Setup extends Command
                         return;
                     }
 
-                    $success = $this->importAssetToFairu($asset, $uuid, $folders, $progress);
+                    try {
+                        $success = $this->importAssetToFairu($asset, $uuid, $folders, $progress);
+                    } catch (Throwable $ex) {
+                        Log::error('Fairu: unexpected error retrying ' . $asset->path() . ': ' . $ex->getMessage());
+                        $success = false;
+                    }
 
                     if ($success) {
                         $list[] = $entry;
