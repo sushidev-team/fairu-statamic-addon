@@ -173,28 +173,47 @@ class Setup extends Command
             label: 'Upload files to fairu...',
             steps: $assets,
             callback: function ($asset, $progress) use ($folders, $uuidMap, $existingIdSet, &$list, &$failed, &$skipped) {
-                $uuid = $uuidMap[$asset->id()] ?? (new ServicesFairu($this->connection))->convertToUuid($asset->url());
-
-                $entry = [
-                    'id' => $asset->id,
-                    'path' => $asset->path,
-                    'fairu' => $uuid,
-                    'url' => $asset->url(),
-                    'asset' => $asset,
-                ];
-
-                if (isset($existingIdSet[$uuid])) {
-                    $progress->label('Skipping (already on fairu) ' . $asset->basename());
-                    $skipped[] = $entry;
-                    $list[] = $entry;
-                    return;
-                }
+                $assetPath = null;
+                $entry = null;
 
                 try {
+                    $assetPath = $asset->path ?? null;
+                    $uuid = $uuidMap[$asset->id()] ?? (new ServicesFairu($this->connection))->convertToUuid($asset->url());
+
+                    $entry = [
+                        'id' => $asset->id,
+                        'path' => $assetPath,
+                        'fairu' => $uuid,
+                        'url' => $asset->url(),
+                        'asset' => $asset,
+                    ];
+
+                    if (isset($existingIdSet[$uuid])) {
+                        $progress->label('Skipping (already on fairu) ' . $asset->basename());
+                        $skipped[] = $entry;
+                        $list[] = $entry;
+                        return;
+                    }
+
                     $success = $this->importAssetToFairu($asset, $uuid, $folders, $progress);
                 } catch (Throwable $ex) {
-                    Log::error('Fairu: unexpected error importing ' . $asset->path() . ': ' . $ex->getMessage());
+                    Log::error(sprintf(
+                        'Fairu: unexpected error importing %s: %s%s%s',
+                        $assetPath ?? 'unknown asset',
+                        $ex->getMessage(),
+                        PHP_EOL,
+                        $ex->getTraceAsString()
+                    ));
                     $success = false;
+                    if ($entry === null) {
+                        $entry = [
+                            'id' => null,
+                            'path' => $assetPath,
+                            'fairu' => null,
+                            'url' => null,
+                            'asset' => $asset,
+                        ];
+                    }
                 }
 
                 if ($success) {
