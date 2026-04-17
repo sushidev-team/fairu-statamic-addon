@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.3](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.1.2...v2.1.3) (2026-04-17)
+
+
+### Bug Fixes
+
+* better fetchMeta handling ([1cda228](https://github.com/sushidev-team/fairu-statamic-addon/commit/1cda228f105767eb99ad421a56939f2882543bda))
+
 ## [2.1.2](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.1.1...v2.1.2) (2026-04-16)
 
 
