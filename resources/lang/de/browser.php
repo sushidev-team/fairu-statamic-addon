@@ -15,7 +15,12 @@ return [
     "previous" => "Zurück",
     "search_in_folder" => "Suche in Ordner",
     "select" => "Auswählen",
+    "apply" => "Auswahl übernehmen",
     "open" => "Öffnen",
     "preview" => "Vorschau",
-    "upload" => "Hochladen"
+    "upload" => "Hochladen",
+    "root" => "Stammordner",
+    "go_up" => "Zum übergeordneten Ordner",
+    "image_selected" => ":name ausgewählt",
+    "image_deselected" => ":name abgewählt"
 ];

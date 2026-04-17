@@ -172,8 +172,6 @@ class AssetController extends Controller
 
     public function updateFile(Request $request, string $id)
     {
-        $connection = config('statamic.fairu.connections.default');
-
         $data = array_merge(
             ['id' => $id],
             array_filter(
@@ -182,11 +180,8 @@ class AssetController extends Controller
             ),
         );
 
-        $result = Http::withHeaders([
-            'Tenant' => data_get($connection, 'tenant'),
-            'Authorization' => 'Bearer ' . data_get($connection, 'tenant_secret'),
-        ])->post(config('statamic.fairu.url') . '/graphql', [
-            'query' => <<<'GRAPHQL'
+        return $this->graphql(
+            <<<'GRAPHQL'
                 mutation UpdateFairuFile($data: FairuFileDTO!) {
                     updateFairuFile(data: $data) {
                         id
@@ -198,7 +193,67 @@ class AssetController extends Controller
                     }
                 }
             GRAPHQL,
-            'variables' => ['data' => $data],
+            ['data' => $data],
+            'updateFairuFile',
+        );
+    }
+
+    public function deleteFile(Request $request, string $id)
+    {
+        return $this->graphql(
+            <<<'GRAPHQL'
+                mutation DeleteFairuFile($id: ID!) {
+                    deleteFairuFile(id: $id)
+                }
+            GRAPHQL,
+            ['id' => $id],
+            'deleteFairuFile',
+        );
+    }
+
+    public function renameFile(Request $request, string $id)
+    {
+        $request->validate(['name' => 'required|string|min:1|max:255']);
+
+        return $this->graphql(
+            <<<'GRAPHQL'
+                mutation RenameFairuFile($id: ID!, $name: String!) {
+                    renameFairuFile(id: $id, name: $name) {
+                        id
+                        name
+                    }
+                }
+            GRAPHQL,
+            ['id' => $id, 'name' => $request->input('name')],
+            'renameFairuFile',
+        );
+    }
+
+    public function moveFile(Request $request, string $id)
+    {
+        $parent = $request->input('parent');
+
+        return $this->graphql(
+            <<<'GRAPHQL'
+                mutation MoveFairuFile($id: ID!, $parent: ID) {
+                    moveFairuFile(id: $id, parent: $parent)
+                }
+            GRAPHQL,
+            ['id' => $id, 'parent' => $parent ?: null],
+            'moveFairuFile',
+        );
+    }
+
+    protected function graphql(string $query, array $variables, string $dataKey)
+    {
+        $connection = config('statamic.fairu.connections.default');
+
+        $result = Http::withHeaders([
+            'Tenant' => data_get($connection, 'tenant'),
+            'Authorization' => 'Bearer ' . data_get($connection, 'tenant_secret'),
+        ])->post(config('statamic.fairu.url') . '/graphql', [
+            'query' => $query,
+            'variables' => $variables,
         ]);
 
         if ($result->status() == 403) {
@@ -218,7 +273,7 @@ class AssetController extends Controller
             ], 422);
         }
 
-        return ['data' => data_get($body, 'data.updateFairuFile')];
+        return ['data' => data_get($body, 'data.' . $dataKey)];
     }
 
     public function getFilesList(Request $request)

@@ -1,7 +1,8 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, getCurrentInstance, defineComponent, h } from 'vue';
 import { toast } from '@statamic/cms/api';
-import { Stack, Button, Input, Textarea, Field, Heading, Subheading, Description } from '@statamic/cms/ui';
+import { Stack, Button, Input, Textarea, Field, Heading, Subheading, Description, Dropdown, DropdownMenu, DropdownItem, DropdownSeparator } from '@statamic/cms/ui';
+import FairuAssetActions from './FairuAssetActions.vue';
 import { fairuGetFile, fairuUpdateFile } from '../utils/fetches';
 
 const __ = getCurrentInstance().appContext.config.globalProperties.__;
@@ -20,7 +21,38 @@ const props = defineProps({
     meta: { type: Object, required: true },
 });
 
-const emit = defineEmits(['close', 'saved']);
+const emit = defineEmits(['close', 'saved', 'renamed', 'moved', 'deleted']);
+
+const actionsRef = ref(null);
+
+function openRename() {
+    if (asset.value) actionsRef.value?.openRename(asset.value);
+}
+
+function openMove() {
+    if (asset.value) actionsRef.value?.openMove(asset.value);
+}
+
+function openDelete() {
+    if (asset.value) actionsRef.value?.openDelete(asset.value);
+}
+
+function handleRenamed(payload) {
+    if (asset.value?.id === payload.id) {
+        asset.value = { ...asset.value, name: payload.name };
+    }
+    emit('renamed', payload);
+}
+
+function handleMoved(payload) {
+    emit('moved', payload);
+    emit('close');
+}
+
+function handleDeleted(payload) {
+    emit('deleted', payload);
+    emit('close');
+}
 
 const loading = ref(true);
 const saving = ref(false);
@@ -176,6 +208,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+    <FairuAssetActions
+        ref="actionsRef"
+        :meta="meta"
+        @renamed="handleRenamed"
+        @moved="handleMoved"
+        @deleted="handleDeleted" />
     <Stack open @closed="emit('close')" inset :wrap-slot="false" size="xl">
         <FairuStackHeader>
             <div class="flex items-center gap-3 min-w-0">
@@ -186,7 +224,37 @@ onBeforeUnmount(() => {
                     {{ asset?.name || __('fairu::fieldtype.editor.title') }}
                 </div>
             </div>
-            <Button icon="x" variant="ghost" class="-me-2" @click="emit('close')" />
+            <div class="flex items-center gap-1">
+                <Dropdown v-if="asset" placement="bottom-end">
+                    <template #trigger>
+                        <Button icon="dots-vertical" variant="ghost" size="sm" />
+                    </template>
+                    <DropdownMenu>
+                        <DropdownItem
+                            :text="__('fairu::fieldtype.rename')"
+                            icon="rename"
+                            @click="openRename" />
+                        <DropdownItem
+                            :text="__('fairu::fieldtype.move')"
+                            icon="folder-open"
+                            @click="openMove" />
+                        <DropdownSeparator />
+                        <DropdownItem
+                            :text="__('fairu::browser.edit_in_fairu')"
+                            icon="external-link"
+                            :href="meta.file + '/' + asset.id"
+                            target="_blank" />
+                        <DropdownSeparator />
+                        <DropdownItem
+                            :text="__('fairu::fieldtype.delete')"
+                            icon="trash"
+                            variant="destructive"
+                            class="!text-red-600 dark:!text-red-400"
+                            @click="openDelete" />
+                    </DropdownMenu>
+                </Dropdown>
+                <Button icon="x" variant="ghost" class="-me-2" @click="emit('close')" />
+            </div>
         </FairuStackHeader>
 
         <div class="flex-1 overflow-y-auto">

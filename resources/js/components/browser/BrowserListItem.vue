@@ -1,6 +1,6 @@
 <script setup>
 import { computed, getCurrentInstance } from 'vue';
-import { Checkbox, Button, Dropdown, DropdownMenu, DropdownItem } from '@statamic/cms/ui';
+import { Checkbox, Button, Dropdown, DropdownMenu, DropdownItem, DropdownSeparator } from '@statamic/cms/ui';
 
 const __ = getCurrentInstance().appContext.config.globalProperties.__;
 
@@ -13,7 +13,7 @@ const props = defineProps({
     disabled: Boolean,
 });
 
-const emit = defineEmits(['change', 'preview', 'edit']);
+const emit = defineEmits(['change', 'preview', 'edit', 'rename', 'move', 'delete']);
 
 function toggleSelection() {
     if (props.disabled) return;
@@ -26,6 +26,18 @@ function emitPreview() {
 
 function emitEdit() {
     emit('edit', props.asset);
+}
+
+function emitRename() {
+    emit('rename', props.asset);
+}
+
+function emitMove() {
+    emit('move', props.asset);
+}
+
+function emitDelete() {
+    emit('delete', props.asset);
 }
 
 const isList = computed(() => (props.displayType ?? 'list') === 'list');
@@ -93,11 +105,27 @@ const isMedia = computed(() =>
                             icon="pencil"
                             @click.stop="emitEdit" />
                         <DropdownItem
+                            :text="__('fairu::fieldtype.rename')"
+                            icon="rename"
+                            @click.stop="emitRename" />
+                        <DropdownItem
+                            :text="__('fairu::fieldtype.move')"
+                            icon="folder-open"
+                            @click.stop="emitMove" />
+                        <DropdownSeparator />
+                        <DropdownItem
                             :text="__('fairu::browser.edit_in_fairu')"
                             icon="external-link"
                             :href="meta.file + '/' + asset.id"
                             target="_blank"
                             @click.stop />
+                        <DropdownSeparator />
+                        <DropdownItem
+                            :text="__('fairu::fieldtype.delete')"
+                            icon="trash"
+                            variant="destructive"
+                            class="!text-red-600 dark:!text-red-400"
+                            @click.stop="emitDelete" />
                     </DropdownMenu>
                 </Dropdown>
             </div>
@@ -129,33 +157,85 @@ const isMedia = computed(() =>
                 </div>
             </div>
             <!-- Tile actions overlay -->
-            <div class="flex w-auto absolute right-2 bottom-2 justify-end gap-0.5 rounded-xl bg-gray-900/0 group-hover:bg-gray-900/30 transition-all duration-300">
+            <div class="tile-actions flex w-auto absolute right-2 bottom-2 justify-end gap-1 rounded-full bg-white/15 hover:bg-gray-900/70 backdrop-blur-md shadow-md ring-1 ring-white/20 px-1 py-1 transition-colors duration-150">
                 <Button
                     icon="eye"
                     variant="ghost"
                     size="xs"
                     round
-                    class="opacity-60 group-hover:opacity-100 transition-opacity duration-300 text-white"
+                    :title="__('fairu::browser.preview')"
                     @click.stop="emitPreview" />
                 <Button
                     icon="pencil"
                     variant="ghost"
                     size="xs"
                     round
-                    class="opacity-60 group-hover:opacity-100 transition-opacity duration-300 text-white"
                     :title="__('fairu::fieldtype.edit')"
                     @click.stop="emitEdit" />
-                <Button
-                    as="a"
-                    :href="meta.file + '/' + asset.id"
-                    target="_blank"
-                    icon="external-link"
-                    variant="ghost"
-                    size="xs"
-                    round
-                    class="opacity-60 group-hover:opacity-100 transition-opacity duration-300 text-white"
-                    @click.stop />
+                <Dropdown placement="left-start">
+                    <template #trigger>
+                        <Button
+                            icon="dots-vertical"
+                            variant="ghost"
+                            size="xs"
+                            round
+                            @click.stop />
+                    </template>
+                    <DropdownMenu>
+                        <DropdownItem
+                            :text="__('fairu::fieldtype.rename')"
+                            icon="rename"
+                            @click.stop="emitRename" />
+                        <DropdownItem
+                            :text="__('fairu::fieldtype.move')"
+                            icon="folder-open"
+                            @click.stop="emitMove" />
+                        <DropdownSeparator />
+                        <DropdownItem
+                            :text="__('fairu::browser.edit_in_fairu')"
+                            icon="external-link"
+                            :href="meta.file + '/' + asset.id"
+                            target="_blank"
+                            @click.stop />
+                        <DropdownSeparator />
+                        <DropdownItem
+                            :text="__('fairu::fieldtype.delete')"
+                            icon="trash"
+                            variant="destructive"
+                            class="!text-red-600 dark:!text-red-400"
+                            @click.stop="emitDelete" />
+                    </DropdownMenu>
+                </Dropdown>
             </div>
         </div>
     </div>
 </template>
+
+<style scoped>
+.tile-actions :deep(button),
+.tile-actions :deep(a) {
+    background: transparent;
+    color: rgb(255 255 255 / 0.92) !important;
+}
+
+.tile-actions :deep(svg) {
+    color: rgb(255 255 255 / 0.92) !important;
+}
+
+.tile-actions :deep(button:hover),
+.tile-actions :deep(a:hover) {
+    background: rgb(255 255 255 / 0.18);
+    color: rgb(255 255 255) !important;
+}
+
+.tile-actions :deep(button:hover svg),
+.tile-actions :deep(a:hover svg) {
+    color: rgb(255 255 255) !important;
+}
+
+.tile-actions :deep(button:focus-visible),
+.tile-actions :deep(a:focus-visible) {
+    outline: 2px solid rgb(255 255 255 / 0.6);
+    outline-offset: 1px;
+}
+</style>

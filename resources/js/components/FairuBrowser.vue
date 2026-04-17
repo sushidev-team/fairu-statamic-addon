@@ -6,6 +6,8 @@ import Dropzone from './Dropzone.vue';
 import BrowserListItem from './browser/BrowserListItem.vue';
 import Folder from './browser/Folder.vue';
 import FairuAssetEditor from './FairuAssetEditor.vue';
+import FairuAssetActions from './FairuAssetActions.vue';
+import FairuPreview from './FairuPreview.vue';
 import { fairuLoadFolder, fairuUpload, fairuCreateFolder, fairuLoadFilesMeta } from '../utils/fetches';
 
 const __ = getCurrentInstance().appContext.config.globalProperties.__;
@@ -51,6 +53,7 @@ const createFolderInputVisible = ref(false);
 const newFolderName = ref('');
 const previewItem = ref(null);
 const editingAssetId = ref(null);
+const actionsRef = ref(null);
 
 
 let searchTimer = null;
@@ -141,6 +144,31 @@ function setPreview(itemIndex) {
     previewItem.value = itemIndex;
 }
 
+function closePreview() {
+    previewItem.value = null;
+}
+
+function editPreview(item) {
+    if (!item?.id) return;
+    previewItem.value = null;
+    openEditor(item);
+}
+
+function handlePreviewConfirm(item) {
+    if (!item) return;
+    selectItem(item);
+}
+
+function handlePreviewToggle(item) {
+    if (!item) return;
+    toggleItemSelection(item);
+}
+
+function handlePreviewApply() {
+    previewItem.value = null;
+    sendSelection();
+}
+
 function openEditor(asset) {
     if (!asset?.id) return;
     editingAssetId.value = asset.id;
@@ -155,20 +183,52 @@ async function handleAssetSaved(updated) {
     const refreshed = await loadMetaData([updated.id]);
     const refreshedAsset = refreshed?.[0];
     if (!refreshedAsset) return;
+    patchAsset(refreshedAsset.id, refreshedAsset);
+}
+
+function patchAsset(id, patch) {
     if (folderContent.value?.data) {
         folderContent.value.data = folderContent.value.data.map((e) =>
-            e?.id === refreshedAsset.id ? { ...e, ...refreshedAsset } : e,
+            e?.id === id ? { ...e, ...patch } : e,
         );
     }
     assets.value = assets.value.map((e) =>
-        e?.id === refreshedAsset.id ? { ...e, ...refreshedAsset } : e,
+        e?.id === id ? { ...e, ...patch } : e,
     );
 }
 
-function navigatePreview(diff) {
-    const filesOnly = folderContent.value?.data?.filter((e) => e.type !== 'folder') || [];
-    previewItem.value = Math.min(Math.max(0, previewItem.value + diff), filesOnly.length - 1);
+function removeAssetFromView(id) {
+    if (folderContent.value?.data) {
+        folderContent.value.data = folderContent.value.data.filter((e) => e?.id !== id);
+    }
+    assets.value = assets.value.filter((e) => e?.id !== id);
 }
+
+function openRename(asset) {
+    actionsRef.value?.openRename(asset);
+}
+
+function openMove(asset) {
+    actionsRef.value?.openMove(asset);
+}
+
+function openDelete(asset) {
+    actionsRef.value?.openDelete(asset);
+}
+
+function handleAssetRenamed({ id, name, asset }) {
+    patchAsset(id, { name, ...(asset || {}) });
+}
+
+async function handleAssetMoved({ id }) {
+    removeAssetFromView(id);
+    await loadFolderContent(searchQuery.value);
+}
+
+function handleAssetDeleted({ id }) {
+    removeAssetFromView(id);
+}
+
 
 function isSelected(asset) {
     return assets.value?.some((e) => e?.id === asset.id);
@@ -380,9 +440,20 @@ function handleListingSelections(newSelections) {
     if (assets.value.length < 1) showSelection.value = false;
 }
 
+const breadcrumbSegments = computed(() => {
+    const path = folder.value?.folder_path;
+    if (!path || typeof path !== 'string') {
+        if (folder.value?.name) return [folder.value.name];
+        return [];
+    }
+    return path.split('/').map((s) => s.trim()).filter((s) => s.length > 0);
+});
+
+const parentFolderId = computed(() => folder.value?.parent_id ?? null);
+
 const previewImage = computed(() => {
     if (previewItem.value === null || previewItem.value === undefined) return null;
-    return folderContent.value?.data?.filter((e) => e?.type !== 'folder')?.[previewItem.value];
+    return fileItems.value[previewItem.value];
 });
 
 onMounted(async () => {
@@ -414,7 +485,17 @@ onBeforeUnmount(() => {
         :assetId="editingAssetId"
         :meta="meta"
         @close="closeEditor"
-        @saved="handleAssetSaved" />
+        @saved="handleAssetSaved"
+        @renamed="handleAssetRenamed"
+        @moved="handleAssetMoved"
+        @deleted="handleAssetDeleted" />
+    <FairuAssetActions
+        ref="actionsRef"
+        :meta="meta"
+        :config="config"
+        @renamed="handleAssetRenamed"
+        @moved="handleAssetMoved"
+        @deleted="handleAssetDeleted" />
     <Stack open @closed="emitClose" inset :wrap-slot="false">
         <!-- Custom header with Fairu logo -->
         <FairuStackHeader>
@@ -468,6 +549,37 @@ onBeforeUnmount(() => {
                 <Button icon="x" variant="ghost" class="-me-2" @click="emitClose" />
             </div>
         </FairuStackHeader>
+
+        <!-- Breadcrumbs -->
+        <div class="flex items-center gap-1 border-b border-gray-200 px-4 py-2 text-sm dark:border-gray-700 dark:bg-gray-900">
+            <Button
+                size="xs"
+                variant="ghost"
+                icon="arrow-up"
+                round
+                :disabled="!folder"
+                :title="__('fairu::browser.go_up')"
+                @click="selectFolder(parentFolderId)" />
+            <nav class="flex flex-wrap items-center gap-1 min-w-0">
+                <button
+                    type="button"
+                    class="rounded px-1.5 py-0.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+                    :class="{ 'font-semibold !text-gray-900 dark:!text-gray-100': !folder }"
+                    @click="folder ? selectFolder(null) : null">
+                    {{ __('fairu::browser.root') }}
+                </button>
+                <template v-for="(segment, idx) in breadcrumbSegments" :key="idx + '-' + segment">
+                    <Icon name="chevron-right" class="size-3 shrink-0 text-gray-400" />
+                    <span
+                        class="truncate px-1.5 py-0.5"
+                        :class="idx === breadcrumbSegments.length - 1
+                            ? 'font-semibold text-gray-900 dark:text-gray-100'
+                            : 'text-gray-500 dark:text-gray-400'">
+                        {{ segment }}
+                    </span>
+                </template>
+            </nav>
+        </div>
 
         <!-- Content area -->
         <dropzone
@@ -542,31 +654,50 @@ onBeforeUnmount(() => {
                                 <span class="truncate">{{ value }}</span>
                             </div>
                             <!-- File row (single select) -->
-                            <button
+                            <div
                                 v-else-if="!multiselect"
-                                class="flex items-center gap-2 w-full cursor-pointer select-none -my-3 py-3"
-                                @click.stop="selectItem(row)">
-                                <div class="shrink-0 size-7 rounded-sm overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                                    <img
-                                        v-if="meta.proxy && row?.blocked !== true && isMediaItem(row)"
-                                        draggable="false"
-                                        :src="thumbnailUrl(row)"
-                                        class="size-full object-cover" />
-                                    <i v-else class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-base">description</i>
-                                </div>
-                                <span class="truncate">{{ value }}</span>
-                            </button>
+                                class="flex items-center gap-2 w-full select-none -my-3 py-3">
+                                <button
+                                    class="flex items-center gap-2 grow min-w-0 cursor-pointer text-left"
+                                    @click.stop="selectItem(row)">
+                                    <div class="shrink-0 size-7 rounded-sm overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                        <img
+                                            v-if="meta.proxy && row?.blocked !== true && isMediaItem(row)"
+                                            draggable="false"
+                                            :src="thumbnailUrl(row)"
+                                            class="size-full object-cover" />
+                                        <i v-else class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-base">description</i>
+                                    </div>
+                                    <span class="truncate">{{ value }}</span>
+                                </button>
+                                <Button
+                                    icon="pencil"
+                                    variant="ghost"
+                                    size="xs"
+                                    round
+                                    :title="__('fairu::fieldtype.edit')"
+                                    @click.stop="openEditor(row)" />
+                            </div>
                             <!-- File row (multiselect) -->
-                            <div v-else class="flex items-center gap-2 w-full select-none cursor-pointer -my-3 py-3">
-                                <div class="shrink-0 size-7 rounded-sm overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                                    <img
-                                        v-if="meta.proxy && row?.blocked !== true && isMediaItem(row)"
-                                        draggable="false"
-                                        :src="thumbnailUrl(row)"
-                                        class="size-full object-cover" />
-                                    <i v-else class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-base">description</i>
+                            <div v-else class="flex items-center gap-2 w-full select-none -my-3 py-3">
+                                <div class="flex items-center gap-2 grow min-w-0 cursor-pointer">
+                                    <div class="shrink-0 size-7 rounded-sm overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                        <img
+                                            v-if="meta.proxy && row?.blocked !== true && isMediaItem(row)"
+                                            draggable="false"
+                                            :src="thumbnailUrl(row)"
+                                            class="size-full object-cover" />
+                                        <i v-else class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-base">description</i>
+                                    </div>
+                                    <span class="truncate">{{ value }}</span>
                                 </div>
-                                <span class="truncate">{{ value }}</span>
+                                <Button
+                                    icon="pencil"
+                                    variant="ghost"
+                                    size="xs"
+                                    round
+                                    :title="__('fairu::fieldtype.edit')"
+                                    @click.stop="openEditor(row)" />
                             </div>
                         </template>
                         <template #prepended-row-actions="{ row }">
@@ -587,10 +718,24 @@ onBeforeUnmount(() => {
                                     icon="pencil"
                                     @click="openEditor(row)" />
                                 <DropdownItem
+                                    :text="__('fairu::fieldtype.rename')"
+                                    icon="rename"
+                                    @click="openRename(row)" />
+                                <DropdownItem
+                                    :text="__('fairu::fieldtype.move')"
+                                    icon="folder-open"
+                                    @click="openMove(row)" />
+                                <DropdownItem
                                     :text="__('fairu::browser.edit_in_fairu')"
                                     icon="external-link"
                                     :href="meta.file + '/' + row.id"
                                     target="_blank" />
+                                <DropdownItem
+                                    :text="__('fairu::fieldtype.delete')"
+                                    icon="trash"
+                                    variant="destructive"
+                                    class="!text-red-600 dark:!text-red-400"
+                                    @click="openDelete(row)" />
                             </template>
                         </template>
                     </ListingTable>
@@ -656,74 +801,29 @@ onBeforeUnmount(() => {
                         displayType="tiles"
                         @change="multiselect ? toggleItemSelection(item) : selectItem(item)"
                         @preview="setPreview(index)"
-                        @edit="openEditor(item)" />
+                        @edit="openEditor(item)"
+                        @rename="openRename(item)"
+                        @move="openMove(item)"
+                        @delete="openDelete(item)" />
                 </div>
                 </Panel>
                 <div class="h-4" aria-hidden="true" />
             </template>
 
-            <!-- Preview overlay -->
-            <div
-                class="z-10 grid fixed inset-0 size-full bg-white/95"
-                style="grid-template-rows: auto 1fr"
-                v-if="previewImage">
-                <div class="flex h-min max-h-screen w-full items-center justify-end gap-4 p-4">
-                    <div class="text-lg text-gray-900">
-                        {{ (previewItem ?? 0) + 1 }}/{{ folderContent?.data?.filter((e) => e.type !== 'folder')?.length }}
-                    </div>
-                    <Button
-                        icon="x"
-                        variant="ghost"
-                        @click="previewItem = null" />
-                </div>
-                <div class="grid h-full min-h-0 items-center pb-10">
-                    <div class="bg-white rounded-lg overflow-hidden mx-auto grid size-full min-h-0 max-w-screen-xl shadow-lg" style="max-height: 70vh; grid-template-rows: 1fr auto">
-                        <div class="relative size-full min-h-0">
-                            <img
-                                v-if="
-                                    meta.proxy &&
-                                    previewImage?.blocked !== true &&
-                                    (previewImage?.mime?.startsWith('image/') ||
-                                        previewImage?.mime?.startsWith('video/'))
-                                "
-                                draggable="false"
-                                :src="`${meta.proxy}/${previewImage.id}/thumbnail.webp?width=1280`"
-                                @click="multiselect ? toggleItemSelection(previewImage) : selectItem(previewImage)"
-                                class="size-full object-contain" />
-                            <Checkbox
-                                v-if="multiselect"
-                                solo
-                                class="absolute left-0 top-0 m-3"
-                                :model-value="isSelected(previewImage)"
-                                @update:model-value="toggleItemSelection(previewImage)" />
-                            <div class="grid size-full place-items-center">
-                                <div
-                                    class="whitespace-pre-wrap text-gray-600"
-                                    v-if="
-                                        !previewImage?.mime?.startsWith('image/') &&
-                                        !previewImage?.mime?.startsWith('video/')
-                                    ">
-                                    <i class="material-symbols-outlined pointer-events-none text-gray-900 dark:!text-gray-600" style="font-size: 200px">description</i>
-                                </div>
-                            </div>
-                            <Button
-                                class="absolute left-8 top-1/2 z-10 -translate-y-1/2"
-                                icon="chevron-left"
-                                round
-                                @click.stop.prevent="navigatePreview(-1)" />
-                            <Button
-                                class="absolute right-8 top-1/2 z-10 -translate-y-1/2"
-                                icon="chevron-right"
-                                round
-                                @click.stop.prevent="navigatePreview(1)" />
-                        </div>
-                        <div class="flex items-center justify-between gap-2 grow border-t border-gray-100 bg-gray-100/50 px-6 py-3 text-base">
-                            <div class="font-normal">{{ previewImage.name }}</div>
-                            <div class="text-xs uppercase tracking-wider text-gray-500">{{ getExtension(previewImage.mime) }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- Preview gallery -->
+            <FairuPreview
+                v-if="previewImage"
+                :items="fileItems"
+                :startIndex="previewItem ?? 0"
+                :meta="meta"
+                :multiselect="multiselect"
+                :isFolderMode="isFolderMode"
+                :isSelectedFn="isSelected"
+                @close="closePreview"
+                @edit="editPreview"
+                @toggle-select="handlePreviewToggle"
+                @confirm-select="handlePreviewConfirm"
+                @apply="handlePreviewApply" />
         </dropzone>
 
         <!-- Footer -->

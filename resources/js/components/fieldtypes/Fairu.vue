@@ -63,6 +63,22 @@ async function handleAssetSaved(updated) {
     );
 }
 
+function handleAssetRenamed({ id, name }) {
+    if (!assets.value) return;
+    assets.value = assets.value.map((e) => (e?.id === id ? { ...e, name } : e));
+}
+
+function handleAssetMoved({ id }) {
+    if (!assets.value) return;
+    assets.value = assets.value.map((e) => (e?.id === id ? { ...e, exists: true } : e));
+}
+
+function handleAssetDeleted({ id }) {
+    if (!assets.value) return;
+    assets.value = assets.value.filter((e) => e?.id !== id);
+    sendUpdate();
+}
+
 function getSize(item) {
     if (!item?.size) return null;
     return (item.size / 1024 / 1024).toFixed(2) + ' MB';
@@ -188,7 +204,10 @@ onMounted(async () => {
             :assetId="editingAssetId"
             :meta="meta"
             @close="closeEditor"
-            @saved="handleAssetSaved" />
+            @saved="handleAssetSaved"
+            @renamed="handleAssetRenamed"
+            @moved="handleAssetMoved"
+            @deleted="handleAssetDeleted" />
         <dropzone
             :enabled="canUpload"
             @dropped="handleFileDrop">

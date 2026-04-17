@@ -15,7 +15,12 @@ return [
     "previous" => "Previous",
     "search_in_folder" => "Search in folder",
     "select" => "Select",
+    "apply" => "Apply selection",
     "open" => "Open",
     "preview" => "Preview",
-    "upload" => "Upload"
+    "upload" => "Upload",
+    "root" => "Root",
+    "go_up" => "Go to parent folder",
+    "image_selected" => ":name selected",
+    "image_deselected" => ":name deselected"
 ];

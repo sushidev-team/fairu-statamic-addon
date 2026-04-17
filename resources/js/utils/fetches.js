@@ -165,3 +165,47 @@ export async function fairuUpdateFile(id, payload) {
 
     return res.json();
 }
+
+export async function fairuDeleteFile(id) {
+    const res = await fetch(`/fairu/files/${id}`, {
+        method: 'DELETE',
+        headers: headers(),
+    });
+
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw errorData;
+    }
+
+    return res.json();
+}
+
+export async function fairuRenameFile(id, name) {
+    const res = await fetch(`/fairu/files/${id}/rename`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({ name }),
+    });
+
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw errorData;
+    }
+
+    return res.json();
+}
+
+export async function fairuMoveFile(id, parent) {
+    const res = await fetch(`/fairu/files/${id}/move`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({ parent: parent ?? null }),
+    });
+
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw errorData;
+    }
+
+    return res.json();
+}
