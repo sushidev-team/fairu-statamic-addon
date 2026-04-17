@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.2.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.1.3...v2.2.0) (2026-04-17)
+
+
+### Features
+
+* added action buttons to edit stack ([5199b5a](https://github.com/sushidev-team/fairu-statamic-addon/commit/5199b5a31f9de728f2e51d78a2b2c1cee074ccd6))
+* added edit page w/ focal point selection ([43d42a7](https://github.com/sushidev-team/fairu-statamic-addon/commit/43d42a7b94583d4b1ff166dc0a417c9d3752a09b))
+* gallery improvements, handling ([3c9ed76](https://github.com/sushidev-team/fairu-statamic-addon/commit/3c9ed7608dc5e181243f0a20166ebce6bd4c979c))
+
 ## [2.1.3](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.1.2...v2.1.3) (2026-04-17)
 
 
