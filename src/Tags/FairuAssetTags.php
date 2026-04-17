@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
 use Statamic\Tags\Tags;
 use Sushidev\Fairu\Services\Fairu;
+use Sushidev\Fairu\Services\FairuMetaBag;
 use Sushidev\Fairu\Traits\TransformAssets;
 
 class FairuAssetTags extends Tags
@@ -14,79 +15,6 @@ class FairuAssetTags extends Tags
     use TransformAssets;
 
     protected static $handle = 'fairu';
-
-    protected function getSources($asset, ?string $sourcesParam = null, ?string $name = null, ?string $ratio = null)
-    {
-        $srcset_entries = [];
-        $breakpoints = [];
-
-        $ratioMultiplier = null;
-        if (!empty($ratio) && strpos($ratio, '/') !== false) {
-            list($numerator, $denominator) = explode('/', $ratio);
-            if (is_numeric($numerator) && is_numeric($denominator) && $denominator != 0) {
-                $ratioMultiplier = (float)$numerator / (float)$denominator;
-            }
-        }
-
-        if (!empty($sourcesParam)) {
-            // Format with semicolons as source separators:
-            // "100,100,200w;480,480,800w;768,768,1200w" (3 params: width, *height*, maxWidth)
-            // "100,200w;480,800w;768,1200w" (2 params: width, maxWidth)
-            $sourcesList = explode(';', $sourcesParam);
-
-            foreach ($sourcesList as $sourceItem) {
-                $parts = explode(',', trim($sourceItem));
-
-                // Check if we have enough parts to process
-                if (count($parts) >= 2) {
-                    $width = (int) trim($parts[0]);
-                    $height = null;
-                    $maxWidth = null;
-
-                    if (count($parts) === 3) {
-                        // Format with height: width,height,maxWidthw
-                        $height = (int) trim($parts[1]);
-                        $maxWidth = trim($parts[2]);
-                    } else {
-                        // Format without height: width,maxWidthw
-                        $maxWidth = trim($parts[1]);
-                        // Calculate height from ratio if ratio is provided
-                        if ($ratioMultiplier !== null) {
-                            $height = (int)($width / $ratioMultiplier);
-                        }
-                    }
-
-                    // Add to breakpoints
-                    $breakpointData = [
-                        'width' => $width,
-                        'maxWidth' => $maxWidth
-                    ];
-
-                    if ($height !== null) {
-                        $breakpointData['height'] = $height;
-                    }
-
-                    $breakpoints[] = $breakpointData;
-
-                    // Generate URL for this width and height
-                    $url = $this->getUrl(
-                        id: data_get($asset, 'id'),
-                        filename: $name ?? data_get($asset, 'name'),
-                        width: $width,
-                        height: $height,
-                        fit: $this->params->get('fit') ?? data_get($asset, 'fit'),
-                        focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point'),
-                        appendQuery: true
-                    );
-
-                    // Add to srcset entries
-                    $srcset_entries[] = "{$url} {$maxWidth}";
-                }
-            }
-        }
-
-        return $srcset_entries;
-    }
 
     /**
      * The {{ fairu:url }} tag.
@@ -101,7 +29,12 @@ class FairuAssetTags extends Tags
 
         $filename = $this->params->get('name');
 
-        if (! $filename && $this->params->bool('fetchMeta')) {
+        if (! $filename && $id !== null && $this->params->bool('fetchMeta')) {
+            $bag = app(FairuMetaBag::class);
+            if ($bag->isActive()) {
+                return $bag->queue('url', $id, $this->params->toArray(), $this->getConnectionName());
+            }
+
             $asset = $this->getFile($id, true);
             $filename = data_get($asset, 'name');
         }
@@ -162,6 +95,11 @@ class FairuAssetTags extends Tags
         $id = Arr::get($this->resolveIds($this->params->get('id')), 0);
         if (!$id) {
             return;
+        }
+
+        $bag = app(FairuMetaBag::class);
+        if ($bag->isActive()) {
+            return $bag->queue('image', $id, $this->params->toArray(), $this->getConnectionName());
         }
 
         return Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($id) {

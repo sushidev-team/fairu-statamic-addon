@@ -57,6 +57,25 @@ class Fairu
         return $result->json();
     }
 
+    public function getFilesMeta(?array $ids = []): ?array
+    {
+        $ids = array_filter($ids);
+
+        if (empty($ids)) {
+            return null;
+        }
+
+        $result = $this->client->post($this->endpoint('api/files/meta'), [
+            'ids' => $ids,
+        ]);
+
+        if ($result->status() != 200) {
+            throw new Exception(json_encode($result?->json()));
+        }
+
+        return $result->json();
+    }
+
     public function getExistingFileIds(array $ids, int $chunkSize = 200): array
     {
         $ids = array_values(array_filter($ids));

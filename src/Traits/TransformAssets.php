@@ -138,6 +138,61 @@ trait TransformAssets
         return $url;
     }
 
+    protected function getSources($asset, ?string $sourcesParam = null, ?string $name = null, ?string $ratio = null)
+    {
+        $srcset_entries = [];
+
+        $ratioMultiplier = null;
+        if (!empty($ratio) && strpos($ratio, '/') !== false) {
+            list($numerator, $denominator) = explode('/', $ratio);
+            if (is_numeric($numerator) && is_numeric($denominator) && $denominator != 0) {
+                $ratioMultiplier = (float)$numerator / (float)$denominator;
+            }
+        }
+
+        if (empty($sourcesParam)) {
+            return $srcset_entries;
+        }
+
+        $sourcesList = explode(';', $sourcesParam);
+
+        foreach ($sourcesList as $sourceItem) {
+            $parts = explode(',', trim($sourceItem));
+
+            if (count($parts) < 2) {
+                continue;
+            }
+
+            $width = (int) trim($parts[0]);
+            $height = null;
+            $maxWidth = null;
+
+            if (count($parts) === 3) {
+                $height = (int) trim($parts[1]);
+                $maxWidth = trim($parts[2]);
+            } else {
+                $maxWidth = trim($parts[1]);
+                if ($ratioMultiplier !== null) {
+                    $height = (int)($width / $ratioMultiplier);
+                }
+            }
+
+            $url = $this->getUrl(
+                id: data_get($asset, 'id'),
+                filename: $name ?? data_get($asset, 'name'),
+                width: $width,
+                height: $height,
+                fit: $this->getParam('fit') ?? data_get($asset, 'fit'),
+                focalPoint: $this->getParam('focal_point') ?? data_get($asset, 'focal_point'),
+                appendQuery: true
+            );
+
+            $srcset_entries[] = "{$url} {$maxWidth}";
+        }
+
+        return $srcset_entries;
+    }
+
     protected function getFiles(?array $ids = [], mixed $fetchMeta = false)
     {
         if (empty($ids)) {
@@ -146,7 +201,7 @@ trait TransformAssets
 
         sort($ids);
 
-        $fetchMeta = filter_var($fetchMeta, FILTER_VALIDATE_BOOLEAN);
+        $mode = $this->resolveFetchMetaMode($fetchMeta);
 
         $result = [];
         foreach ($ids as $id) {
@@ -155,22 +210,41 @@ trait TransformAssets
                 'url' => $this->buildFileUrl($id)
             ];
         }
-        if (! $fetchMeta) {
+
+        if ($mode === null) {
             return $result;
         }
 
+        $fingerprint = md5($mode . '-' . json_encode($ids));
 
-        $fingerprint = md5(json_encode($ids));
-
-        return Cache::flexible('file-' . $fingerprint, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids, $result) {
+        return Cache::flexible('file-' . $mode . '-' . $fingerprint, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids, $mode, $result) {
             $files = null;
             try {
-                $files = (new Fairu($this->getConnectionName()))->getFiles($ids);
+                $fairu = new Fairu($this->getConnectionName());
+                $files = $mode === 'full'
+                    ? $fairu->getFiles($ids)
+                    : $fairu->getFilesMeta($ids);
             } catch (\Exception $e) {
                 Log::error($e);
             }
             return $files !== null ? $files : $result;
         });
+    }
+
+    /**
+     * Resolve the fetchMeta parameter into a fetch mode.
+     *
+     * - false / null / "" / "0"  → null   (no meta fetch, skip API call)
+     * - "full"                    → "full" (hit /api/files/list, heavy payload with licenses/blocks)
+     * - any other truthy value    → "meta" (hit /api/files/meta, lean payload)
+     */
+    protected function resolveFetchMetaMode(mixed $fetchMeta): ?string
+    {
+        if (is_string($fetchMeta) && strtolower($fetchMeta) === 'full') {
+            return 'full';
+        }
+
+        return filter_var($fetchMeta, FILTER_VALIDATE_BOOLEAN) ? 'meta' : null;
     }
 
     protected function getFile(?string $id = null, mixed $fetchMeta = false)

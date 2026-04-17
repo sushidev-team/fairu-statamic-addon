@@ -5,6 +5,7 @@ namespace Sushidev\Fairu;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
 use Statamic\Providers\AddonServiceProvider;
+use Sushidev\Fairu\Services\FairuMetaBag;
 
 class ServiceProvider extends AddonServiceProvider
 {
@@ -18,6 +19,12 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $fieldtypes = [
         \Sushidev\Fairu\Fieldtypes\Fairu::class,
+    ];
+
+    protected $middlewareGroups = [
+        'statamic.web' => [
+            \Sushidev\Fairu\Http\Middleware\CoalesceFairuMeta::class,
+        ],
     ];
 
     protected $vite = [
@@ -60,6 +67,8 @@ class ServiceProvider extends AddonServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/fairu.php', 'statamic.fairu');
+
+        $this->app->scoped(FairuMetaBag::class);
 
         if (config('statamic.fairu.deactivate_old') == true) {
             $this->app->bind(

@@ -46,19 +46,69 @@ There are several tags available to generate different code.
 > [!NOTE]
 > The tags generally don't fetch metadata from the Fairu server and build the file path locally. Use the `fetchMeta` parameter to fetch the asset information from Fairu.
 
-You can fetch metadata by passing `fetchMeta="true"` to the tags, which makes the metadata accessible:
+You can fetch metadata by passing `fetchMeta="true"` to the tags, which makes the metadata accessible.
 
+### Lean vs. full fetch
+
+The addon can fetch metadata in two modes:
+
+| Mode | Parameter | Endpoint | Returns |
+| --- | --- | --- | --- |
+| **Lean** *(default)* | `fetchMeta="true"` | `POST /api/files/meta` | `id, name, width, height, focal_point, alt, caption, is_image, is_video, mime, active` — minimal, no licenses/copyrights/blocks, no N+1 scans. |
+| **Full** | `fetchMeta="full"` | `POST /api/files/list` | Full `File` resource including `licenses`, `copyrights`, `block` status, `hasValidLicense`, `amountInvalidLicenses`, etc. Use only when your template logic depends on that data. |
+
+The lean endpoint is **~8× smaller** and issues **3–10× fewer SQL queries** on the Fairu backend. Unless you need license/block data at render time, stick with the default.
+
+Fields accessible via `fetchMeta="true"`:
+
+- name
 - alt
 - caption
-- description
-- copyrights
 - focal_point (`x-y-zoom` e.g. `40-30-1`)
 - focus_css (e.g. `40% 30%`)
-- name
-- size
-- is_image | is_video | is_pdf | is_audio | mime | extension
 - width | height
-- ...
+- is_image | is_video | mime
+- active
+
+Use `fetchMeta="full"` when you additionally need `description`, `copyrights`, `licenses`, `block`, `size`, `fingerprint`, `extension`, or any other non-rendering metadata.
+
+## Automatic meta coalescing
+
+When a page uses many `{{ fairu:image }}` / `{{ fairu:url ... fetchMeta="true" }}` tags — especially when they come from nested components, bards, or loops that you don't control up front — the addon automatically collapses every meta fetch on the page into a **single** batched API call.
+
+### How it works
+
+1. Each tag emits an opaque placeholder token instead of immediately fetching meta.
+2. A response middleware (`CoalesceFairuMeta`) queues all ids while the view renders.
+3. After Antlers finishes, it fires **one** `POST /api/files/meta` call for every unique id across the whole response.
+4. The placeholders are replaced in-place with the final `<img>` / URL output.
+
+Result: a page with 15, 30, or 300 images issues exactly one meta round-trip per request, independent of template nesting.
+
+### Enabling / disabling
+
+Enabled by default. Toggle via environment variable:
+
+```bash
+FAIRU_COALESCE_META=false
+```
+
+…or in `config/statamic/fairu.php`:
+
+```php
+'coalesce_meta' => env('FAIRU_COALESCE_META', true),
+```
+
+### Caveats
+
+- **Do not wrap fairu tags in `{{ cache }}` blocks.** The placeholder would get cached without the corresponding queue entry, so subsequent cache-hit renders can't resolve it. Use Statamic's response-level static caching instead — the middleware runs *before* static caching stores, so the cached HTML contains the final output.
+- **String operations on tag output** (e.g. `{{ fairu:url ... | upper }}`) will operate on the placeholder, not the URL. Rare, but worth noting.
+- Only `text/html` responses are rewritten. JSON, streamed, and binary responses pass through untouched.
+- Tags without `fetchMeta` or with an explicit `name` parameter render immediately and don't go through the coalescer — no change in behaviour.
+
+### Requirements
+
+The `POST /api/files/meta` endpoint is required on your Fairu backend for the default (lean) mode and for meta coalescing. It ships with `fairu-app` alongside this addon version. If you run an older Fairu deployment that doesn't expose the endpoint yet, set `FAIRU_COALESCE_META=false` and use `fetchMeta="full"` until the backend is updated.
 
 ## Available parameters
 
@@ -76,7 +126,7 @@ You can fetch metadata by passing `fetchMeta="true"` to the tags, which makes th
 | **fit**          | cover / contain the image          | **✓** |       | **✓**  | **✓**   |
 | **⁠focal_point** | Focal point for cropping           | **✓** |       | **✓**  | **✓**   |
 | **timestamp**   | Video thumbnail timestamp (HH:MM:SS.mmm) | **✓** | **✓** | **✓**  | **✓**   |
-| **fetchMeta**   | Fetch metadata from Fairu (e.g. real filename for videos) | **✓** | **✓** | **✓**  | **✓**   |
+| **fetchMeta**   | `"true"` for lean meta (default), `"full"` for full `File` resource, `"false"` to skip | **✓** | **✓** | **✓**  | **✓**   |
 
 ## {{ fairu }}
 
