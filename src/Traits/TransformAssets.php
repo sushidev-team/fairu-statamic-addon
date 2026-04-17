@@ -138,7 +138,7 @@ trait TransformAssets
         return $url;
     }
 
-    protected function getFiles(?array $ids = [], ?bool $fetchMeta = false)
+    protected function getFiles(?array $ids = [], mixed $fetchMeta = false)
     {
         if (empty($ids)) {
             return null;
@@ -146,6 +146,7 @@ trait TransformAssets
 
         sort($ids);
 
+        $fetchMeta = filter_var($fetchMeta, FILTER_VALIDATE_BOOLEAN);
 
         $result = [];
         foreach ($ids as $id) {
@@ -154,7 +155,7 @@ trait TransformAssets
                 'url' => $this->buildFileUrl($id)
             ];
         }
-        if ($fetchMeta !== true) {
+        if (! $fetchMeta) {
             return $result;
         }
 
@@ -172,7 +173,7 @@ trait TransformAssets
         });
     }
 
-    protected function getFile(?string $id = null, ?bool $fetchMeta = false)
+    protected function getFile(?string $id = null, mixed $fetchMeta = false)
     {
         if (!$id) {
             return;

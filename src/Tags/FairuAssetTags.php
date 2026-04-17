@@ -98,9 +98,17 @@ class FairuAssetTags extends Tags
         $id = Arr::get($this->resolveIds($this->params->get('id')), 0);
 
         $id = $this->fairu->parse($id);
+
+        $filename = $this->params->get('name');
+
+        if (! $filename && $this->params->bool('fetchMeta')) {
+            $asset = $this->getFile($id, true);
+            $filename = data_get($asset, 'name');
+        }
+
         return $this->getUrl(
             id: $id,
-            filename: $this->params->get('name') ?? 'file',
+            filename: $filename ?? 'file',
             appendQuery: true
         );
     }
@@ -119,7 +127,7 @@ class FairuAssetTags extends Tags
 
 
         $files = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids) {
-            return collect($this->getFiles($ids, $this->params->get('fetchMeta')))->map(function ($asset) {
+            return collect($this->getFiles($ids, $this->params->bool('fetchMeta')))->map(function ($asset) {
                 $url = $this->getUrl(
                     id: data_get($asset, 'id'),
                     filename: $this->params->get('name') ?? data_get($asset, 'name'),
@@ -157,7 +165,7 @@ class FairuAssetTags extends Tags
         }
 
         return Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($id) {
-            $asset = $this->getFile($id, $this->params->get('fetchMeta'));
+            $asset = $this->getFile($id, $this->params->bool('fetchMeta'));
             $url = $this->getUrl(
                 id: data_get($asset, 'id'),
                 filename: $this->params->get('name') ?? data_get($asset, 'name'),
@@ -203,7 +211,7 @@ class FairuAssetTags extends Tags
         }
 
         $imgStrings = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids) {
-            return collect($this->getFiles($ids))->map(function ($asset) {
+            return collect($this->getFiles($ids, $this->params->bool('fetchMeta')))->map(function ($asset) {
                 $url = $this->getUrl(
                     id: data_get($asset, 'id'),
                     filename: $this->params->get('name') ?? data_get($asset, 'name'),

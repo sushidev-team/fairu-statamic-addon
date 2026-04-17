@@ -76,6 +76,7 @@ You can fetch metadata by passing `fetchMeta="true"` to the tags, which makes th
 | **fit**          | cover / contain the image          | **✓** |       | **✓**  | **✓**   |
 | **⁠focal_point** | Focal point for cropping           | **✓** |       | **✓**  | **✓**   |
 | **timestamp**   | Video thumbnail timestamp (HH:MM:SS.mmm) | **✓** | **✓** | **✓**  | **✓**   |
+| **fetchMeta**   | Fetch metadata from Fairu (e.g. real filename for videos) | **✓** | **✓** | **✓**  | **✓**   |
 
 ## {{ fairu }}
 
@@ -98,6 +99,15 @@ Get the URL of a file.
 
 <!-- Outputs -->
 https://fairu.app/files/[UUID]/filename.webp
+```
+
+If you don't know the filename (e.g. for video files where the extension matters for browser playback), pass `fetchMeta="true"` to resolve the real filename from Fairu:
+
+```html
+{{ fairu:url id="ID" fetchMeta="true" }}
+
+<!-- Outputs (extension resolved from meta) -->
+https://fairu.app/files/[UUID]/hero.mp4
 ```
 
 ## {{ fairu:image }}
