@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, getCurrentInstance, defineComponent, h } from 'vue';
 import { toast } from '@statamic/cms/api';
-import { Stack, Button, Input, Textarea, Field, Heading, Subheading, Description, Dropdown, DropdownMenu, DropdownItem, DropdownSeparator } from '@statamic/cms/ui';
+import { Stack, Button, Input, Textarea, Field, Heading, Subheading, Description } from '@statamic/cms/ui';
 import FairuAssetActions from './FairuAssetActions.vue';
 import { fairuGetFile, fairuUpdateFile } from '../utils/fetches';
 
@@ -224,37 +224,7 @@ onBeforeUnmount(() => {
                     {{ asset?.name || __('fairu::fieldtype.editor.title') }}
                 </div>
             </div>
-            <div class="flex items-center gap-1">
-                <Dropdown v-if="asset" placement="bottom-end">
-                    <template #trigger>
-                        <Button icon="dots-vertical" variant="ghost" size="sm" />
-                    </template>
-                    <DropdownMenu>
-                        <DropdownItem
-                            :text="__('fairu::fieldtype.rename')"
-                            icon="rename"
-                            @click="openRename" />
-                        <DropdownItem
-                            :text="__('fairu::fieldtype.move')"
-                            icon="folder-open"
-                            @click="openMove" />
-                        <DropdownSeparator />
-                        <DropdownItem
-                            :text="__('fairu::browser.edit_in_fairu')"
-                            icon="external-link"
-                            :href="meta.file + '/' + asset.id"
-                            target="_blank" />
-                        <DropdownSeparator />
-                        <DropdownItem
-                            :text="__('fairu::fieldtype.delete')"
-                            icon="trash"
-                            variant="destructive"
-                            class="!text-red-600 dark:!text-red-400"
-                            @click="openDelete" />
-                    </DropdownMenu>
-                </Dropdown>
-                <Button icon="x" variant="ghost" class="-me-2" @click="emit('close')" />
-            </div>
+            <Button icon="x" variant="ghost" class="-me-2" @click="emit('close')" />
         </FairuStackHeader>
 
         <div class="flex-1 overflow-y-auto">
@@ -288,6 +258,37 @@ onBeforeUnmount(() => {
                         :instructions="__('fairu::fieldtype.editor.long_description_instructions')">
                         <Textarea v-model="description" elastic :rows="4" />
                     </Field>
+
+                    <!-- Asset actions -->
+                    <div
+                        v-if="asset"
+                        class="flex flex-wrap items-center gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+                        <Button
+                            size="sm"
+                            icon="rename"
+                            :text="__('fairu::fieldtype.rename')"
+                            @click="openRename" />
+                        <Button
+                            size="sm"
+                            icon="folder-open"
+                            :text="__('fairu::fieldtype.move')"
+                            @click="openMove" />
+                        <Button
+                            as="a"
+                            size="sm"
+                            icon="external-link"
+                            :href="meta.file + '/' + asset.id"
+                            target="_blank"
+                            :text="__('fairu::browser.edit_in_fairu')" />
+                        <div class="grow"></div>
+                        <Button
+                            size="sm"
+                            icon="trash"
+                            variant="destructive"
+                            class="!text-red-600 dark:!text-red-400 dark:!bg-red-900/20 !bg-red-50 hover:!bg-red-100 dark:hover:!bg-red-900/40"
+                            :text="__('fairu::fieldtype.delete')"
+                            @click="openDelete" />
+                    </div>
                 </section>
 
                 <!-- Focal point -->
