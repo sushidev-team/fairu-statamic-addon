@@ -15,5 +15,6 @@ Route::name('fairu.')
         Route::get('/fairu/folders/{id}', [AssetController::class, 'getFolder'])->name('folder_get');
         Route::post('/fairu/folders/{id}', [AssetController::class, 'updateFolder'])->name('folder_update');
         Route::get('/fairu/files/{id}', [AssetController::class, 'getFile'])->name('file');
+        Route::put('/fairu/files/{id}', [AssetController::class, 'updateFile'])->name('file_update');
         Route::post('/fairu/files/list', [AssetController::class, 'getFilesList'])->name('files-list');
     });

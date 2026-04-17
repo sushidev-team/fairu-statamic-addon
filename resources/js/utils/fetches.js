@@ -141,3 +141,27 @@ export async function fairuLoadFilesMeta(ids) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
 }
+
+export async function fairuGetFile(id) {
+    const res = await fetch(`/fairu/files/${id}`, {
+        headers: headers(),
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+}
+
+export async function fairuUpdateFile(id, payload) {
+    const res = await fetch(`/fairu/files/${id}`, {
+        method: 'PUT',
+        headers: headers(),
+        body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw errorData;
+    }
+
+    return res.json();
+}

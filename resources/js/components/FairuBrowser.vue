@@ -5,6 +5,7 @@ import { Stack, Button, Input, Icon, Checkbox, Pagination, ToggleGroup, ToggleIt
 import Dropzone from './Dropzone.vue';
 import BrowserListItem from './browser/BrowserListItem.vue';
 import Folder from './browser/Folder.vue';
+import FairuAssetEditor from './FairuAssetEditor.vue';
 import { fairuLoadFolder, fairuUpload, fairuCreateFolder, fairuLoadFilesMeta } from '../utils/fetches';
 
 const __ = getCurrentInstance().appContext.config.globalProperties.__;
@@ -28,6 +29,7 @@ const props = defineProps({
     },
     multiselect: Boolean,
     canUpload: Boolean,
+    startFolder: { type: String, default: null },
 });
 
 const emit = defineEmits(['close', 'selected']);
@@ -48,6 +50,7 @@ const folderContent = ref(null);
 const createFolderInputVisible = ref(false);
 const newFolderName = ref('');
 const previewItem = ref(null);
+const editingAssetId = ref(null);
 
 
 let searchTimer = null;
@@ -136,6 +139,30 @@ function toggleCurrentSelection() {
 
 function setPreview(itemIndex) {
     previewItem.value = itemIndex;
+}
+
+function openEditor(asset) {
+    if (!asset?.id) return;
+    editingAssetId.value = asset.id;
+}
+
+function closeEditor() {
+    editingAssetId.value = null;
+}
+
+async function handleAssetSaved(updated) {
+    if (!updated?.id) return;
+    const refreshed = await loadMetaData([updated.id]);
+    const refreshedAsset = refreshed?.[0];
+    if (!refreshedAsset) return;
+    if (folderContent.value?.data) {
+        folderContent.value.data = folderContent.value.data.map((e) =>
+            e?.id === refreshedAsset.id ? { ...e, ...refreshedAsset } : e,
+        );
+    }
+    assets.value = assets.value.map((e) =>
+        e?.id === refreshedAsset.id ? { ...e, ...refreshedAsset } : e,
+    );
 }
 
 function navigatePreview(diff) {
@@ -364,7 +391,7 @@ onMounted(async () => {
         props.config.max_files === 1
             ? []
             : [...(props.initialAssets?.length > 0 ? props.initialAssets : [])];
-    const startFolder = props.config.folder || props.meta?.folder || null;
+    const startFolder = props.startFolder || props.config.folder || props.meta?.folder || null;
     try {
         await loadFolderContent(null, startFolder);
     } catch (error) {
@@ -382,6 +409,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+    <FairuAssetEditor
+        v-if="editingAssetId"
+        :assetId="editingAssetId"
+        :meta="meta"
+        @close="closeEditor"
+        @saved="handleAssetSaved" />
     <Stack open @closed="emitClose" inset :wrap-slot="false">
         <!-- Custom header with Fairu logo -->
         <FairuStackHeader>
@@ -550,6 +583,10 @@ onBeforeUnmount(() => {
                                     icon="eye"
                                     @click="setPreview(getFileIndex(row))" />
                                 <DropdownItem
+                                    :text="__('fairu::fieldtype.edit')"
+                                    icon="pencil"
+                                    @click="openEditor(row)" />
+                                <DropdownItem
                                     :text="__('fairu::browser.edit_in_fairu')"
                                     icon="external-link"
                                     :href="meta.file + '/' + row.id"
@@ -618,7 +655,8 @@ onBeforeUnmount(() => {
                         :multiselect="multiselect"
                         displayType="tiles"
                         @change="multiselect ? toggleItemSelection(item) : selectItem(item)"
-                        @preview="setPreview(index)" />
+                        @preview="setPreview(index)"
+                        @edit="openEditor(item)" />
                 </div>
                 </Panel>
                 <div class="h-4" aria-hidden="true" />

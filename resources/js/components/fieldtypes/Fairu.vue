@@ -4,6 +4,7 @@ import { Fieldtype } from '@statamic/cms';
 import { toast, progress, config } from '@statamic/cms/api';
 import { Button } from '@statamic/cms/ui';
 import FairuBrowser from '../FairuBrowser.vue';
+import FairuAssetEditor from '../FairuAssetEditor.vue';
 import Dropzone from '../Dropzone.vue';
 import { fairuUpload, fairuLoadFilesMeta } from '../../utils/fetches';
 
@@ -23,6 +24,8 @@ const loading = ref(true);
 const uploading = ref(false);
 const percentUploaded = ref(null);
 const metaItemsFetching = ref(new Set());
+const editingAssetId = ref(null);
+const browserStartFolder = ref(null);
 
 const multiselect = computed(() => props.config.max_files !== 1);
 
@@ -33,7 +36,31 @@ const canUpload = computed(() => {
 });
 
 function openSearch() {
+    browserStartFolder.value = null;
+    if (!multiselect.value && assets.value?.length === 1) {
+        const current = assets.value[0];
+        browserStartFolder.value = current?.folder_id || current?.parent_id || null;
+    }
     searchOpen.value = true;
+}
+
+function openEditor(item) {
+    if (!item?.id) return;
+    editingAssetId.value = item.id;
+}
+
+function closeEditor() {
+    editingAssetId.value = null;
+}
+
+async function handleAssetSaved(updated) {
+    if (!updated?.id) return;
+    const refreshed = await loadMetaData([updated.id]);
+    const refreshedAsset = refreshed?.[0];
+    if (!refreshedAsset || !assets.value) return;
+    assets.value = assets.value.map((e) =>
+        e?.id === refreshedAsset.id ? { ...e, ...refreshedAsset } : e,
+    );
 }
 
 function getSize(item) {
@@ -154,7 +181,14 @@ onMounted(async () => {
             :initialAssets="assets"
             :meta="meta"
             :config="props.config"
-            :canUpload="canUpload" />
+            :canUpload="canUpload"
+            :startFolder="browserStartFolder" />
+        <fairu-asset-editor
+            v-if="editingAssetId"
+            :assetId="editingAssetId"
+            :meta="meta"
+            @close="closeEditor"
+            @saved="handleAssetSaved" />
         <dropzone
             :enabled="canUpload"
             @dropped="handleFileDrop">
@@ -243,6 +277,13 @@ onMounted(async () => {
                     <!-- Actions (right-aligned, gradient fade) -->
                     <div class="flex shrink-0 items-center gap-1 bg-gradient-to-r from-transparent to-white dark:to-gray-900 pl-4">
                         <span class="text-sm text-gray-600 dark:text-gray-400">{{ getSize(item) }}</span>
+                        <Button
+                            icon="pencil"
+                            variant="ghost"
+                            size="xs"
+                            round
+                            :title="__('fairu::fieldtype.edit')"
+                            @click.prevent.stop="openEditor(item)" />
                         <Button
                             as="a"
                             :href="meta.file + '/' + item?.id"

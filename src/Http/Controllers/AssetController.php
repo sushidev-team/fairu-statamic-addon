@@ -170,6 +170,57 @@ class AssetController extends Controller
         return $result->json();
     }
 
+    public function updateFile(Request $request, string $id)
+    {
+        $connection = config('statamic.fairu.connections.default');
+
+        $data = array_merge(
+            ['id' => $id],
+            array_filter(
+                $request->only(['alt', 'caption', 'description', 'focal_point']),
+                fn ($value) => $value !== null,
+            ),
+        );
+
+        $result = Http::withHeaders([
+            'Tenant' => data_get($connection, 'tenant'),
+            'Authorization' => 'Bearer ' . data_get($connection, 'tenant_secret'),
+        ])->post(config('statamic.fairu.url') . '/graphql', [
+            'query' => <<<'GRAPHQL'
+                mutation UpdateFairuFile($data: FairuFileDTO!) {
+                    updateFairuFile(data: $data) {
+                        id
+                        name
+                        alt
+                        caption
+                        description
+                        focal_point
+                    }
+                }
+            GRAPHQL,
+            'variables' => ['data' => $data],
+        ]);
+
+        if ($result->status() == 403) {
+            return abort(403, 'Fairu: Currently, no subscription is active for this tenant.');
+        }
+
+        if (!$result->successful()) {
+            return abort(400, 'Communication error with Fairu.');
+        }
+
+        $body = $result->json();
+
+        if (!empty($body['errors'])) {
+            return response()->json([
+                'message' => data_get($body, 'errors.0.message', 'GraphQL error'),
+                'errors' => $body['errors'],
+            ], 422);
+        }
+
+        return ['data' => data_get($body, 'data.updateFairuFile')];
+    }
+
     public function getFilesList(Request $request)
     {
         $connection = config('statamic.fairu.connections.default');

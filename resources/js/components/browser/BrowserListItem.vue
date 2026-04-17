@@ -13,7 +13,7 @@ const props = defineProps({
     disabled: Boolean,
 });
 
-const emit = defineEmits(['change', 'preview']);
+const emit = defineEmits(['change', 'preview', 'edit']);
 
 function toggleSelection() {
     if (props.disabled) return;
@@ -22,6 +22,10 @@ function toggleSelection() {
 
 function emitPreview() {
     emit('preview');
+}
+
+function emitEdit() {
+    emit('edit', props.asset);
 }
 
 const isList = computed(() => (props.displayType ?? 'list') === 'list');
@@ -64,6 +68,13 @@ const isMedia = computed(() =>
                     round
                     :title="__('fairu::browser.preview')"
                     @click.stop="emitPreview" />
+                <Button
+                    icon="pencil"
+                    variant="ghost"
+                    size="xs"
+                    round
+                    :title="__('fairu::fieldtype.edit')"
+                    @click.stop="emitEdit" />
                 <Dropdown placement="left-start">
                     <template #trigger>
                         <Button
@@ -77,6 +88,10 @@ const isMedia = computed(() =>
                             :text="__('fairu::browser.preview')"
                             icon="eye"
                             @click.stop="emitPreview" />
+                        <DropdownItem
+                            :text="__('fairu::fieldtype.edit')"
+                            icon="pencil"
+                            @click.stop="emitEdit" />
                         <DropdownItem
                             :text="__('fairu::browser.edit_in_fairu')"
                             icon="external-link"
@@ -122,6 +137,14 @@ const isMedia = computed(() =>
                     round
                     class="opacity-60 group-hover:opacity-100 transition-opacity duration-300 text-white"
                     @click.stop="emitPreview" />
+                <Button
+                    icon="pencil"
+                    variant="ghost"
+                    size="xs"
+                    round
+                    class="opacity-60 group-hover:opacity-100 transition-opacity duration-300 text-white"
+                    :title="__('fairu::fieldtype.edit')"
+                    @click.stop="emitEdit" />
                 <Button
                     as="a"
                     :href="meta.file + '/' + asset.id"
