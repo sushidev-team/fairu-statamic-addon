@@ -312,9 +312,8 @@ function handlePageSelected(p) {
     loadFolderContent(searchQuery.value);
 }
 
-async function loadFolderContent(search, folderId) {
+async function loadFolderContent(search, folderId, { allowRootFallback = false, retries = 1 } = {}) {
     loadingList.value = true;
-    let retriesAvailable = 1;
 
     await fairuLoadFolder({
         page: page.value,
@@ -326,9 +325,12 @@ async function loadFolderContent(search, folderId) {
             loadingList.value = false;
         },
         errorCallback: async () => {
-            if (folderId && retriesAvailable > 0) {
-                retriesAvailable -= 1;
-                await loadFolderContent(search, folderId);
+            if (folderId && retries > 0) {
+                await loadFolderContent(search, folderId, { allowRootFallback, retries: retries - 1 });
+                return;
+            }
+            if (folderId && allowRootFallback) {
+                await loadFolderContent(search, null);
                 return;
             }
             toast.error(__('fairu::browser.errors.error_accessing_folder'));
@@ -463,12 +465,7 @@ onMounted(async () => {
             ? []
             : [...(props.initialAssets?.length > 0 ? props.initialAssets : [])];
     const startFolder = props.startFolder || props.config.folder || props.meta?.folder || null;
-    try {
-        await loadFolderContent(null, startFolder);
-    } catch (error) {
-        toast.error(__('fairu::browser.errors.error_loading_folder'));
-        await loadFolderContent(null, null);
-    }
+    await loadFolderContent(null, startFolder, { allowRootFallback: true });
 });
 
 onBeforeUnmount(() => {
