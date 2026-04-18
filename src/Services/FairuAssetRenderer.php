@@ -2,6 +2,7 @@
 
 namespace Sushidev\Fairu\Services;
 
+use Statamic\Facades\Antlers;
 use Sushidev\Fairu\Traits\TransformAssets;
 
 /**
@@ -29,6 +30,70 @@ class FairuAssetRenderer
             'url' => $this->renderUrl($params, $asset),
             default => '',
         };
+    }
+
+    /**
+     * Render a deferred {{ fairu }} list tag by building each asset the same way
+     * FairuAssetTags::index() does and parsing the tag body once per asset.
+     *
+     * @param  array<int, array<string, mixed>>  $assets  resolved meta for the ids in order
+     * @param  array<string, mixed>  $params
+     * @param  array<string, mixed>  $context  outer Antlers context captured at queue time
+     */
+    public function renderList(array $assets, array $params, string $body, array $context, string $connection = 'default'): string
+    {
+        $this->renderParams = $params;
+        $this->renderConnection = $connection;
+
+        if ($body === '') {
+            return '';
+        }
+
+        $out = '';
+
+        foreach ($assets as $asset) {
+            $asset = $this->augmentAsset((array) $asset, $params);
+            $data = array_merge($context, $asset);
+
+            $out .= (string) Antlers::parse($body, $data);
+        }
+
+        return $out;
+    }
+
+    /**
+     * Mirror the url/srcset/focus_css augmentation that FairuAssetTags::index()
+     * applies before returning the collection to Antlers.
+     */
+    protected function augmentAsset(array $asset, array $params): array
+    {
+        $url = $this->getUrl(
+            id: data_get($asset, 'id'),
+            filename: $params['name'] ?? data_get($asset, 'name'),
+            focalPoint: $params['focal_point'] ?? data_get($asset, 'focal_point'),
+            fit: $params['fit'] ?? data_get($asset, 'fit'),
+            appendQuery: data_get($asset, 'is_image')
+                || ! empty($params['width'])
+                || ! empty($params['height'])
+                || ! empty($params['sources'])
+                || ! empty($params['timestamp']),
+        );
+
+        $srcsetEntries = $this->getSources(
+            $asset,
+            $params['sources'] ?? null,
+            $params['name'] ?? null,
+            $params['ratio'] ?? null,
+        );
+
+        $asset['url'] = $url;
+        $asset['focus_css'] = $this->formatFocalPoint($params['focal_point'] ?? data_get($asset, 'focal_point'));
+
+        if (! empty($srcsetEntries)) {
+            $asset['srcset'] = implode(', ', $srcsetEntries);
+        }
+
+        return $asset;
     }
 
     protected function renderUrl(array $params, ?array $asset): string

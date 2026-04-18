@@ -6,7 +6,12 @@ return [
     "display_types" => ["list" => "List", "tiles" => "Tiles"],
     "edit_in_fairu" => "Edit in Fairu",
     "entries_selected" => "entries selected",
-    "errors" => ["error_fetching_files" => "Error fetching files"],
+    "errors" => [
+        "error_fetching_files" => "Error fetching files",
+        "error_accessing_folder" => "Error accessing folder",
+        "folder_creation_failed" => "Could not create folder",
+        "upload_failed" => "Upload failed",
+    ],
     "files_uploaded_successfully" => "Files uploaded successfully.",
     "new_folder" => "New folder",
     "new_folder_name" => "New foldername",

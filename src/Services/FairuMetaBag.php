@@ -43,7 +43,31 @@ class FairuMetaBag
         $this->entries[$handle] = [
             'type' => $type,
             'id' => $id,
+            'ids' => null,
             'params' => $params,
+            'body' => null,
+            'context' => null,
+            'connection' => $connection,
+        ];
+
+        return $this->token($handle);
+    }
+
+    /**
+     * Queue a {{ fairu }} list-tag invocation. Stores the Antlers body and outer
+     * context so the middleware can re-render after meta is resolved in bulk.
+     */
+    public function queueList(array $ids, array $params, string $body, array $context, string $connection = 'default'): string
+    {
+        $handle = bin2hex(random_bytes(8));
+
+        $this->entries[$handle] = [
+            'type' => 'list',
+            'id' => null,
+            'ids' => array_values(array_filter($ids)),
+            'params' => $params,
+            'body' => $body,
+            'context' => $context,
             'connection' => $connection,
         ];
 
@@ -68,6 +92,7 @@ class FairuMetaBag
 
     /**
      * Unique ids grouped by connection for batched meta fetching.
+     * Covers both single-asset and list-tag entries.
      *
      * @return array<string, array<int, string>>
      */
@@ -76,11 +101,17 @@ class FairuMetaBag
         $grouped = [];
 
         foreach ($this->entries as $entry) {
-            if (empty($entry['id'])) {
-                continue;
+            $connection = $entry['connection'];
+
+            if (! empty($entry['id'])) {
+                $grouped[$connection][$entry['id']] = true;
             }
 
-            $grouped[$entry['connection']][$entry['id']] = true;
+            foreach ((array) ($entry['ids'] ?? []) as $id) {
+                if (is_string($id) && $id !== '') {
+                    $grouped[$connection][$id] = true;
+                }
+            }
         }
 
         return array_map(static fn ($ids) => array_keys($ids), $grouped);

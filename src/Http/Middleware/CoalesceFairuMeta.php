@@ -76,12 +76,28 @@ class CoalesceFairuMeta
                 continue;
             }
 
-            $asset = $bag->meta($entry['id']);
-            if ($asset === null && $entry['id'] !== null) {
-                $asset = ['id' => $entry['id']];
-            }
+            if ($entry['type'] === 'list') {
+                $assets = [];
+                foreach ((array) ($entry['ids'] ?? []) as $id) {
+                    $meta = $bag->meta($id);
+                    $assets[] = $meta ?? ['id' => $id];
+                }
 
-            $replacement = $renderer->render($entry['type'], $entry['params'], $asset, $entry['connection']);
+                $replacement = $renderer->renderList(
+                    assets: $assets,
+                    params: $entry['params'],
+                    body: (string) ($entry['body'] ?? ''),
+                    context: (array) ($entry['context'] ?? []),
+                    connection: $entry['connection'],
+                );
+            } else {
+                $asset = $bag->meta($entry['id']);
+                if ($asset === null && $entry['id'] !== null) {
+                    $asset = ['id' => $entry['id']];
+                }
+
+                $replacement = $renderer->render($entry['type'], $entry['params'], $asset, $entry['connection']);
+            }
 
             $body = str_replace($token, $replacement, $body);
         }

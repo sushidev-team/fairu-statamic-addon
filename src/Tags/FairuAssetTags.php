@@ -29,7 +29,9 @@ class FairuAssetTags extends Tags
 
         $filename = $this->params->get('name');
 
-        if (! $filename && $id !== null && $this->params->bool('fetchMeta')) {
+        $fetchMeta = filter_var($this->fetchMetaParam(), FILTER_VALIDATE_BOOLEAN);
+
+        if (! $filename && $id !== null && $fetchMeta) {
             $bag = app(FairuMetaBag::class);
             if ($bag->isActive()) {
                 return $bag->queue('url', $id, $this->params->toArray(), $this->getConnectionName());
@@ -58,9 +60,29 @@ class FairuAssetTags extends Tags
         $ids = $this->params->get('id') ?? $this->params->get('ids');
         $ids = $this->resolveIds($ids);
 
+        $fetchMeta = $this->fetchMetaParam();
 
-        $files = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids) {
-            return collect($this->getFiles($ids, $this->params->bool('fetchMeta')))->map(function ($asset) {
+        // Coalesce: when active AND meta is actually being fetched, defer the
+        // whole list tag (body + ids) so the middleware can resolve every id on
+        // the page in one batched /api/files/meta call and re-render each body.
+        if (is_array($ids) && ! empty($ids) && filter_var($fetchMeta, FILTER_VALIDATE_BOOLEAN)) {
+            $bag = app(FairuMetaBag::class);
+            if ($bag->isActive() && is_string($this->content) && $this->content !== '') {
+                $params = $this->params->toArray();
+                $params['_ids'] = $ids;
+
+                return $bag->queueList(
+                    ids: $ids,
+                    params: $params,
+                    body: $this->content,
+                    context: $this->context?->all() ?? [],
+                    connection: $this->getConnectionName(),
+                );
+            }
+        }
+
+        $files = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids, $fetchMeta) {
+            return collect($this->getFiles($ids, $fetchMeta))->map(function ($asset) {
                 $url = $this->getUrl(
                     id: data_get($asset, 'id'),
                     filename: $this->params->get('name') ?? data_get($asset, 'name'),
@@ -102,8 +124,10 @@ class FairuAssetTags extends Tags
             return $bag->queue('image', $id, $this->params->toArray(), $this->getConnectionName());
         }
 
-        return Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($id) {
-            $asset = $this->getFile($id, $this->params->bool('fetchMeta'));
+        $fetchMeta = $this->fetchMetaParam();
+
+        return Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($id, $fetchMeta) {
+            $asset = $this->getFile($id, $fetchMeta);
             $url = $this->getUrl(
                 id: data_get($asset, 'id'),
                 filename: $this->params->get('name') ?? data_get($asset, 'name'),
@@ -148,8 +172,10 @@ class FairuAssetTags extends Tags
             return;
         }
 
-        $imgStrings = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids) {
-            return collect($this->getFiles($ids, $this->params->bool('fetchMeta')))->map(function ($asset) {
+        $fetchMeta = $this->fetchMetaParam();
+
+        $imgStrings = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids, $fetchMeta) {
+            return collect($this->getFiles($ids, $fetchMeta))->map(function ($asset) {
                 $url = $this->getUrl(
                     id: data_get($asset, 'id'),
                     filename: $this->params->get('name') ?? data_get($asset, 'name'),

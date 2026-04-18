@@ -33,6 +33,26 @@ trait TransformAssets
     }
 
     /**
+     * Read the fetchMeta flag accepting either camelCase or snake/kebab variants.
+     * Returns the raw value so callers can distinguish between "true", "full", and false.
+     */
+    protected function fetchMetaParam(): mixed
+    {
+        if (! property_exists($this, 'params') || ! is_object($this->params)) {
+            return false;
+        }
+
+        foreach (['fetchMeta', 'fetch_meta', 'fetch-meta'] as $key) {
+            $value = $this->params->get($key);
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Safely get a parameter value from the appropriate context.
      *
      * @param string $key The parameter key
