@@ -19,6 +19,8 @@ return [
     "only_selection" => "Nur Auswahl",
     "previous" => "Zurück",
     "search_in_folder" => "Suche in Ordner",
+    "global_search" => "Global",
+    "global_search_tooltip" => "Über alle Ordner suchen",
     "select" => "Auswählen",
     "apply" => "Auswahl übernehmen",
     "open" => "Öffnen",

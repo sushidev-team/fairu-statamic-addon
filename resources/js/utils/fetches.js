@@ -24,12 +24,12 @@ export async function fairuGetFolder({ folder, successCallback, errorCallback })
     }
 }
 
-export async function fairuLoadFolder({ page, folder, search = null, successCallback, errorCallback }) {
+export async function fairuLoadFolder({ page, folder, search = null, globalSearch = false, successCallback, errorCallback }) {
     try {
         const res = await fetch('/fairu/folders', {
             method: 'POST',
             headers: headers(),
-            body: JSON.stringify({ page, folder, search }),
+            body: JSON.stringify({ page, folder, search, globalSearch }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();

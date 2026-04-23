@@ -26,6 +26,7 @@ class AssetController extends Controller
             'page' => $request->input('page', 1),
             'per_page' => $request->input('per_page', 25),
             'q' => $request->input('search'),
+            'globalSearch' => $request->boolean('globalSearch') ? 'true' : 'false',
         ]);
 
         if ($result->status() == 403) {

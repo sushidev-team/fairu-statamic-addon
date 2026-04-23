@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, getCurrentInstance, defineComponent, h } from 'vue';
 import { toast, progress } from '@statamic/cms/api';
-import { Stack, Button, Input, Icon, Checkbox, Pagination, ToggleGroup, ToggleItem, Listing, ListingTable, Panel, DropdownItem } from '@statamic/cms/ui';
+import { Stack, Button, Input, Icon, Checkbox, Pagination, ToggleGroup, ToggleItem, Listing, ListingTable, Panel, DropdownItem, Badge } from '@statamic/cms/ui';
 import Dropzone from './Dropzone.vue';
 import BrowserListItem from './browser/BrowserListItem.vue';
 import Folder from './browser/Folder.vue';
@@ -38,6 +38,7 @@ const emit = defineEmits(['close', 'selected']);
 
 const uploadInput = ref(null);
 const searchQuery = ref('');
+const globalSearch = ref(false);
 
 const assets = ref([]);
 const loading = ref(false);
@@ -78,8 +79,22 @@ function closeCreateFolder() {
 
 function selectFolder(folderId) {
     page.value = 1;
+    globalSearch.value = false;
     loadFolderContent(null, folderId);
     searchQuery.value = '';
+}
+
+function toggleGlobalSearch() {
+    globalSearch.value = !globalSearch.value;
+    if (searchQuery.value) {
+        page.value = 1;
+        loadFolderContent(searchQuery.value);
+    }
+}
+
+function clearSearch() {
+    searchQuery.value = '';
+    handleSearchInput('');
 }
 
 function selectItem(asset) {
@@ -319,6 +334,7 @@ async function loadFolderContent(search, folderId, { allowRootFallback = false, 
         page: page.value,
         folder: folderId !== undefined ? folderId : folder.value?.id,
         search: search ?? null,
+        globalSearch: !!search && globalSearch.value,
         successCallback: (result) => {
             folder.value = result.data.entry;
             folderContent.value = result.data.entries;
@@ -525,11 +541,27 @@ onBeforeUnmount(() => {
                     <Input
                         icon="magnifying-glass"
                         size="sm"
-                        clearable
                         :placeholder="__('fairu::browser.search_in_folder')"
                         :model-value="searchQuery"
                         @update:model-value="searchQuery = $event; handleSearchInput($event)"
-                        @keyup.esc="searchQuery = ''; handleSearchInput('')" />
+                        @keyup.esc="clearSearch">
+                        <template #append>
+                            <Badge
+                                as="button"
+                                size="sm"
+                                class="me-1.5"
+                                :color="globalSearch ? 'blue' : 'default'"
+                                :title="__('fairu::browser.global_search_tooltip')"
+                                :text="__('fairu::browser.global_search')"
+                                @click="toggleGlobalSearch" />
+                            <Button
+                                v-if="searchQuery"
+                                size="sm"
+                                icon="x"
+                                variant="ghost"
+                                @click="clearSearch" />
+                        </template>
+                    </Input>
                     <Button
                         v-if="selectionType !== 'folder' && canUpload"
                         size="sm"

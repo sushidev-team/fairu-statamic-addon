@@ -19,6 +19,8 @@ return [
     "only_selection" => "Only selection",
     "previous" => "Previous",
     "search_in_folder" => "Search in folder",
+    "global_search" => "Global",
+    "global_search_tooltip" => "Search across all folders",
     "select" => "Select",
     "apply" => "Apply selection",
     "open" => "Open",
