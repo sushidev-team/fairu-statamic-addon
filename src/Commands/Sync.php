@@ -170,14 +170,15 @@ class Sync extends Command
             label: 'Uploading missing files to fairu...',
             steps: $missingAssets,
             callback: function ($asset, $progress) use ($folders, $uuidMap, &$list, &$failed) {
-                $assetPath = $asset->path ?? null;
+                $assetPath = null;
                 $entry = null;
 
                 try {
+                    $assetPath = $asset->path() ?? null;
                     $uuid = $uuidMap[$asset->id()] ?? (new ServicesFairu($this->connection))->convertToUuid($asset->url());
 
                     $entry = [
-                        'id' => $asset->id,
+                        'id' => $asset->id(),
                         'path' => $assetPath,
                         'fairu' => $uuid,
                         'url' => $asset->url(),

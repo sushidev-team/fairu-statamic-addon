@@ -116,7 +116,7 @@ class Setup extends Command
             label: 'Prepare list of files...',
             steps: $assets?->count() > 0 ? $assets : [],
             callback: function ($asset, $progress) use (&$paths) {
-                $paths->push($asset->path);
+                $paths->push($asset->path());
             },
             hint: 'This may take some time.'
         );
@@ -171,11 +171,11 @@ class Setup extends Command
                 $entry = null;
 
                 try {
-                    $assetPath = $asset->path ?? null;
+                    $assetPath = $asset->path() ?? null;
                     $uuid = $uuidMap[$asset->id()] ?? (new ServicesFairu($this->connection))->convertToUuid($asset->url());
 
                     $entry = [
-                        'id' => $asset->id,
+                        'id' => $asset->id(),
                         'path' => $assetPath,
                         'fairu' => $uuid,
                         'url' => $asset->url(),

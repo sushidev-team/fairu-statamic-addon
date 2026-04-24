@@ -24,7 +24,7 @@ trait UploadsAssetsToFairu
 {
     protected function importAssetToFairu(AssetsAsset $asset, string $uuid, array $folders, $progress): bool
     {
-        $folder = (new ServicesImport)->getFolderPath($asset->path);
+        $folder = (new ServicesImport)->getFolderPath($asset->path());
         $folderId = data_get(collect($folders)->where('path', $folder)->first(), 'id');
 
         $fileContent = $asset->contents();
