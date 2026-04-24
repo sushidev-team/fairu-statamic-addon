@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.3.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.2.0...v2.3.0) (2026-04-24)
+
+
+### Features
+
+* added global search option ([58f6b8e](https://github.com/sushidev-team/fairu-statamic-addon/commit/58f6b8e1980ddefafd165605312d2656ab0b1fd1))
+* coalesce Fairu meta data in bag, use new meta endpoint ([77a922b](https://github.com/sushidev-team/fairu-statamic-addon/commit/77a922bebc8b33e74056c619b30ee383df2d76b8))
+* dedicated sync command for updating upload files ([834fd6a](https://github.com/sushidev-team/fairu-statamic-addon/commit/834fd6a58b6da2e3b37365e77f1b5970491bb7c0))
+
+
+### Bug Fixes
+
+* additional fetchMeta usage in tags ([fac343c](https://github.com/sushidev-team/fairu-statamic-addon/commit/fac343c35a56f2a78cf31956266c0bef56822e06))
+* fallback to root folder if folder is not found ([5bf7d85](https://github.com/sushidev-team/fairu-statamic-addon/commit/5bf7d8554821320dd58b0ebdd81ead05655e02b3))
+* issue with breadcrumb route ([959720e](https://github.com/sushidev-team/fairu-statamic-addon/commit/959720e69149abb1632f7f416e47b4c8c7bcd7e0))
+
 ## [2.2.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.1.3...v2.2.0) (2026-04-17)
 
 
