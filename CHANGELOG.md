@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.3.0...v2.3.1) (2026-04-24)
+
+
+### Bug Fixes
+
+* edge case error on sync ([fe82d53](https://github.com/sushidev-team/fairu-statamic-addon/commit/fe82d53fc2c6785ba7a7391192fba34dee1db1af))
+
 ## [2.3.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.2.0...v2.3.0) (2026-04-24)
 
 
