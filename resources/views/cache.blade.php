@@ -7,10 +7,13 @@
 
     <header class="mb-6">
 
-        @include('statamic::partials.breadcrumb', [
-            'url' => cp_route('utilities.index'),
-            'title' => __('Utilities')
-        ])
+        <a
+            href="{{ cp_route('utilities.index') }}"
+            class="inline-flex items-center gap-1 text-sm text-gray-700 dark:text-dark-150 hover:underline mb-2"
+        >
+            @cp_svg('icons/chevron-left', 'size-4 rtl:rotate-180')
+            <span>{{ __('Utilities') }}</span>
+        </a>
         <div class="flex items-center justify-between">
             <h1>{{ __('Cache Manager') }}</h1>
 
