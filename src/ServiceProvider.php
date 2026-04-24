@@ -11,6 +11,7 @@ class ServiceProvider extends AddonServiceProvider
 {
     protected $commands = [
         Commands\Setup::class,
+        Commands\Sync::class,
     ];
 
     protected $tags = [
