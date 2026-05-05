@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.2](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.3.1...v2.3.2) (2026-05-05)
+
+
+### Miscellaneous Chores
+
+* added DS_STORE to gitignore ([e7b62f4](https://github.com/sushidev-team/fairu-statamic-addon/commit/e7b62f443ca3e6a178c69bb8f8952a73c65e004c))
+
 ## [2.3.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.3.0...v2.3.1) (2026-04-24)
 
 
