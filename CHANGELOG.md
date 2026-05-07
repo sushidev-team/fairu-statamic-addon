@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.4.0...v2.5.0) (2026-05-07)
+
+
+### Features
+
+* blurred placeholder + loading spinner in asset preview gallery ([f96d2df](https://github.com/sushidev-team/fairu-statamic-addon/commit/f96d2dfd13e572ea41b85215a8d489855e40b617))
+
 ## [2.4.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.3.1...v2.4.0) (2026-05-07)
 
 
