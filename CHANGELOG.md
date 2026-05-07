@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.4.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.3.1...v2.4.0) (2026-05-07)
+
+
+### Features
+
+* fairu explorer as replacement of statamic screen ([500466b](https://github.com/sushidev-team/fairu-statamic-addon/commit/500466b8f547b63af4b30afc2fb8363045a32b60))
+
+
+### Bug Fixes
+
+* render kebab menu icon in asset action overlays ([00c59e0](https://github.com/sushidev-team/fairu-statamic-addon/commit/00c59e0b103d08631b0462915afebe6c44c976ac))
+
+
+### Miscellaneous Chores
+
+* added DS_STORE to gitignore ([e7b62f4](https://github.com/sushidev-team/fairu-statamic-addon/commit/e7b62f443ca3e6a178c69bb8f8952a73c65e004c))
+
 ## [2.3.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.3.0...v2.3.1) (2026-04-24)
 
 
