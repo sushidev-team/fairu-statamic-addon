@@ -90,7 +90,7 @@ const isMedia = computed(() =>
                 <Dropdown placement="left-start">
                     <template #trigger>
                         <Button
-                            icon="dots-vertical"
+                            icon="dots"
                             variant="ghost"
                             size="xs"
                             round />
@@ -175,7 +175,7 @@ const isMedia = computed(() =>
                 <Dropdown placement="left-start">
                     <template #trigger>
                         <Button
-                            icon="dots-vertical"
+                            icon="dots"
                             variant="ghost"
                             size="xs"
                             round
