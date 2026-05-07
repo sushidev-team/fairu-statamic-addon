@@ -698,7 +698,17 @@ onBeforeUnmount(() => {
                                 v-if="row.type === 'folder'"
                                 class="flex items-center gap-2 w-full cursor-pointer select-none -my-3 py-3"
                                 @click.stop="selectFolder(row._isParent ? folder?.parent_id : row.id)">
-                                <Icon name="folder" class="size-5 text-gray-500" />
+                                <svg
+                                    viewBox="0 0 80 66"
+                                    fill="#3EBEB41C"
+                                    stroke="#3EBEB4"
+                                    stroke-width="3"
+                                    stroke-linejoin="round"
+                                    stroke-linecap="round"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    class="h-5 w-[24px] shrink-0">
+                                    <path d="M8 6 H26 Q30 6 30 10 V14 H72 Q78 14 78 20 V56 Q78 62 72 62 H8 Q2 62 2 56 V12 Q2 6 8 6 Z"/>
+                                </svg>
                                 <span>{{ value }}</span>
                             </button>
                             <!-- File row (disabled in folder mode) -->
