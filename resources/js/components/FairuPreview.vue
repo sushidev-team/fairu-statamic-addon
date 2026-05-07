@@ -150,9 +150,10 @@ defineExpose({ scrollPrev, scrollNext });
 </script>
 
 <template>
+    <Teleport to="body">
     <div
         v-if="current"
-        class="z-10 fixed inset-4 md:inset-8 rounded-xl bg-white dark:bg-gray-900 shadow-2xl ring-1 ring-gray-200 dark:ring-gray-700 grid overflow-hidden"
+        class="z-50 fixed inset-4 md:inset-8 rounded-xl bg-white dark:bg-gray-900 shadow-2xl ring-1 ring-gray-200 dark:ring-gray-700 grid overflow-hidden"
         style="grid-template-rows: auto 1fr auto">
         <!-- Toolbar -->
         <div class="flex h-min w-full items-center justify-between gap-3 p-4">
@@ -181,7 +182,7 @@ defineExpose({ scrollPrev, scrollNext });
                     v-if="!isFolderMode"
                     variant="primary"
                     size="sm"
-                    icon="check"
+                    icon="checkmark"
                     :text="multiselect
                         ? __('fairu::browser.apply')
                         : __('fairu::browser.select')"
@@ -263,4 +264,5 @@ defineExpose({ scrollPrev, scrollNext });
             </div>
         </div>
     </div>
+    </Teleport>
 </template>

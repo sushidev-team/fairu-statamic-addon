@@ -301,7 +301,7 @@ onBeforeUnmount(() => {
                         <Button
                             size="xs"
                             variant="ghost"
-                            icon="rotate-counter-clockwise"
+                            icon="history"
                             :text="__('fairu::fieldtype.editor.focal_point_reset')"
                             @click="resetFocal" />
                     </header>
@@ -330,7 +330,7 @@ onBeforeUnmount(() => {
                                 class="md:hidden absolute top-2 right-2"
                                 size="xs"
                                 variant="ghost"
-                                :icon="infoExpanded ? 'x' : 'information'"
+                                :icon="infoExpanded ? 'x' : 'info'"
                                 round
                                 :title="__('fairu::fieldtype.editor.info_dimensions')"
                                 @click="infoExpanded = !infoExpanded" />

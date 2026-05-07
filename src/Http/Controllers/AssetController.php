@@ -5,13 +5,25 @@ namespace Sushidev\Fairu\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Routing\Controller;
+use Inertia\Inertia;
 
 class AssetController extends Controller
 {
-
-    public function index()
+    public function browser()
     {
-        return redirect(config('statamic.fairu.url') . "/folders");
+        return Inertia::render('fairu/Browser', [
+            'meta' => [
+                'proxy' => config('statamic.fairu.url_proxy'),
+                'file' => config('statamic.fairu.url') . '/files',
+                'folder' => null,
+            ],
+            'config' => [
+                'display_type' => 'list',
+                'allow_uploads' => true,
+                'folder' => null,
+            ],
+            'title' => 'Assets',
+        ]);
     }
 
     public function folderContent(Request $request)

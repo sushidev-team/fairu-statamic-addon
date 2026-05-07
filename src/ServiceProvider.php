@@ -4,6 +4,7 @@ namespace Sushidev\Fairu;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
+use Statamic\Facades\CP\Nav;
 use Statamic\Providers\AddonServiceProvider;
 use Sushidev\Fairu\Services\FairuMetaBag;
 
@@ -53,6 +54,13 @@ class ServiceProvider extends AddonServiceProvider
             }
 
             View::addNamespace('fairu', $vendorViewsPath);
+
+            Nav::extend(function ($nav) {
+                $nav->remove('Content', 'Assets');
+                $nav->content('Assets')
+                    ->url(cp_route('fairu.browser'))
+                    ->icon('assets');
+            });
         }
 
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'fairu');

@@ -1,6 +1,6 @@
 {
   "resources/css/cp.css": {
-    "file": "assets/cp-BkE-sogO.css",
+    "file": "assets/cp-CSNl5GlU.css",
     "src": "resources/css/cp.css",
     "isEntry": true,
     "name": "cp",
@@ -12,13 +12,28 @@
     "file": "assets/MaterialSymbolsOutlined-Regular-DQJClE0Y.ttf",
     "src": "resources/fonts/MaterialSymbolsOutlined-Regular.ttf"
   },
+  "resources/js/components/FairuBrowser.vue": {
+    "file": "assets/FairuBrowser-DQ5Lz3Ka.js",
+    "name": "FairuBrowser",
+    "src": "resources/js/components/FairuBrowser.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/cp.js"
+    ],
+    "css": [
+      "assets/FairuBrowser-D48OGD8R.css"
+    ]
+  },
   "resources/js/cp.js": {
-    "file": "assets/cp-KI-b9cke.js",
+    "file": "assets/cp-DxcQJSdi.js",
     "name": "cp",
     "src": "resources/js/cp.js",
     "isEntry": true,
-    "css": [
-      "assets/cp-B-EXkfXd.css"
+    "dynamicImports": [
+      "resources/js/components/FairuBrowser.vue",
+      "resources/js/components/FairuBrowser.vue",
+      "resources/js/components/FairuBrowser.vue",
+      "resources/js/components/FairuBrowser.vue"
     ],
     "assets": [
       "assets/fairu-logo-C5d5urL9.svg"

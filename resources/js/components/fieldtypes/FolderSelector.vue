@@ -1,9 +1,10 @@
 <script setup>
-import { ref, computed, onMounted, getCurrentInstance } from 'vue';
+import { ref, computed, onMounted, getCurrentInstance, defineAsyncComponent } from 'vue';
 import { Fieldtype } from '@statamic/cms';
 import { Button, Icon } from '@statamic/cms/ui';
-import FairuBrowser from '../FairuBrowser.vue';
 import { fairuGetFolder } from '../../utils/fetches';
+
+const FairuBrowser = defineAsyncComponent(() => import('../FairuBrowser.vue'));
 
 const __ = getCurrentInstance().appContext.config.globalProperties.__;
 

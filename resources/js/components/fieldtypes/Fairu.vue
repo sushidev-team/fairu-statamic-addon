@@ -1,12 +1,13 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, useId, getCurrentInstance } from 'vue';
+import { ref, computed, nextTick, onMounted, useId, getCurrentInstance, defineAsyncComponent } from 'vue';
 import { Fieldtype } from '@statamic/cms';
 import { toast, progress, config } from '@statamic/cms/api';
 import { Button } from '@statamic/cms/ui';
-import FairuBrowser from '../FairuBrowser.vue';
 import FairuAssetEditor from '../FairuAssetEditor.vue';
 import Dropzone from '../Dropzone.vue';
 import { fairuUpload, fairuLoadFilesMeta } from '../../utils/fetches';
+
+const FairuBrowser = defineAsyncComponent(() => import('../FairuBrowser.vue'));
 
 const emit = defineEmits(Fieldtype.emits);
 const props = defineProps(Fieldtype.props);

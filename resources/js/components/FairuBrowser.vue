@@ -1,22 +1,26 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, getCurrentInstance, defineComponent, h } from 'vue';
 import { toast, progress } from '@statamic/cms/api';
-import { Stack, Button, Input, Icon, Checkbox, Pagination, ToggleGroup, ToggleItem, Listing, ListingTable, Panel, DropdownItem, Badge } from '@statamic/cms/ui';
+import { Button, Input, Icon, Checkbox, Pagination, ToggleGroup, ToggleItem, Listing, ListingTable, Panel, Dropdown, DropdownMenu, DropdownItem, DropdownSeparator, Badge } from '@statamic/cms/ui';
 import Dropzone from './Dropzone.vue';
 import BrowserListItem from './browser/BrowserListItem.vue';
 import Folder from './browser/Folder.vue';
 import FairuAssetEditor from './FairuAssetEditor.vue';
 import FairuAssetActions from './FairuAssetActions.vue';
 import FairuPreview from './FairuPreview.vue';
+import FairuBrowserChrome from './FairuBrowserChrome.vue';
 import { fairuLoadFolder, fairuUpload, fairuCreateFolder, fairuLoadFilesMeta } from '../utils/fetches';
 
 const __ = getCurrentInstance().appContext.config.globalProperties.__;
 
 const FairuStackHeader = defineComponent({
     name: 'StackHeader',
-    setup(_, { slots }) {
+    props: { embedded: { type: Boolean, default: false } },
+    setup(props, { slots }) {
         return () => h('div', {
-            class: 'flex items-center justify-between rounded-t-xl border-b border-gray-300 ps-6 pe-4 py-2 dark:border-gray-950 dark:bg-gray-800',
+            class: props.embedded
+                ? 'flex shrink-0 flex-wrap items-center gap-2 border-b border-gray-200 px-4 py-2 dark:border-gray-700 dark:bg-gray-900'
+                : 'flex flex-wrap items-center gap-2 rounded-t-xl border-b border-gray-300 ps-6 pe-4 py-2 dark:border-gray-950 dark:bg-gray-800',
         }, slots.default?.());
     },
 });
@@ -32,9 +36,13 @@ const props = defineProps({
     multiselect: Boolean,
     canUpload: Boolean,
     startFolder: { type: String, default: null },
+    embedded: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['close', 'selected']);
+
+const effectiveMultiselect = computed(() => !props.embedded && props.multiselect);
+const effectiveSelectionType = computed(() => props.embedded ? 'files' : props.selectionType);
 
 const uploadInput = ref(null);
 const searchQuery = ref('');
@@ -98,14 +106,19 @@ function clearSearch() {
 }
 
 function selectItem(asset) {
+    if (props.embedded) {
+        const idx = fileItems.value.findIndex((f) => f.id === asset.id);
+        if (idx > -1) setPreview(idx);
+        return;
+    }
     emit('selected', asset);
     nextTick(() => emitClose());
 }
 
 function sendSelection() {
-    if (props.selectionType === 'folder') {
+    if (effectiveSelectionType.value === 'folder') {
         emit('selected', folder.value);
-    } else if (props.multiselect) {
+    } else if (effectiveMultiselect.value) {
         emit('selected', assets.value);
     } else {
         emit('selected', assets.value?.[0] ?? null);
@@ -276,7 +289,9 @@ function handleUploadFiles(files) {
             const newIds = result?.data?.map((e) => e.id) || [];
             const fetchedAssets = await loadMetaData(newIds);
 
-            if (props.multiselect) {
+            if (props.embedded) {
+                await loadFolderContent();
+            } else if (effectiveMultiselect.value) {
                 if (fetchedAssets?.length > 0) {
                     const remainingSlots = Number.isFinite(props.config.max_files)
                         ? Math.max(0, props.config.max_files - assets.value.length)
@@ -380,8 +395,11 @@ function getExtension(mime) {
     return parts.length === 2 ? parts[1] : 'n/a';
 }
 
-const isFolderMode = computed(() => props.selectionType === 'folder');
-const listingColumns = [{ field: 'name', label: __('Name'), sortable: false }];
+const isFolderMode = computed(() => effectiveSelectionType.value === 'folder');
+const listingColumns = computed(() => [
+    { field: 'name', label: __('Name'), sortable: false },
+    { field: '_actions', label: '', sortable: false, width: '90' },
+]);
 
 const folderItems = computed(() =>
     folderContent.value?.data?.filter((e) => e?.type === 'folder') || []
@@ -419,7 +437,7 @@ const folderIds = computed(() => {
 });
 
 const maxSelectionsCount = computed(() => {
-    if (!props.multiselect) return 1;
+    if (!effectiveMultiselect.value) return 1;
     return props.config.max_files || Infinity;
 });
 
@@ -439,7 +457,7 @@ function handleListingSelections(newSelections) {
     // Filter out folder IDs — folders are not selectable
     const fileOnlySelections = newSelections.filter((id) => !folderIds.value.has(id));
 
-    if (!props.multiselect) {
+    if (!effectiveMultiselect.value) {
         const newId = fileOnlySelections.find((id) => !selectedIds.value.includes(id));
         if (newId) {
             const item = fileItems.value.find((f) => f.id === newId) ||
@@ -476,8 +494,9 @@ const previewImage = computed(() => {
 
 onMounted(async () => {
     displayType.value = props.config.display_type || 'list';
-    assets.value =
-        props.config.max_files === 1
+    assets.value = props.embedded
+        ? []
+        : props.config.max_files === 1
             ? []
             : [...(props.initialAssets?.length > 0 ? props.initialAssets : [])];
     const startFolder = props.startFolder || props.config.folder || props.meta?.folder || null;
@@ -509,75 +528,89 @@ onBeforeUnmount(() => {
         @renamed="handleAssetRenamed"
         @moved="handleAssetMoved"
         @deleted="handleAssetDeleted" />
-    <Stack open @closed="emitClose" inset :wrap-slot="false">
+    <FairuBrowserChrome
+        :embedded="embedded"
+        :show-footer="!!folderContent && !showSelection"
+        @close="emitClose">
         <!-- Custom header with Fairu logo -->
-        <FairuStackHeader>
-            <a href="https://fairu.app" target="_blank" class="flex items-center">
+        <template #header>
+        <FairuStackHeader :embedded="embedded">
+            <a href="https://fairu.app" target="_blank" class="flex shrink-0 items-center">
                 <img class="w-16 h-auto" src="../../svg/fairu-logo.svg" alt="Fairu" />
             </a>
-            <div class="flex items-center gap-2">
-                <input class="hidden" type="file" ref="uploadInput" @change="handleFileChange" />
+            <input class="hidden" type="file" ref="uploadInput" @change="handleFileChange" />
+            <div class="flex flex-1 flex-wrap items-center justify-end gap-2">
                 <template v-if="createFolderInputVisible">
-                    <Input
-                        size="sm"
-                        icon="asset-folder"
-                        :focus="true"
-                        :placeholder="__('fairu::browser.new_folder_name')"
-                        :model-value="newFolderName"
-                        @update:model-value="newFolderName = $event"
-                        @keyup.enter="handleCreateFolder"
-                        @keyup.esc="closeCreateFolder" />
-                    <Button
-                        variant="primary"
-                        size="sm"
-                        :text="__('fairu::browser.create')"
-                        @click="handleCreateFolder" />
-                    <Button
-                        size="sm"
-                        :text="__('fairu::browser.cancel')"
-                        @click="closeCreateFolder" />
+                    <div class="w-72 max-w-full">
+                        <Input
+                            size="sm"
+                            icon="asset-folder"
+                            :focus="true"
+                            :placeholder="__('fairu::browser.new_folder_name')"
+                            :model-value="newFolderName"
+                            @update:model-value="newFolderName = $event"
+                            @keyup.enter="handleCreateFolder"
+                            @keyup.esc="closeCreateFolder" />
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            :text="__('fairu::browser.create')"
+                            @click="handleCreateFolder" />
+                        <Button
+                            size="sm"
+                            :text="__('fairu::browser.cancel')"
+                            @click="closeCreateFolder" />
+                        <Button v-if="!embedded" icon="x" variant="ghost" class="-me-2" @click="emitClose" />
+                    </div>
                 </template>
                 <template v-else>
-                    <Input
-                        icon="magnifying-glass"
-                        size="sm"
-                        :placeholder="__('fairu::browser.search_in_folder')"
-                        :model-value="searchQuery"
-                        @update:model-value="searchQuery = $event; handleSearchInput($event)"
-                        @keyup.esc="clearSearch">
-                        <template #append>
-                            <Badge
-                                as="button"
-                                size="sm"
-                                class="me-1.5"
-                                :color="globalSearch ? 'blue' : 'default'"
-                                :title="__('fairu::browser.global_search_tooltip')"
-                                :text="__('fairu::browser.global_search')"
-                                @click="toggleGlobalSearch" />
-                            <Button
-                                v-if="searchQuery"
-                                size="sm"
-                                icon="x"
-                                variant="ghost"
-                                @click="clearSearch" />
-                        </template>
-                    </Input>
-                    <Button
-                        v-if="selectionType !== 'folder' && canUpload"
-                        size="sm"
-                        icon="upload"
-                        :text="__('fairu::browser.upload')"
-                        @click="openFile()" />
-                    <Button
-                        v-if="canUpload"
-                        size="sm"
-                        icon="asset-folder"
-                        :text="__('fairu::browser.new_folder')"
-                        @click="openCreateFolder" />
+                    <div class="w-72 max-w-full">
+                        <Input
+                            icon="magnifying-glass"
+                            size="sm"
+                            :placeholder="__('fairu::browser.search_in_folder')"
+                            :model-value="searchQuery"
+                            @update:model-value="searchQuery = $event; handleSearchInput($event)"
+                            @keyup.esc="clearSearch">
+                            <template #append>
+                                <Badge
+                                    as="button"
+                                    size="sm"
+                                    class="me-1.5"
+                                    :color="globalSearch ? 'blue' : 'default'"
+                                    :title="__('fairu::browser.global_search_tooltip')"
+                                    :text="__('fairu::browser.global_search')"
+                                    @click="toggleGlobalSearch" />
+                                <Button
+                                    v-if="searchQuery"
+                                    size="sm"
+                                    icon="x"
+                                    variant="ghost"
+                                    @click="clearSearch" />
+                            </template>
+                        </Input>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <Button
+                            v-if="effectiveSelectionType !== 'folder' && canUpload"
+                            size="sm"
+                            icon="upload"
+                            :text="__('fairu::browser.upload')"
+                            @click="openFile()" />
+                        <Button
+                            v-if="canUpload"
+                            size="sm"
+                            icon="asset-folder"
+                            :text="__('fairu::browser.new_folder')"
+                            @click="openCreateFolder" />
+                        <Button v-if="!embedded" icon="x" variant="ghost" class="-me-2" @click="emitClose" />
+                    </div>
                 </template>
-                <Button icon="x" variant="ghost" class="-me-2" @click="emitClose" />
             </div>
         </FairuStackHeader>
+        </template>
 
         <!-- Breadcrumbs -->
         <div class="flex items-center gap-1 border-b border-gray-200 px-4 py-2 text-sm dark:border-gray-700 dark:bg-gray-900">
@@ -614,7 +647,7 @@ onBeforeUnmount(() => {
         <dropzone
             :enabled="canUpload"
             @dropped="handleFileDrop"
-            class="flex-1 overflow-y-auto p-4">
+            class="flex-1 min-h-0 min-w-0 overflow-y-auto p-4">
             <div
                 v-if="loadingList"
                 class="grid items-center justify-center w-full h-full p-8">
@@ -629,8 +662,8 @@ onBeforeUnmount(() => {
                 v-if="!loadingList && displayType === 'list'"
                 :items="allListingItems"
                 :columns="listingColumns"
-                :selections="multiselect ? selectedIds : undefined"
-                :max-selections="multiselect ? maxSelectionsCount : undefined"
+                :selections="effectiveMultiselect ? selectedIds : undefined"
+                :max-selections="effectiveMultiselect ? maxSelectionsCount : undefined"
                 :allow-search="false"
                 :allow-customizing-columns="false"
                 :allow-bulk-actions="false"
@@ -639,11 +672,11 @@ onBeforeUnmount(() => {
                 :per-page="999"
                 @update:selections="handleListingSelections"
                 v-slot="{ items }">
-                <Panel v-if="items.length" class="relative !mb-0">
+                <Panel v-if="items.length" class="fairu-browser-list relative !mb-0">
                     <!-- Toolbar overlaid on the table header row -->
                     <div class="absolute top-1.75 right-1.75 z-10 flex items-center gap-2 px-3 h-[2.375rem]">
                         <Button
-                            v-if="multiselect && assets?.length > 0"
+                            v-if="effectiveMultiselect && assets?.length > 0"
                             size="xs"
                             :variant="showSelection ? 'filled' : 'ghost'"
                             @click="toggleShowSelection">
@@ -680,92 +713,87 @@ onBeforeUnmount(() => {
                                         class="size-full object-cover" />
                                     <i v-else class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-base">description</i>
                                 </div>
-                                <span class="truncate">{{ value }}</span>
+                                <span class="truncate block flex-1 min-w-0">{{ value }}</span>
                             </div>
                             <!-- File row (single select) -->
-                            <div
-                                v-else-if="!multiselect"
-                                class="flex items-center gap-2 w-full select-none -my-3 py-3">
-                                <button
-                                    class="flex items-center gap-2 grow min-w-0 cursor-pointer text-left"
-                                    @click.stop="selectItem(row)">
-                                    <div class="shrink-0 size-7 rounded-sm overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                                        <img
-                                            v-if="meta.proxy && row?.blocked !== true && isMediaItem(row)"
-                                            draggable="false"
-                                            :src="thumbnailUrl(row)"
-                                            class="size-full object-cover" />
-                                        <i v-else class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-base">description</i>
-                                    </div>
-                                    <span class="truncate">{{ value }}</span>
-                                </button>
-                                <Button
-                                    icon="pencil"
-                                    variant="ghost"
-                                    size="xs"
-                                    round
-                                    :title="__('fairu::fieldtype.edit')"
-                                    @click.stop="openEditor(row)" />
-                            </div>
-                            <!-- File row (multiselect) -->
-                            <div v-else class="flex items-center gap-2 w-full select-none -my-3 py-3">
-                                <div class="flex items-center gap-2 grow min-w-0 cursor-pointer">
-                                    <div class="shrink-0 size-7 rounded-sm overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                                        <img
-                                            v-if="meta.proxy && row?.blocked !== true && isMediaItem(row)"
-                                            draggable="false"
-                                            :src="thumbnailUrl(row)"
-                                            class="size-full object-cover" />
-                                        <i v-else class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-base">description</i>
-                                    </div>
-                                    <span class="truncate">{{ value }}</span>
+                            <button
+                                v-else-if="!effectiveMultiselect"
+                                class="flex items-center gap-2 w-full min-w-0 cursor-pointer text-left -my-3 py-3"
+                                @click.stop="selectItem(row)">
+                                <div class="shrink-0 size-7 rounded-sm overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                    <img
+                                        v-if="meta.proxy && row?.blocked !== true && isMediaItem(row)"
+                                        draggable="false"
+                                        :src="thumbnailUrl(row)"
+                                        class="size-full object-cover" />
+                                    <i v-else class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-base">description</i>
                                 </div>
-                                <Button
-                                    icon="pencil"
-                                    variant="ghost"
-                                    size="xs"
-                                    round
-                                    :title="__('fairu::fieldtype.edit')"
-                                    @click.stop="openEditor(row)" />
+                                <span class="truncate block flex-1 min-w-0">{{ value }}</span>
+                            </button>
+                            <!-- File row (multiselect) -->
+                            <div v-else class="flex items-center gap-2 w-full min-w-0 -my-3 py-3">
+                                <div class="shrink-0 size-7 rounded-sm overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                    <img
+                                        v-if="meta.proxy && row?.blocked !== true && isMediaItem(row)"
+                                        draggable="false"
+                                        :src="thumbnailUrl(row)"
+                                        class="size-full object-cover" />
+                                    <i v-else class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-base">description</i>
+                                </div>
+                                <span class="truncate block flex-1 min-w-0">{{ value }}</span>
                             </div>
                         </template>
-                        <template #prepended-row-actions="{ row }">
-                            <!-- Folder actions -->
-                            <DropdownItem
-                                v-if="row.type === 'folder'"
-                                :text="__('fairu::browser.open')"
-                                icon="folder"
-                                @click="selectFolder(row._isParent ? folder?.parent_id : row.id)" />
-                            <!-- File actions -->
-                            <template v-else-if="!isFolderMode">
-                                <DropdownItem
-                                    :text="__('fairu::browser.preview')"
-                                    icon="eye"
-                                    @click="setPreview(getFileIndex(row))" />
-                                <DropdownItem
-                                    :text="__('fairu::fieldtype.edit')"
+                        <template #cell-_actions="{ row }">
+                            <div class="flex items-center justify-end gap-1 -my-3 py-3">
+                                <Button
+                                    v-if="row.type !== 'folder' && !row._isParent"
                                     icon="pencil"
-                                    @click="openEditor(row)" />
-                                <DropdownItem
-                                    :text="__('fairu::fieldtype.rename')"
-                                    icon="rename"
-                                    @click="openRename(row)" />
-                                <DropdownItem
-                                    :text="__('fairu::fieldtype.move')"
-                                    icon="folder-open"
-                                    @click="openMove(row)" />
-                                <DropdownItem
-                                    :text="__('fairu::browser.edit_in_fairu')"
-                                    icon="external-link"
-                                    :href="meta.file + '/' + row.id"
-                                    target="_blank" />
-                                <DropdownItem
-                                    :text="__('fairu::fieldtype.delete')"
-                                    icon="trash"
-                                    variant="destructive"
-                                    class="!text-red-600 dark:!text-red-400"
-                                    @click="openDelete(row)" />
-                            </template>
+                                    variant="ghost"
+                                    size="xs"
+                                    round
+                                    :title="__('fairu::fieldtype.edit')"
+                                    @click.stop="openEditor(row)" />
+                                <Dropdown placement="bottom-end">
+                                    <!-- Folder actions -->
+                                    <DropdownMenu v-if="row.type === 'folder'">
+                                        <DropdownItem
+                                            :text="__('fairu::browser.open')"
+                                            icon="folder"
+                                            @click="selectFolder(row._isParent ? folder?.parent_id : row.id)" />
+                                    </DropdownMenu>
+                                    <!-- File actions -->
+                                    <DropdownMenu v-else-if="!isFolderMode">
+                                        <DropdownItem
+                                            :text="__('fairu::browser.preview')"
+                                            icon="eye"
+                                            @click="setPreview(getFileIndex(row))" />
+                                        <DropdownItem
+                                            :text="__('fairu::fieldtype.edit')"
+                                            icon="pencil"
+                                            @click="openEditor(row)" />
+                                        <DropdownItem
+                                            :text="__('fairu::fieldtype.rename')"
+                                            icon="rename"
+                                            @click="openRename(row)" />
+                                        <DropdownItem
+                                            :text="__('fairu::fieldtype.move')"
+                                            icon="folder-open"
+                                            @click="openMove(row)" />
+                                        <DropdownItem
+                                            :text="__('fairu::browser.edit_in_fairu')"
+                                            icon="external-link"
+                                            :href="meta.file + '/' + row.id"
+                                            target="_blank" />
+                                        <DropdownSeparator />
+                                        <DropdownItem
+                                            :text="__('fairu::fieldtype.delete')"
+                                            icon="trash"
+                                            variant="destructive"
+                                            class="!text-red-600 dark:!text-red-400"
+                                            @click="openDelete(row)" />
+                                    </DropdownMenu>
+                                </Dropdown>
+                            </div>
                         </template>
                     </ListingTable>
                 </Panel>
@@ -779,7 +807,7 @@ onBeforeUnmount(() => {
                     <div class="flex items-center justify-between gap-2 px-3 py-1.5">
                         <div class="flex gap-2 items-center">
                             <Button
-                                v-if="multiselect && assets?.length > 0"
+                                v-if="effectiveMultiselect && assets?.length > 0"
                                 size="xs"
                                 :variant="showSelection ? 'filled' : 'ghost'"
                                 @click="toggleShowSelection">
@@ -819,16 +847,16 @@ onBeforeUnmount(() => {
                         :asset="item"
                         :meta="meta"
                         :disabled="
-                            (config.max_files &&
+                            (!embedded && config.max_files &&
                                 config.max_files > 0 &&
                                 assets?.length >= config.max_files &&
                                 !isSelected(item)) ||
-                            (selectionType === 'folder' && item?.type !== 'folder')
+                            (effectiveSelectionType === 'folder' && item?.type !== 'folder')
                         "
                         :selected="isSelected(item)"
-                        :multiselect="multiselect"
+                        :multiselect="effectiveMultiselect"
                         displayType="tiles"
-                        @change="multiselect ? toggleItemSelection(item) : selectItem(item)"
+                        @change="effectiveMultiselect ? toggleItemSelection(item) : selectItem(item)"
                         @preview="setPreview(index)"
                         @edit="openEditor(item)"
                         @rename="openRename(item)"
@@ -845,7 +873,7 @@ onBeforeUnmount(() => {
                 :items="fileItems"
                 :startIndex="previewItem ?? 0"
                 :meta="meta"
-                :multiselect="multiselect"
+                :multiselect="effectiveMultiselect"
                 :isFolderMode="isFolderMode"
                 :isSelectedFn="isSelected"
                 @close="closePreview"
@@ -867,7 +895,7 @@ onBeforeUnmount(() => {
                 :show-page-links="true"
                 @page-selected="handlePageSelected" />
         </template>
-        <template #footer-end>
+        <template v-if="!embedded" #footer-end>
             <Button
                 :text="__('fairu::browser.cancel')"
                 @click="emitClose" />
@@ -876,5 +904,15 @@ onBeforeUnmount(() => {
                 :text="__('fairu::browser.select')"
                 @click="sendSelection" />
         </template>
-    </Stack>
+    </FairuBrowserChrome>
 </template>
+
+<style scoped>
+.fairu-browser-list :deep(table.data-table) {
+    width: 100%;
+    table-layout: fixed;
+}
+.fairu-browser-list :deep([data-column="_actions"]) {
+    width: 90px;
+}
+</style>
