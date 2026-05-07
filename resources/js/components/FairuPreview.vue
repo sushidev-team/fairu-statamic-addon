@@ -18,6 +18,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'edit', 'toggle-select', 'confirm-select', 'apply']);
 
 const currentIndex = ref(props.startIndex);
+const loadedIds = ref(new Set());
 
 const [mainRef, mainApi] = emblaCarouselVue({ loop: false });
 const [thumbsRef, thumbsApi] = emblaCarouselVue({ loop: false, containScroll: 'keepSnaps', dragFree: true, align: 'center' });
@@ -33,6 +34,7 @@ function thumbnailUrl(item, size = 128) {
 }
 
 const IMAGE_WIDTHS = [480, 768, 1024, 1280, 1600, 1920];
+const PLACEHOLDER_WIDTH = 20;
 
 function fullUrl(item, width = 1600) {
     return `${props.meta.proxy}/${item.id}/thumbnail.webp?width=${width}`;
@@ -40,6 +42,22 @@ function fullUrl(item, width = 1600) {
 
 function fullSrcset(item) {
     return IMAGE_WIDTHS.map((w) => `${fullUrl(item, w)} ${w}w`).join(', ');
+}
+
+function placeholderUrl(item) {
+    return `${props.meta.proxy}/${item.id}/thumbnail.webp?width=${PLACEHOLDER_WIDTH}`;
+}
+
+function isLoaded(item) {
+    return loadedIds.value.has(item.id);
+}
+
+function markLoaded(item) {
+    if (!loadedIds.value.has(item.id)) {
+        const next = new Set(loadedIds.value);
+        next.add(item.id);
+        loadedIds.value = next;
+    }
 }
 
 function scrollPrev() {
@@ -204,16 +222,38 @@ defineExpose({ scrollPrev, scrollNext });
                         :key="'main-' + item.id"
                         class="embla__slide relative flex items-center justify-center"
                         style="flex: 0 0 100%; min-width: 0">
-                        <img
-                            v-if="meta.proxy && item?.blocked !== true && isMediaItem(item)"
-                            draggable="false"
-                            :src="fullUrl(item, 1600)"
-                            :srcset="fullSrcset(item)"
-                            sizes="100vw"
-                            loading="lazy"
-                            class="max-h-full max-w-full object-contain select-none"
-                            :class="multiselect && !isFolderMode ? 'cursor-pointer' : ''"
-                            @click="handleImageClick(item)" />
+                        <template v-if="meta.proxy && item?.blocked !== true && isMediaItem(item)">
+                            <img
+                                draggable="false"
+                                :src="placeholderUrl(item)"
+                                aria-hidden="true"
+                                class="fairu-preview-placeholder size-full object-contain select-none pointer-events-none"
+                                :class="{ 'is-faded': isLoaded(item) }" />
+                            <img
+                                draggable="false"
+                                :src="fullUrl(item, 1600)"
+                                :srcset="fullSrcset(item)"
+                                sizes="100vw"
+                                loading="lazy"
+                                class="fairu-preview-full max-h-full max-w-full object-contain select-none"
+                                :class="[
+                                    multiselect && !isFolderMode ? 'cursor-pointer' : '',
+                                    isLoaded(item) ? 'is-loaded' : '',
+                                ]"
+                                @load="markLoaded(item)"
+                                @click="handleImageClick(item)" />
+                            <div
+                                v-if="!isLoaded(item)"
+                                class="pointer-events-none absolute inset-0 grid place-items-center"
+                                aria-live="polite">
+                                <div class="grid place-items-center size-16 rounded-full bg-black/55 backdrop-blur-sm">
+                                    <svg class="size-8 animate-spin text-white" viewBox="0 0 24 24" fill="none">
+                                        <circle class="opacity-30" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                                        <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </template>
                         <div
                             v-else
                             class="grid size-full place-items-center text-gray-600">
@@ -266,3 +306,25 @@ defineExpose({ scrollPrev, scrollNext });
     </div>
     </Teleport>
 </template>
+
+<style scoped>
+.fairu-preview-placeholder {
+    position: absolute;
+    inset: 0;
+    filter: blur(18px);
+    transition: opacity 250ms ease-out;
+}
+
+.fairu-preview-placeholder.is-faded {
+    opacity: 0;
+}
+
+.fairu-preview-full {
+    opacity: 0;
+    transition: opacity 200ms ease-out;
+}
+
+.fairu-preview-full.is-loaded {
+    opacity: 1;
+}
+</style>
