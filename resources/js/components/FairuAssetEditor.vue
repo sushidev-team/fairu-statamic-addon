@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, getCurrentInstance, defineComponent, h } from 'vue';
 import { toast } from '@statamic/cms/api';
-import { Stack, Button, Input, Textarea, Field, Heading, Subheading, Description } from '@statamic/cms/ui';
+import { Stack, Button, Input, Textarea, Field, Heading, Subheading, Description, Slider } from '@statamic/cms/ui';
 import FairuAssetActions from './FairuAssetActions.vue';
 import { fairuGetFile, fairuUpdateFile } from '../utils/fetches';
 
@@ -63,6 +63,14 @@ const caption = ref('');
 const description = ref('');
 const focalX = ref(50);
 const focalY = ref(50);
+const zoom = ref(1);
+
+const ZOOM_MIN = 1;
+const ZOOM_MAX = 4;
+const ZOOM_STEP = 0.1;
+const ZOOM_STEP_FINE = 0.01;
+const fineZoom = ref(false);
+const zoomStep = computed(() => (fineZoom.value ? ZOOM_STEP_FINE : ZOOM_STEP));
 
 const pickerEl = ref(null);
 const imageEl = ref(null);
@@ -95,15 +103,26 @@ const imageUrl = computed(() => {
 });
 
 const focalCss = computed(() => `${focalX.value}% ${focalY.value}%`);
+const formattedZoom = computed(() => {
+    const decimals = fineZoom.value ? 2 : 1;
+    return `${zoom.value.toFixed(decimals)}×`;
+});
+const previewImageStyle = computed(() => ({
+    objectPosition: focalCss.value,
+    transform: `scale(${zoom.value})`,
+    transformOrigin: focalCss.value,
+}));
 
 function parseFocalPoint(str) {
-    if (!str || typeof str !== 'string') return { x: 50, y: 50 };
+    if (!str || typeof str !== 'string') return { x: 50, y: 50, z: 1 };
     const parts = str.split('-');
     const x = parseFloat(parts[0]);
     const y = parseFloat(parts[1]);
+    const z = parseFloat(parts[2]);
     return {
         x: Number.isFinite(x) ? clamp(x, 0, 100) : 50,
         y: Number.isFinite(y) ? clamp(y, 0, 100) : 50,
+        z: Number.isFinite(z) ? clamp(z, ZOOM_MIN, ZOOM_MAX) : 1,
     };
 }
 
@@ -142,11 +161,15 @@ function handlePointerUp() {
 function resetFocal() {
     focalX.value = 50;
     focalY.value = 50;
+    zoom.value = 1;
 }
 
 function focalToString() {
-    if (focalX.value === 50 && focalY.value === 50) return null;
-    return `${Math.round(focalX.value * 10) / 10}-${Math.round(focalY.value * 10) / 10}-1`;
+    const x = Math.round(focalX.value * 10) / 10;
+    const y = Math.round(focalY.value * 10) / 10;
+    const z = Math.round(zoom.value * 100) / 100;
+    if (x === 50 && y === 50 && z === 1) return null;
+    return `${x}-${y}-${z}`;
 }
 
 async function load() {
@@ -161,6 +184,7 @@ async function load() {
         const fp = parseFocalPoint(file?.focal_point);
         focalX.value = fp.x;
         focalY.value = fp.y;
+        zoom.value = fp.z;
     } catch (err) {
         console.error(err);
         toast.error(__('fairu::fieldtype.editor.load_error'));
@@ -198,12 +222,26 @@ function handleImageLoad(evt) {
     }
 }
 
+function handleShiftKey(evt) {
+    if (evt.key === 'Shift') fineZoom.value = evt.type === 'keydown';
+}
+
+function handleWindowBlur() {
+    fineZoom.value = false;
+}
+
 onMounted(() => {
     load();
+    window.addEventListener('keydown', handleShiftKey);
+    window.addEventListener('keyup', handleShiftKey);
+    window.addEventListener('blur', handleWindowBlur);
 });
 
 onBeforeUnmount(() => {
     window.removeEventListener('pointermove', handlePointerMove);
+    window.removeEventListener('keydown', handleShiftKey);
+    window.removeEventListener('keyup', handleShiftKey);
+    window.removeEventListener('blur', handleWindowBlur);
 });
 </script>
 
@@ -363,8 +401,32 @@ onBeforeUnmount(() => {
                                 </dt>
                                 <dd class="font-mono">{{ formattedCoordinates }}</dd>
                             </div>
+                            <div>
+                                <dt class="uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                    {{ __('fairu::fieldtype.editor.info_zoom') }}
+                                </dt>
+                                <dd class="font-mono">{{ formattedZoom }}</dd>
+                            </div>
                             <Description class="pt-1">{{ __('fairu::fieldtype.editor.focal_point_hint') }}</Description>
                         </dl>
+                    </div>
+
+                    <!-- Zoom -->
+                    <div>
+                        <div class="flex items-center justify-between gap-3 mb-1">
+                            <Subheading>{{ __('fairu::fieldtype.editor.zoom_title') }}</Subheading>
+                            <span
+                                class="text-xs font-mono"
+                                :class="fineZoom ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300'">
+                                {{ formattedZoom }}<span v-if="fineZoom" class="ml-1 opacity-70">·fine</span>
+                            </span>
+                        </div>
+                        <Slider
+                            v-model="zoom"
+                            :min="ZOOM_MIN"
+                            :max="ZOOM_MAX"
+                            :step="zoomStep" />
+                        <Description class="mt-1">{{ __('fairu::fieldtype.editor.zoom_hint') }}</Description>
                     </div>
 
                     <!-- Previews -->
@@ -376,7 +438,7 @@ onBeforeUnmount(() => {
                                     v-if="imageUrl"
                                     :src="imageUrl"
                                     class="size-full object-cover"
-                                    :style="{ objectPosition: focalCss }"
+                                    :style="previewImageStyle"
                                     draggable="false" />
                             </div>
                             <div class="aspect-square bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
@@ -384,7 +446,7 @@ onBeforeUnmount(() => {
                                     v-if="imageUrl"
                                     :src="imageUrl"
                                     class="size-full object-cover"
-                                    :style="{ objectPosition: focalCss }"
+                                    :style="previewImageStyle"
                                     draggable="false" />
                             </div>
                             <div class="aspect-[3/4] bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
@@ -392,7 +454,7 @@ onBeforeUnmount(() => {
                                     v-if="imageUrl"
                                     :src="imageUrl"
                                     class="size-full object-cover"
-                                    :style="{ objectPosition: focalCss }"
+                                    :style="previewImageStyle"
                                     draggable="false" />
                             </div>
                         </div>
