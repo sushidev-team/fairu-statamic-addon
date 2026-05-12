@@ -401,7 +401,7 @@ onBeforeUnmount(() => {
                                 </dt>
                                 <dd class="font-mono">{{ formattedCoordinates }}</dd>
                             </div>
-                            <div>
+                            <div v-if="false">
                                 <dt class="uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                     {{ __('fairu::fieldtype.editor.info_zoom') }}
                                 </dt>
@@ -412,7 +412,7 @@ onBeforeUnmount(() => {
                     </div>
 
                     <!-- Zoom -->
-                    <div>
+                    <div v-if="false">
                         <div class="flex items-center justify-between gap-3 mb-1">
                             <Subheading>{{ __('fairu::fieldtype.editor.zoom_title') }}</Subheading>
                             <span
