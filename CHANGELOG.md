@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.5.0...v2.6.0) (2026-05-12)
+
+
+### Features
+
+* v5 to v6 migration command, auto upgrade ([5c36434](https://github.com/sushidev-team/fairu-statamic-addon/commit/5c364347415797dcdb53da860b9d5b0532976744))
+
 ## [2.5.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.4.0...v2.5.0) (2026-05-07)
 
 
