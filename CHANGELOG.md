@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.6.0...v2.6.1) (2026-05-12)
+
+
+### Bug Fixes
+
+* hide zoom ([53bb9ee](https://github.com/sushidev-team/fairu-statamic-addon/commit/53bb9eecd75c71f97210f32119c68951700f2b86))
+
 ## [2.6.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.5.0...v2.6.0) (2026-05-12)
 
 
