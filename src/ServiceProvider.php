@@ -78,12 +78,5 @@ class ServiceProvider extends AddonServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/../config/fairu.php', 'statamic.fairu');
 
         $this->app->scoped(FairuMetaBag::class);
-
-        if (config('statamic.fairu.deactivate_old') == true) {
-            $this->app->bind(
-                \Statamic\Http\Controllers\CP\Utilities\CacheController::class,
-                \Sushidev\Fairu\Http\Controllers\CacheController::class
-            );
-        }
     }
 }
