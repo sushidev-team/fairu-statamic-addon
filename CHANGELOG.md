@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.2](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.6.1...v2.6.2) (2026-05-13)
+
+
+### Bug Fixes
+
+* use default statamic cache view ([739d1a8](https://github.com/sushidev-team/fairu-statamic-addon/commit/739d1a8632ed589ff9507485b1aae5831211f4c8))
+
 ## [2.6.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.6.0...v2.6.1) (2026-05-12)
 
 
