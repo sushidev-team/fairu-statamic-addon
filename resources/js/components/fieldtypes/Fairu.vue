@@ -1,11 +1,12 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, useId, getCurrentInstance, defineAsyncComponent } from 'vue';
 import { Fieldtype } from '@statamic/cms';
-import { toast, progress, config } from '@statamic/cms/api';
+import { toast, progress } from '@statamic/cms/api';
 import { Button } from '@statamic/cms/ui';
 import FairuAssetEditor from '../FairuAssetEditor.vue';
 import Dropzone from '../Dropzone.vue';
 import { fairuUpload, fairuLoadFilesMeta } from '../../utils/fetches';
+import { useFairuPermissions } from '../../utils/permissions.js';
 
 const FairuBrowser = defineAsyncComponent(() => import('../FairuBrowser.vue'));
 
@@ -30,13 +31,11 @@ const browserStartFolder = ref(null);
 
 const multiselect = computed(() => props.config.max_files !== 1);
 
-const canUpload = computed(() => {
-    const user = config.get('user');
-    const hasPermission = user?.super || (user?.permissions || []).includes('configure asset containers');
-    return hasPermission && props.config.allow_uploads;
-});
+const { canView, canUpload: hasUploadPermission, canEdit } = useFairuPermissions();
+const canUpload = computed(() => hasUploadPermission.value && props.config.allow_uploads);
 
 function openSearch() {
+    if (!canView.value) return;
     browserStartFolder.value = null;
     if (!multiselect.value && assets.value?.length === 1) {
         const current = assets.value[0];
@@ -214,7 +213,7 @@ onMounted(async () => {
             @dropped="handleFileDrop">
             <!-- Picker area -->
             <div
-                v-if="(multiselect || assets?.length < 1) && !uploading"
+                v-if="(multiselect || assets?.length < 1) && !uploading && (canView || canUpload)"
                 class="p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-850 rounded-xl flex flex-row items-center gap-3"
                 :class="{ 'rounded-b-none': assets?.length > 0 }">
                 <input
@@ -223,15 +222,15 @@ onMounted(async () => {
                     ref="uploadInput"
                     @change="(e) => handleUpload(e.target.files)" />
                 <Button
+                    v-if="canView"
                     icon="folder-open"
                     :text="__('fairu::fieldtype.search')"
                     @click="openSearch()" />
-                <div class="text-sm text-gray-600 dark:text-gray-400">
+                <div v-if="canUpload" class="text-sm text-gray-600 dark:text-gray-400">
                     <button
                         type="button"
                         class="text-blue-600 underline hover:text-blue-800 dark:text-blue-400"
-                        @click="openFile"
-                        v-if="canUpload">{{ __('fairu::fieldtype.upload_file') }}</button>
+                        @click="openFile">{{ __('fairu::fieldtype.upload_file') }}</button>
                     <span class="ml-1 text-gray-500 dark:text-gray-400">{{
                         __('fairu::fieldtype.or_add_per_drag_and_drop')
                     }}</span>
@@ -242,7 +241,7 @@ onMounted(async () => {
             <div
                 v-if="(loading || uploading) && !(assets?.length > 0)"
                 class="flex items-center gap-2 p-3 border border-gray-300 dark:border-gray-700 rounded-xl"
-                :class="{ 'border-t-0 rounded-t-none': multiselect || assets?.length < 1 }">
+                :class="{ 'border-t-0 rounded-t-none': (multiselect || assets?.length < 1) && (canView || canUpload) }">
                 <svg class="animate-spin size-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -254,7 +253,7 @@ onMounted(async () => {
             <div
                 v-if="assets?.length > 0 && !loading"
                 class="relative overflow-hidden rounded-xl border border-gray-300 dark:border-gray-700"
-                :class="{ 'border-t-0 rounded-t-none': multiselect || assets?.length < 1 }">
+                :class="{ 'border-t-0 rounded-t-none': (multiselect || assets?.length < 1) && (canView || canUpload) }">
                 <!-- Min/Max info -->
                 <div
                     class="px-3 py-1.5 text-xs text-gray-400 dark:text-gray-500 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900"
@@ -266,7 +265,8 @@ onMounted(async () => {
                 <div
                     v-for="(item, index) in assets"
                     :key="item.id + index"
-                    class="group relative flex items-center gap-2 sm:gap-3 p-3 bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-900 border-b dark:border-gray-600 last:border-b-0 cursor-pointer"
+                    class="group relative flex items-center gap-2 sm:gap-3 p-3 bg-white dark:bg-gray-900 border-b dark:border-gray-600 last:border-b-0"
+                    :class="canView ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900' : 'cursor-default'"
                     @click.prevent="openSearch">
                     <!-- Availability dot -->
                     <div
@@ -298,6 +298,7 @@ onMounted(async () => {
                     <div class="flex shrink-0 items-center gap-1 bg-gradient-to-r from-transparent to-white dark:to-gray-900 pl-4">
                         <span class="text-sm text-gray-600 dark:text-gray-400">{{ getSize(item) }}</span>
                         <Button
+                            v-if="canEdit"
                             icon="pencil"
                             variant="ghost"
                             size="xs"

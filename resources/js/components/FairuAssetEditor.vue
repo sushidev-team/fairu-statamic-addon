@@ -4,6 +4,9 @@ import { toast } from '@statamic/cms/api';
 import { Stack, Button, Input, Textarea, Field, Heading, Subheading, Description, Slider } from '@statamic/cms/ui';
 import FairuAssetActions from './FairuAssetActions.vue';
 import { fairuGetFile, fairuUpdateFile } from '../utils/fetches';
+import { useFairuPermissions } from '../utils/permissions.js';
+
+const { canEdit, canRename, canMove, canDelete } = useFairuPermissions();
 
 const __ = getCurrentInstance().appContext.config.globalProperties.__;
 
@@ -302,11 +305,13 @@ onBeforeUnmount(() => {
                         v-if="asset"
                         class="flex flex-wrap items-center gap-2 pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
                         <Button
+                            v-if="canRename"
                             size="sm"
                             icon="rename"
                             :text="__('fairu::fieldtype.rename')"
                             @click="openRename" />
                         <Button
+                            v-if="canMove"
                             size="sm"
                             icon="folder-open"
                             :text="__('fairu::fieldtype.move')"
@@ -320,6 +325,7 @@ onBeforeUnmount(() => {
                             :text="__('fairu::browser.edit_in_fairu')" />
                         <div class="grow"></div>
                         <Button
+                            v-if="canDelete"
                             size="sm"
                             icon="trash"
                             variant="destructive"
@@ -466,6 +472,7 @@ onBeforeUnmount(() => {
         <template #footer-end>
             <Button :text="__('fairu::browser.cancel')" :disabled="saving" @click="emit('close')" />
             <Button
+                v-if="canEdit"
                 variant="primary"
                 :text="__('fairu::fieldtype.editor.save')"
                 :loading="saving"

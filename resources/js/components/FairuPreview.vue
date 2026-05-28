@@ -3,6 +3,9 @@ import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount, getCurrentI
 import { toast } from '@statamic/cms/api';
 import { Button, Checkbox } from '@statamic/cms/ui';
 import emblaCarouselVue from 'embla-carousel-vue';
+import { useFairuPermissions } from '../utils/permissions.js';
+
+const { canEdit } = useFairuPermissions();
 
 const __ = getCurrentInstance().appContext.config.globalProperties.__;
 
@@ -191,7 +194,7 @@ defineExpose({ scrollPrev, scrollNext });
                     {{ currentIndex + 1 }} / {{ items.length }}
                 </div>
                 <Button
-                    v-if="!isFolderMode"
+                    v-if="!isFolderMode && canEdit"
                     size="sm"
                     icon="pencil"
                     :text="__('fairu::fieldtype.edit')"

@@ -10,6 +10,9 @@ import FairuAssetActions from './FairuAssetActions.vue';
 import FairuPreview from './FairuPreview.vue';
 import FairuBrowserChrome from './FairuBrowserChrome.vue';
 import { fairuLoadFolder, fairuUpload, fairuCreateFolder, fairuLoadFilesMeta } from '../utils/fetches';
+import { useFairuPermissions } from '../utils/permissions.js';
+
+const { canEdit, canMove, canRename, canDelete } = useFairuPermissions();
 
 const __ = getCurrentInstance().appContext.config.globalProperties.__;
 
@@ -600,7 +603,7 @@ onBeforeUnmount(() => {
                             :text="__('fairu::browser.upload')"
                             @click="openFile()" />
                         <Button
-                            v-if="canUpload"
+                            v-if="canMove"
                             size="sm"
                             icon="asset-folder"
                             :text="__('fairu::browser.new_folder')"
@@ -756,7 +759,7 @@ onBeforeUnmount(() => {
                         <template #cell-_actions="{ row }">
                             <div class="flex items-center justify-end gap-1 -my-3 py-3">
                                 <Button
-                                    v-if="row.type !== 'folder' && !row._isParent"
+                                    v-if="row.type !== 'folder' && !row._isParent && canEdit"
                                     icon="pencil"
                                     variant="ghost"
                                     size="xs"
@@ -778,14 +781,12 @@ onBeforeUnmount(() => {
                                             icon="eye"
                                             @click="setPreview(getFileIndex(row))" />
                                         <DropdownItem
-                                            :text="__('fairu::fieldtype.edit')"
-                                            icon="pencil"
-                                            @click="openEditor(row)" />
-                                        <DropdownItem
+                                            v-if="canRename"
                                             :text="__('fairu::fieldtype.rename')"
                                             icon="rename"
                                             @click="openRename(row)" />
                                         <DropdownItem
+                                            v-if="canMove"
                                             :text="__('fairu::fieldtype.move')"
                                             icon="folder-open"
                                             @click="openMove(row)" />
@@ -794,8 +795,9 @@ onBeforeUnmount(() => {
                                             icon="external-link"
                                             :href="meta.file + '/' + row.id"
                                             target="_blank" />
-                                        <DropdownSeparator />
+                                        <DropdownSeparator v-if="canDelete" />
                                         <DropdownItem
+                                            v-if="canDelete"
                                             :text="__('fairu::fieldtype.delete')"
                                             icon="trash"
                                             variant="destructive"
@@ -865,6 +867,10 @@ onBeforeUnmount(() => {
                         "
                         :selected="isSelected(item)"
                         :multiselect="effectiveMultiselect"
+                        :can-edit="canEdit"
+                        :can-rename="canRename"
+                        :can-move="canMove"
+                        :can-delete="canDelete"
                         displayType="tiles"
                         @change="effectiveMultiselect ? toggleItemSelection(item) : selectItem(item)"
                         @preview="setPreview(index)"

@@ -6,11 +6,29 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
+use Statamic\Facades\User;
 
 class AssetController extends Controller
 {
+    protected function ensurePermission(string $action): void
+    {
+        $user = User::current();
+
+        if (!$user) {
+            abort(403, 'You do not have permission to perform this action.');
+        }
+
+        if ($user->isSuper() || $user->hasPermission("{$action} fairu assets")) {
+            return;
+        }
+
+        abort(403, 'You do not have permission to perform this action.');
+    }
+
     public function browser()
     {
+        $this->ensurePermission('view');
+
         return Inertia::render('fairu/Browser', [
             'meta' => [
                 'proxy' => config('statamic.fairu.url_proxy'),
@@ -28,6 +46,7 @@ class AssetController extends Controller
 
     public function folderContent(Request $request)
     {
+        $this->ensurePermission('view');
 
         $connection = config('statamic.fairu.connections.default');
 
@@ -54,6 +73,7 @@ class AssetController extends Controller
 
     public function upload(Request $request)
     {
+        $this->ensurePermission('upload');
 
         $connection = config('statamic.fairu.connections.default');
 
@@ -75,6 +95,8 @@ class AssetController extends Controller
 
     public function uploadMultiple(Request $request)
     {
+        $this->ensurePermission('upload');
+
         $connection = config('statamic.fairu.connections.default');
 
         // Validate the request
@@ -106,6 +128,7 @@ class AssetController extends Controller
 
     public function uploadMetaBulk(Request $request)
     {
+        $this->ensurePermission('upload');
 
         $connection = config('statamic.fairu.connections.default');
 
@@ -125,6 +148,7 @@ class AssetController extends Controller
 
     public function createFolder(Request $request)
     {
+        $this->ensurePermission('move');
 
         $connection = config('statamic.fairu.connections.default');
 
@@ -145,6 +169,7 @@ class AssetController extends Controller
 
     public function updateFolder(Request $request, $id)
     {
+        $this->ensurePermission('move');
 
         $connection = config('statamic.fairu.connections.default');
 
@@ -185,6 +210,8 @@ class AssetController extends Controller
 
     public function updateFile(Request $request, string $id)
     {
+        $this->ensurePermission('edit');
+
         $data = array_merge(
             ['id' => $id],
             array_filter(
@@ -213,6 +240,8 @@ class AssetController extends Controller
 
     public function deleteFile(Request $request, string $id)
     {
+        $this->ensurePermission('delete');
+
         return $this->graphql(
             <<<'GRAPHQL'
                 mutation DeleteFairuFile($id: ID!) {
@@ -226,6 +255,8 @@ class AssetController extends Controller
 
     public function renameFile(Request $request, string $id)
     {
+        $this->ensurePermission('rename');
+
         $request->validate(['name' => 'required|string|min:1|max:255']);
 
         return $this->graphql(
@@ -244,6 +275,8 @@ class AssetController extends Controller
 
     public function moveFile(Request $request, string $id)
     {
+        $this->ensurePermission('move');
+
         $parent = $request->input('parent');
 
         return $this->graphql(

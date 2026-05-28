@@ -5,6 +5,7 @@ namespace Sushidev\Fairu;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
 use Statamic\Facades\CP\Nav;
+use Statamic\Facades\Permission;
 use Statamic\Providers\AddonServiceProvider;
 use Sushidev\Fairu\Services\FairuMetaBag;
 
@@ -59,7 +60,8 @@ class ServiceProvider extends AddonServiceProvider
                 $nav->remove('Content', 'Assets');
                 $nav->content('Assets')
                     ->url(cp_route('fairu.browser'))
-                    ->icon('assets');
+                    ->icon('assets')
+                    ->can('view fairu assets');
             });
         }
 
@@ -71,6 +73,15 @@ class ServiceProvider extends AddonServiceProvider
         $this->publishes([
             __DIR__ . '/../config/fairu.php' => config_path('statamic/fairu.php'),
         ], 'fairu-config');
+
+        Permission::group('fairu', 'Fairu Assets', function () {
+            Permission::register('view fairu assets')->label('View Fairu assets');
+            Permission::register('upload fairu assets')->label('Upload Fairu assets');
+            Permission::register('edit fairu assets')->label('Edit Fairu asset metadata');
+            Permission::register('rename fairu assets')->label('Rename Fairu assets');
+            Permission::register('move fairu assets')->label('Move Fairu assets and manage folders');
+            Permission::register('delete fairu assets')->label('Delete Fairu assets');
+        });
     }
 
     public function register()

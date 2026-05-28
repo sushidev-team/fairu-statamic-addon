@@ -11,6 +11,10 @@ const props = defineProps({
     selected: Boolean,
     multiselect: Boolean,
     disabled: Boolean,
+    canEdit: { type: Boolean, default: false },
+    canRename: { type: Boolean, default: false },
+    canMove: { type: Boolean, default: false },
+    canDelete: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['change', 'preview', 'edit', 'rename', 'move', 'delete']);
@@ -81,6 +85,7 @@ const isMedia = computed(() =>
                     :title="__('fairu::browser.preview')"
                     @click.stop="emitPreview" />
                 <Button
+                    v-if="canEdit"
                     icon="pencil"
                     variant="ghost"
                     size="xs"
@@ -101,14 +106,12 @@ const isMedia = computed(() =>
                             icon="eye"
                             @click.stop="emitPreview" />
                         <DropdownItem
-                            :text="__('fairu::fieldtype.edit')"
-                            icon="pencil"
-                            @click.stop="emitEdit" />
-                        <DropdownItem
+                            v-if="canRename"
                             :text="__('fairu::fieldtype.rename')"
                             icon="rename"
                             @click.stop="emitRename" />
                         <DropdownItem
+                            v-if="canMove"
                             :text="__('fairu::fieldtype.move')"
                             icon="folder-open"
                             @click.stop="emitMove" />
@@ -119,8 +122,9 @@ const isMedia = computed(() =>
                             :href="meta.file + '/' + asset.id"
                             target="_blank"
                             @click.stop />
-                        <DropdownSeparator />
+                        <DropdownSeparator v-if="canDelete" />
                         <DropdownItem
+                            v-if="canDelete"
                             :text="__('fairu::fieldtype.delete')"
                             icon="trash"
                             variant="destructive"
@@ -166,6 +170,7 @@ const isMedia = computed(() =>
                     :title="__('fairu::browser.preview')"
                     @click.stop="emitPreview" />
                 <Button
+                    v-if="canEdit"
                     icon="pencil"
                     variant="ghost"
                     size="xs"
@@ -183,10 +188,12 @@ const isMedia = computed(() =>
                     </template>
                     <DropdownMenu>
                         <DropdownItem
+                            v-if="canRename"
                             :text="__('fairu::fieldtype.rename')"
                             icon="rename"
                             @click.stop="emitRename" />
                         <DropdownItem
+                            v-if="canMove"
                             :text="__('fairu::fieldtype.move')"
                             icon="folder-open"
                             @click.stop="emitMove" />
@@ -197,8 +204,9 @@ const isMedia = computed(() =>
                             :href="meta.file + '/' + asset.id"
                             target="_blank"
                             @click.stop />
-                        <DropdownSeparator />
+                        <DropdownSeparator v-if="canDelete" />
                         <DropdownItem
+                            v-if="canDelete"
                             :text="__('fairu::fieldtype.delete')"
                             icon="trash"
                             variant="destructive"

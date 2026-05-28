@@ -1,8 +1,8 @@
 <script setup>
-import { computed, defineAsyncComponent } from 'vue';
-import { config } from '@statamic/cms/api';
+import { defineAsyncComponent } from 'vue';
 import { Head } from '@statamic/cms/inertia';
 import { Header } from '@statamic/cms/ui';
+import { useFairuPermissions } from '../utils/permissions.js';
 
 const FairuBrowser = defineAsyncComponent(() => import('./FairuBrowser.vue'));
 
@@ -12,12 +12,7 @@ const props = defineProps({
     title: { type: String, default: 'Assets' },
 });
 
-const canUpload = computed(() => {
-    const user = config.get('user');
-    return Boolean(
-        user?.super || (user?.permissions || []).includes('configure asset containers'),
-    );
-});
+const { canUpload } = useFairuPermissions();
 </script>
 
 <template>
