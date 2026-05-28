@@ -2,6 +2,11 @@
 
 Fairu is your new powerful image and file proxy with the goal in mind to deliver your files in an optimized way.
 
+> [!WARNING]
+> **Upgrading from v2 to v3:** Fairu is now gated behind dedicated permissions. After upgrading, grant the new **Fairu Assets** permissions in each role under **Users → Roles** — otherwise non-super users lose Fairu access (nav hidden, action endpoints return 403). Already-attached assets in fields still render for everyone; only interactive actions are gated.
+>
+> Permissions (all under the **Fairu Assets** group): `view`, `upload`, `edit`, `rename`, `move`, `delete` fairu assets. Independent — `view` is required for anything that needs the folder picker (move, browsing in fields), so grant it alongside any other action.
+
 # Features
 
 This addon provides:
