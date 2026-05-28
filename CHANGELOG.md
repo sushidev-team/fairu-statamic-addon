@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.6.2...v3.0.0) (2026-05-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* fairu addon permissions
+
+### Features
+
+* fairu addon permissions ([0932826](https://github.com/sushidev-team/fairu-statamic-addon/commit/0932826603a33f73f2bc5405a9714dc08b65d699))
+
 ## [2.6.2](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.6.1...v2.6.2) (2026-05-13)
 
 
