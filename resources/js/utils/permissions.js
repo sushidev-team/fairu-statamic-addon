@@ -4,8 +4,11 @@ import { config } from '@statamic/cms/api';
 function hasFairuPermission(action) {
     const user = config.get('user');
     if (!user) return false;
-    if (user.super) return true;
-    return (user.permissions || []).includes(`${action} fairu assets`);
+    // Statamic exposes the current user's permissions as a plain string array.
+    // Super users are represented by the literal 'super' permission (there is no
+    // `user.super` boolean), so mirror Statamic's own check rather than inventing one.
+    const permissions = user.permissions || [];
+    return permissions.includes('super') || permissions.includes(`${action} fairu assets`);
 }
 
 export function useFairuPermissions() {
