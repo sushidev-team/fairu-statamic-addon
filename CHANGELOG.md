@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v3.0.0...v3.0.1) (2026-05-29)
+
+
+### Bug Fixes
+
+* correct super user check ([e86f870](https://github.com/sushidev-team/fairu-statamic-addon/commit/e86f8701bef52e360ad195aeefb46a2cf9f38210))
+
 ## [3.0.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v2.6.2...v3.0.0) (2026-05-28)
 
 
