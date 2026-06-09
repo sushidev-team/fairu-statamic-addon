@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.0.2](https://github.com/sushidev-team/fairu-statamic-addon/compare/v3.0.1...v3.0.2) (2026-06-09)
+
+
+### Bug Fixes
+
+* issue with views ([3d92cb2](https://github.com/sushidev-team/fairu-statamic-addon/commit/3d92cb2d81b66fd34d0678b005ed260305177a91))
+* merge conflict ([1370cba](https://github.com/sushidev-team/fairu-statamic-addon/commit/1370cbaa0fd564d18d2969878b43d9e0b4d93c46))
+
 ## [3.0.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v3.0.0...v3.0.1) (2026-05-29)
 
 
