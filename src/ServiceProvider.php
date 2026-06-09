@@ -66,7 +66,6 @@ class ServiceProvider extends AddonServiceProvider
         }
 
         $viewsPath = __DIR__ . '/../resources/views';
-
         if (File::isDirectory($viewsPath)) {
             $this->loadViewsFrom($viewsPath, 'fairu');
         }
