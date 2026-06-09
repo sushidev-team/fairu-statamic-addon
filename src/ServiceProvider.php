@@ -65,7 +65,11 @@ class ServiceProvider extends AddonServiceProvider
             });
         }
 
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'fairu');
+        $viewsPath = __DIR__ . '/../resources/views';
+
+        if (File::isDirectory($viewsPath)) {
+            $this->loadViewsFrom($viewsPath, 'fairu');
+        }
         $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'fairu');
 
         $this->mergeConfigFrom(__DIR__ . '/../config/fairu.php', 'statamic.fairu');
