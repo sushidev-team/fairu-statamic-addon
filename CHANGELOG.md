@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.1.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v3.0.2...v3.1.0) (2026-07-01)
+
+
+### Features
+
+* add raw and download params ([0232be7](https://github.com/sushidev-team/fairu-statamic-addon/commit/0232be75ae14a4eeaebce66c49cf6d5915ec8c03))
+
+
+### Miscellaneous Chores
+
+* updated readme for better description about download parameter ([a9ce1a7](https://github.com/sushidev-team/fairu-statamic-addon/commit/a9ce1a76c28a7da18aaeedbc8112faece02da238))
+
 ## [3.0.2](https://github.com/sushidev-team/fairu-statamic-addon/compare/v3.0.1...v3.0.2) (2026-06-09)
 
 
