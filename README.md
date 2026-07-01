@@ -132,6 +132,8 @@ The `POST /api/files/meta` endpoint is required on your Fairu backend for the de
 | **⁠focal_point** | Focal point for cropping           | **✓** |       | **✓**  | **✓**   |
 | **timestamp**   | Video thumbnail timestamp (HH:MM:SS.mmm) | **✓** | **✓** | **✓**  | **✓**   |
 | **fetchMeta**   | `"true"` for lean meta (default), `"full"` for full `File` resource, `"false"` to skip | **✓** | **✓** | **✓**  | **✓**   |
+| **raw**          | `"true"` returns the untouched original (no `?quality`/`focal`/transform query). Use for PDFs and other files that must not be routed through the image proxy | **✓** | **✓** | **✓**  | **✓**   |
+| **download**     | `"true"` emits a same-origin URL that forces a browser download (`Content-Disposition: attachment`) instead of opening inline | | **✓** | | |
 
 ## {{ fairu }}
 
@@ -164,6 +166,38 @@ If you don't know the filename (e.g. for video files where the extension matters
 <!-- Outputs (extension resolved from meta) -->
 https://fairu.app/files/[UUID]/hero.mp4
 ```
+
+### Raw originals (PDFs etc.)
+
+By default the URL carries a transform query (`?quality=90&focal=…`) so images can be
+processed by the proxy. For files that must not be transformed — PDFs, ZIPs, original
+documents — pass `raw="true"` to get the untouched original:
+
+```html
+{{ fairu:url id="ID" name="plan.pdf" raw="true" }}
+
+<!-- Outputs (no query) -->
+https://files.fairu.app/[UUID]/plan.pdf
+```
+
+`raw` works on every tag (`{{ fairu }}`, `{{ fairu:image }}`, `{{ fairu:images }}` too).
+
+### Forcing a download
+
+Files are served inline by the CDN, so linking to them opens the file in a new tab.
+The HTML `download` attribute is ignored because the file lives on another origin.
+Pass `download="true"` to route the URL through a same-origin endpoint that streams the
+file with a `Content-Disposition: attachment` header, so the browser saves it:
+
+```html
+<a href="{{ fairu:url id="ID" name="plan.pdf" download="true" }}">Download plan</a>
+
+<!-- href resolves to a same-origin route that forces the download -->
+/fairu/download/[UUID]/plan.pdf
+```
+
+Combine with `fetchMeta="true"` when you don't know the filename — the resolved name
+becomes the downloaded file's name.
 
 ## {{ fairu:image }}
 

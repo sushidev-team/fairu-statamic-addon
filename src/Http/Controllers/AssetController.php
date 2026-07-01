@@ -4,9 +4,11 @@ namespace Sushidev\Fairu\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Statamic\Facades\User;
+use Sushidev\Fairu\Services\Fairu;
 
 class AssetController extends Controller
 {
@@ -344,6 +346,46 @@ class AssetController extends Controller
         return $result->json();
     }
 
+
+    /**
+     * Stream the original file back to the browser with a forced
+     * Content-Disposition: attachment header. Used by
+     * {{ fairu:url ... download="true" }}: the CDN serves files inline and
+     * cross-origin download attributes are ignored, so we proxy the bytes from
+     * this same-origin route to guarantee a download.
+     */
+    public function download(Request $request, string $id, ?string $name = null)
+    {
+        $id = (new Fairu())->parse($id);
+
+        if ($id === null) {
+            abort(404);
+        }
+
+        $baseUrl = Str::endsWith(config('statamic.fairu.url_proxy'), '/')
+            ? config('statamic.fairu.url_proxy')
+            : config('statamic.fairu.url_proxy') . '/';
+
+        // No transform query → the proxy returns the untouched original bytes.
+        $upstream = $baseUrl . $id . '/' . ($name ?? 'file');
+
+        $response = Http::withOptions(['stream' => true])->get($upstream);
+
+        if (! $response->successful()) {
+            abort(404);
+        }
+
+        $body = $response->toPsrResponse()->getBody();
+        $mime = $response->header('Content-Type') ?: 'application/octet-stream';
+
+        return response()->streamDownload(function () use ($body) {
+            while (! $body->eof()) {
+                echo $body->read(8192);
+            }
+        }, $name ?? 'download', [
+            'Content-Type' => $mime,
+        ]);
+    }
 
     public function getFolder(Request $request, String $id)
     {

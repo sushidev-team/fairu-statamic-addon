@@ -41,6 +41,10 @@ class FairuAssetTags extends Tags
             $filename = data_get($asset, 'name');
         }
 
+        if ($this->wantsDownload()) {
+            return $this->downloadUrl($id, $filename ?? 'file');
+        }
+
         return $this->getUrl(
             id: $id,
             filename: $filename ?? 'file',

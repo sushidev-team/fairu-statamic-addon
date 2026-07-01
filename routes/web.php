@@ -3,6 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use Sushidev\Fairu\Http\Controllers\AssetController;
 
+// Public: streams the original file with a forced attachment header so that
+// {{ fairu:url ... download="true" }} downloads instead of opening inline.
+// Same-origin, so the browser honours the download; no CP auth required.
+Route::get('/fairu/download/{id}/{name?}', [AssetController::class, 'download'])
+    ->name('fairu.download');
+
 Route::name('fairu.')
     ->middleware('auth') // Ensures the user is logged into the CP
     ->group(function () {

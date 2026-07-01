@@ -136,6 +136,12 @@ trait TransformAssets
             return null;
         }
 
+        // raw="true" forces the untouched original (no transform query) for any
+        // file type — e.g. PDFs that must not be routed through the image proxy.
+        if ($appendQuery && $this->wantsRaw()) {
+            $appendQuery = false;
+        }
+
         if ($appendQuery) {
             $params = [
                 'width' => $this->getParam('width', $width),
@@ -158,9 +164,45 @@ trait TransformAssets
         return $url;
     }
 
+    /**
+     * raw="true" requests the original file — a transformed srcset makes no
+     * sense in that case, so skip source generation entirely.
+     */
+    protected function wantsRaw(): bool
+    {
+        return filter_var($this->getParam('raw', null, false), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * download="true" swaps the CDN URL for a same-origin route that streams the
+     * original with a Content-Disposition: attachment header, so the browser
+     * saves the file instead of opening it inline (cross-origin download attrs
+     * are ignored by browsers).
+     */
+    protected function wantsDownload(): bool
+    {
+        return filter_var($this->getParam('download', null, false), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    protected function downloadUrl(?string $id, ?string $filename = null): ?string
+    {
+        if ($id === null) {
+            return null;
+        }
+
+        return route('fairu.download', [
+            'id' => $this->fairu->parse($id),
+            'name' => $filename ?? 'file',
+        ]);
+    }
+
     protected function getSources($asset, ?string $sourcesParam = null, ?string $name = null, ?string $ratio = null)
     {
         $srcset_entries = [];
+
+        if ($this->wantsRaw()) {
+            return $srcset_entries;
+        }
 
         $ratioMultiplier = null;
         if (!empty($ratio) && strpos($ratio, '/') !== false) {

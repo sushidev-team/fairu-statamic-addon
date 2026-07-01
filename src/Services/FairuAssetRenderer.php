@@ -101,6 +101,10 @@ class FairuAssetRenderer
         $id = data_get($asset, 'id') ?? ($params['id'] ?? null);
         $filename = $params['name'] ?? data_get($asset, 'name');
 
+        if ($this->wantsDownload()) {
+            return (string) $this->downloadUrl($id, $filename ?? 'file');
+        }
+
         return (string) $this->getUrl(
             id: $id,
             filename: $filename ?? 'file',
