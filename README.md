@@ -133,7 +133,7 @@ The `POST /api/files/meta` endpoint is required on your Fairu backend for the de
 | **timestamp**   | Video thumbnail timestamp (HH:MM:SS.mmm) | **✓** | **✓** | **✓**  | **✓**   |
 | **fetchMeta**   | `"true"` for lean meta (default), `"full"` for full `File` resource, `"false"` to skip | **✓** | **✓** | **✓**  | **✓**   |
 | **raw**          | `"true"` returns the untouched original (no `?quality`/`focal`/transform query). Use for PDFs and other files that must not be routed through the image proxy | **✓** | **✓** | **✓**  | **✓**   |
-| **download**     | `"true"` emits a same-origin URL that forces a browser download (`Content-Disposition: attachment`) instead of opening inline | | **✓** | | |
+| **download**     | `"true"` emits a same-origin URL that forces a browser download (`Content-Disposition: attachment`) instead of opening inline. **`{{ fairu:url }}` only** — ignored on all other tags | | **✓** | | |
 
 ## {{ fairu }}
 
@@ -198,6 +198,11 @@ file with a `Content-Disposition: attachment` header, so the browser saves it:
 
 Combine with `fetchMeta="true"` when you don't know the filename — the resolved name
 becomes the downloaded file's name.
+
+> **`download` only works on `{{ fairu:url }}`.** Unlike `raw`, it is ignored on
+> `{{ fairu }}`, `{{ fairu:image }}`, and `{{ fairu:images }}` — those tags emit
+> the CDN URL directly. To force a download, wrap a `{{ fairu:url ... download="true" }}`
+> in your own `<a>` tag.
 
 ## {{ fairu:image }}
 
