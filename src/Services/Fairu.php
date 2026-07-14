@@ -234,26 +234,36 @@ class Fairu
 
     public function uploadFile(string $content, string $filename, ?string $folder): ?string
     {
-        $id = null;
         $uploadLink = $this->createUploadLink($filename, $folder);
+        $uploadUrl = data_get($uploadLink, 'upload_url');
+
+        // No usable upload link (GraphQL error or empty response) — bail out
+        // instead of sending a PUT to a null URL.
+        if (empty($uploadUrl)) {
+            Log::error('Error while uploading ' . $filename . ': no upload URL returned');
+
+            return null;
+        }
 
         try {
-
             $resultUpload = Http::withHeaders([
                 'x-amz-acl'    => 'public-read',
                 'Content-Type' => data_get($uploadLink, 'mime'),
-            ])->send('PUT', data_get($uploadLink, 'upload_url'), [
+            ])->send('PUT', $uploadUrl, [
                 'body' => $content,
             ]);
         } catch (Throwable $ex) {
-            Log::error('Error while uploading ' . $filename);
+            Log::error('Error while uploading ' . $filename . ': ' . $ex->getMessage());
+
+            return null;
         }
 
-        if ($resultUpload->status() == 200) {
-            Http::get(data_get($uploadLink, 'sync_url'));
-            $id = data_get($uploadLink, 'id');
+        if ($resultUpload->status() != 200) {
+            return null;
         }
 
-        return $id;
+        Http::get(data_get($uploadLink, 'sync_url'));
+
+        return data_get($uploadLink, 'id');
     }
 }
