@@ -2,6 +2,8 @@
 
 namespace Sushidev\Fairu\Services;
 
+use Statamic\View\Antlers\Language\Runtime\GlobalRuntimeState;
+
 /**
  * Per-request registry that collects fairu tag placeholders during Antlers
  * rendering so that the CoalesceFairuMeta middleware can resolve every needed
@@ -13,6 +15,9 @@ class FairuMetaBag
     public const TOKEN_PREFIX = '__FAIRU_';
 
     public const TOKEN_SUFFIX = '__';
+
+    /** Matches any emitted token, used to sweep up placeholders nothing can resolve. */
+    public const TOKEN_PATTERN = '/__FAIRU_[0-9a-f]+__/';
 
     /** @var array<string, array{type:string, id:?string, params:array, connection:string}> */
     protected array $entries = [];
@@ -30,6 +35,22 @@ class FairuMetaBag
     public function isActive(): bool
     {
         return $this->active;
+    }
+
+    /**
+     * Whether a tag may emit a placeholder instead of rendering inline.
+     *
+     * Deferring is only safe while the rendered output stays request-scoped.
+     * Antlers `{{ cache }}` — any Statamic\View\State\CachesOutput tag — stores
+     * its rendered body and replays it on later requests, but placeholder
+     * handles are random per request and live only in this bag. A cached
+     * fragment would therefore replay tokens no later request can resolve,
+     * leaking the raw `__FAIRU_…__` text into the page. Inside such a tag we
+     * render inline instead and give up batching for that block.
+     */
+    public function shouldDefer(): bool
+    {
+        return $this->active && ! GlobalRuntimeState::$isCacheEnabled;
     }
 
     /**

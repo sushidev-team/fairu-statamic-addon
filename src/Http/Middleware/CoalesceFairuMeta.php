@@ -34,16 +34,22 @@ class CoalesceFairuMeta
 
         $response = $next($request);
 
-        if (! $bag->hasEntries()) {
-            return $response;
-        }
-
         if ($response instanceof StreamedResponse || $response instanceof BinaryFileResponse) {
             return $response;
         }
 
         $contentType = (string) $response->headers->get('Content-Type', '');
         if ($contentType !== '' && stripos($contentType, 'text/html') === false) {
+            return $response;
+        }
+
+        $body = $response->getContent();
+        if (! is_string($body) || $body === '') {
+            return $response;
+        }
+
+        // Nothing queued and nothing left over from a cached fragment.
+        if (! $bag->hasEntries() && ! str_contains($body, FairuMetaBag::TOKEN_PREFIX)) {
             return $response;
         }
 
@@ -64,11 +70,6 @@ class CoalesceFairuMeta
 
         /** @var FairuAssetRenderer $renderer */
         $renderer = app(FairuAssetRenderer::class);
-
-        $body = $response->getContent();
-        if (! is_string($body) || $body === '') {
-            return $response;
-        }
 
         foreach ($bag->entries() as $handle => $entry) {
             $token = $bag->token($handle);
@@ -102,8 +103,48 @@ class CoalesceFairuMeta
             $body = str_replace($token, $replacement, $body);
         }
 
+        $body = $this->stripStaleTokens($body);
+
         $response->setContent($body);
 
         return $response;
+    }
+
+    /**
+     * Remove placeholders this request cannot resolve.
+     *
+     * A token only survives to here when the HTML holding it was rendered in an
+     * earlier request and replayed from a cache (an Antlers `{{ cache }}` block,
+     * static caching, a CDN). Its handle died with the bag that issued it, so
+     * the asset is unrecoverable — drop the token rather than let the raw
+     * `__FAIRU_…__` text render as visible page content.
+     */
+    protected function stripStaleTokens(string $body): string
+    {
+        $stale = [];
+
+        $cleaned = preg_replace_callback(
+            FairuMetaBag::TOKEN_PATTERN,
+            function (array $matches) use (&$stale) {
+                $stale[] = $matches[0];
+
+                return '';
+            },
+            $body
+        );
+
+        if ($cleaned === null) {
+            return $body;
+        }
+
+        if ($stale !== []) {
+            Log::warning(sprintf(
+                'Fairu: dropped %d unresolvable placeholder(s) (%s). They were rendered into HTML that was cached in an earlier request — move the fairu tag outside the {{ cache }} block or clear that fragment.',
+                count($stale),
+                implode(', ', array_slice($stale, 0, 5))
+            ));
+        }
+
+        return $cleaned;
     }
 }
