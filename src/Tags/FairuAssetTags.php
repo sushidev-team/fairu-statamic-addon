@@ -33,7 +33,7 @@ class FairuAssetTags extends Tags
 
         if (! $filename && $id !== null && $fetchMeta) {
             $bag = app(FairuMetaBag::class);
-            if ($bag->isActive()) {
+            if ($bag->shouldDefer()) {
                 return $bag->queue('url', $id, $this->params->toArray(), $this->getConnectionName());
             }
 
@@ -71,7 +71,7 @@ class FairuAssetTags extends Tags
         // the page in one batched /api/files/meta call and re-render each body.
         if (is_array($ids) && ! empty($ids) && filter_var($fetchMeta, FILTER_VALIDATE_BOOLEAN)) {
             $bag = app(FairuMetaBag::class);
-            if ($bag->isActive() && is_string($this->content) && $this->content !== '') {
+            if ($bag->shouldDefer() && is_string($this->content) && $this->content !== '') {
                 $params = $this->params->toArray();
                 $params['_ids'] = $ids;
 
@@ -124,7 +124,7 @@ class FairuAssetTags extends Tags
         }
 
         $bag = app(FairuMetaBag::class);
-        if ($bag->isActive()) {
+        if ($bag->shouldDefer()) {
             return $bag->queue('image', $id, $this->params->toArray(), $this->getConnectionName());
         }
 
