@@ -234,7 +234,14 @@ class Fairu
 
     public function uploadFile(string $content, string $filename, ?string $folder): ?string
     {
-        $uploadLink = $this->createUploadLink($filename, $folder);
+        try {
+            $uploadLink = $this->createUploadLink($filename, $folder);
+        } catch (Throwable $ex) {
+            Log::error('Error while uploading ' . $filename . ': ' . $ex->getMessage());
+
+            return null;
+        }
+
         $uploadUrl = data_get($uploadLink, 'upload_url');
 
         // No usable upload link (GraphQL error or empty response) — bail out
@@ -259,6 +266,8 @@ class Fairu
         }
 
         if ($resultUpload->status() != 200) {
+            Log::error('Error while uploading ' . $filename . ': upload responded with status ' . $resultUpload->status());
+
             return null;
         }
 

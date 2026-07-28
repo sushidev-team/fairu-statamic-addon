@@ -54,6 +54,16 @@ it('returns null and skips the PUT when no upload URL is returned', function () 
     Http::assertNotSent(fn ($request) => $request->method() === 'PUT');
 });
 
+it('returns null when creating the upload link throws', function () {
+    Http::fake([
+        'fairu.app/graphql' => fn () => throw new ConnectionException('connection reset'),
+    ]);
+
+    $id = (new Fairu())->uploadFile('bytes', 'hero.webp', null);
+
+    expect($id)->toBeNull();
+});
+
 it('returns null when the upload request throws instead of raising undefined variable', function () {
     Http::fake([
         'fairu.app/graphql' => Http::response(fakeUploadLink()),
