@@ -892,6 +892,7 @@ onBeforeUnmount(() => {
                 :multiselect="effectiveMultiselect"
                 :isFolderMode="isFolderMode"
                 :isSelectedFn="isSelected"
+                :selectable="!embedded"
                 @close="closePreview"
                 @edit="editPreview"
                 @toggle-select="handlePreviewToggle"

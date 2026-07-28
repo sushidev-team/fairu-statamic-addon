@@ -13,7 +13,7 @@
     "src": "resources/fonts/MaterialSymbolsOutlined-Regular.ttf"
   },
   "resources/js/components/FairuBrowser.vue": {
-    "file": "assets/FairuBrowser-IgKrjpgv.js",
+    "file": "assets/FairuBrowser-CpAvVSm4.js",
     "name": "FairuBrowser",
     "src": "resources/js/components/FairuBrowser.vue",
     "isDynamicEntry": true,
@@ -21,11 +21,11 @@
       "resources/js/cp.js"
     ],
     "css": [
-      "assets/FairuBrowser-0-MOlupQ.css"
+      "assets/FairuBrowser-Dto3jD21.css"
     ]
   },
   "resources/js/cp.js": {
-    "file": "assets/cp-C19eKNsu.js",
+    "file": "assets/cp-DvP7JGGD.js",
     "name": "cp",
     "src": "resources/js/cp.js",
     "isEntry": true,

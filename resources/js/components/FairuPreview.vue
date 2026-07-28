@@ -16,6 +16,9 @@ const props = defineProps({
     multiselect: { type: Boolean, default: false },
     isFolderMode: { type: Boolean, default: false },
     isSelectedFn: { type: Function, default: null },
+    // False when the browser is embedded (nav asset browser) — there is no
+    // field to select into, so the Select/Apply button is hidden.
+    selectable: { type: Boolean, default: true },
 });
 
 const emit = defineEmits(['close', 'edit', 'toggle-select', 'confirm-select', 'apply']);
@@ -200,7 +203,7 @@ defineExpose({ scrollPrev, scrollNext });
                     :text="__('fairu::fieldtype.edit')"
                     @click="handleEdit" />
                 <Button
-                    v-if="!isFolderMode"
+                    v-if="!isFolderMode && selectable"
                     variant="primary"
                     size="sm"
                     icon="checkmark"
