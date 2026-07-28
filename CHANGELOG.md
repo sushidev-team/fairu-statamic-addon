@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.1.2](https://github.com/sushidev-team/fairu-statamic-addon/compare/v3.1.1...v3.1.2) (2026-07-28)
+
+
+### Bug Fixes
+
+* hide select button in fairu asset browser ([040a021](https://github.com/sushidev-team/fairu-statamic-addon/commit/040a02154dbea711e432bfb19eae2ebd0bd002ce))
+* **upload:** only return file id after successful sync response ([8327601](https://github.com/sushidev-team/fairu-statamic-addon/commit/832760108d2064699c4c750d30e2cd86599a91f6))
+* **upload:** return null when upload link creation throws and log non-200 uploads ([11e1398](https://github.com/sushidev-team/fairu-statamic-addon/commit/11e13987e1f724af0b31ee14de3dcf511fd3bf34))
+
 ## [3.1.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v3.1.0...v3.1.1) (2026-07-28)
 
 
