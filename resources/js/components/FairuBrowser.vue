@@ -274,14 +274,30 @@ function handleFileDrop(files) {
     handleUploadFiles(files);
 }
 
+// The Fairu listing endpoint is eventually consistent: reloading the folder
+// right after upload-meta-bulk can miss the new files. Insert the records we
+// already fetched by id so they show up without a page refresh.
+function mergeUploadedAssets(uploaded, uploadFolderId) {
+    if (!uploaded?.length) return;
+    if ((folder.value?.id ?? null) !== uploadFolderId) return;
+    if (!folderContent.value?.data) return;
+    const existing = new Set(folderContent.value.data.map((e) => e?.id));
+    const missing = uploaded.filter((a) => a?.id && !existing.has(a.id));
+    if (missing.length) {
+        folderContent.value.data = [...folderContent.value.data, ...missing];
+    }
+}
+
 function handleUploadFiles(files) {
     progress.start('browser-upload');
     percentUploaded.value = 0;
     loading.value = true;
 
+    const uploadFolderId = folder.value?.id ?? null;
+
     fairuUpload({
         files,
-        folder: folder.value?.id ?? null,
+        folder: uploadFolderId,
         onUploadProgressCallback: (progressEvent) => {
             percentUploaded.value = Math.round((progressEvent.loaded * 100) / progressEvent.total);
         },
@@ -294,6 +310,7 @@ function handleUploadFiles(files) {
 
             if (props.embedded) {
                 await loadFolderContent();
+                mergeUploadedAssets(fetchedAssets, uploadFolderId);
             } else if (effectiveMultiselect.value) {
                 if (fetchedAssets?.length > 0) {
                     const remainingSlots = Number.isFinite(props.config.max_files)
@@ -302,6 +319,7 @@ function handleUploadFiles(files) {
                     assets.value.push(...fetchedAssets.slice(0, remainingSlots));
                 }
                 await loadFolderContent();
+                mergeUploadedAssets(fetchedAssets, uploadFolderId);
             } else {
                 assets.value = fetchedAssets?.slice(0, 1) || [];
                 if (assets.value[0]) selectItem(assets.value[0]);
