@@ -55,7 +55,27 @@ class FairuAssetRenderer
             $asset = $this->augmentAsset((array) $asset, $params);
             $data = array_merge($context, $asset);
 
-            $out .= (string) Antlers::parse($body, $data);
+            // trusted: true is required.
+            //
+            // Antlers::parse() defaults to $trusted = false, which sets
+            // GlobalRuntimeState::$isEvaluatingUserData and puts the parse into the sandbox
+            // Statamic uses for user-authored content. In that mode NodeProcessor::guardRuntimeTag()
+            // rejects any tag not on statamic.antlers.allowedContentTags - {{ partial }} included -
+            // logging "Runtime Access Violation: partial:..." and emitting NOTHING.
+            //
+            // The result is that a {{ fairu }} block whose body contains a partial silently
+            // disappears when it is deferred, while the same block renders fine inline inside a
+            // {{ cache }} tag (where shouldDefer() is false). A real-world case:
+            //
+            //     {{ fairu :id="$logo" fetchMeta="true" }}
+            //         {{ partial:core/dyntag type="a" link="/" }}
+            //             <img src="{{ url }}" alt="{{ alt }}" />
+            //         {{ /partial:core/dyntag }}
+            //     {{ /fairu }}
+            //
+            // This body is template source, not user data - it was read from the Antlers file
+            // that called the tag - so the sandbox does not apply to it.
+            $out .= (string) Antlers::parse($body, $data, true);
         }
 
         return $out;
