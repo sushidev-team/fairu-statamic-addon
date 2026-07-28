@@ -271,7 +271,19 @@ class Fairu
             return null;
         }
 
-        Http::get(data_get($uploadLink, 'sync_url'));
+        try {
+            $resultSync = Http::get(data_get($uploadLink, 'sync_url'));
+        } catch (Throwable $ex) {
+            Log::error('Error while uploading ' . $filename . ': sync failed: ' . $ex->getMessage());
+
+            return null;
+        }
+
+        if (! $resultSync->successful()) {
+            Log::error('Error while uploading ' . $filename . ': sync responded with status ' . $resultSync->status());
+
+            return null;
+        }
 
         return data_get($uploadLink, 'id');
     }

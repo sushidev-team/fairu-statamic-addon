@@ -75,6 +75,30 @@ it('returns null when the upload request throws instead of raising undefined var
     expect($id)->toBeNull();
 });
 
+it('returns null when the sync request responds with an error status', function () {
+    Http::fake([
+        'fairu.app/graphql' => Http::response(fakeUploadLink()),
+        UPLOAD_URL => Http::response('', 200),
+        SYNC_URL => Http::response('sync failed', 500),
+    ]);
+
+    $id = (new Fairu())->uploadFile('bytes', 'hero.webp', null);
+
+    expect($id)->toBeNull();
+});
+
+it('returns null when the sync request throws', function () {
+    Http::fake([
+        'fairu.app/graphql' => Http::response(fakeUploadLink()),
+        UPLOAD_URL => Http::response('', 200),
+        SYNC_URL => fn () => throw new ConnectionException('connection reset'),
+    ]);
+
+    $id = (new Fairu())->uploadFile('bytes', 'hero.webp', null);
+
+    expect($id)->toBeNull();
+});
+
 it('returns null when the upload responds with a non-200 status', function () {
     Http::fake([
         'fairu.app/graphql' => Http::response(fakeUploadLink()),
