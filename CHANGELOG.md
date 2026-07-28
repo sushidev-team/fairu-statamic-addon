@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.1](https://github.com/sushidev-team/fairu-statamic-addon/compare/v3.1.0...v3.1.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* statamic cache tag combination w/ fairu tag ([a61d96b](https://github.com/sushidev-team/fairu-statamic-addon/commit/a61d96b3c57489a91801d34965aa67922d235e35))
+
 ## [3.1.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v3.0.2...v3.1.0) (2026-07-01)
 
 
