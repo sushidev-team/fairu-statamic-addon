@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.3](https://github.com/sushidev-team/fairu-statamic-addon/compare/v3.1.2...v3.1.3) (2026-07-28)
+
+
+### Bug Fixes
+
+* **coalesce:** parse deferred tag bodies as trusted so partials render ([74d92de](https://github.com/sushidev-team/fairu-statamic-addon/commit/74d92de40bc1c614f42e00889c0942ca7accdd10))
+
 ## [3.1.2](https://github.com/sushidev-team/fairu-statamic-addon/compare/v3.1.1...v3.1.2) (2026-07-28)
 
 
