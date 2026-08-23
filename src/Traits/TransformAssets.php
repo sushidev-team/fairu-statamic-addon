@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Sushidev\Fairu\Services\Fairu;
+use Sushidev\Fairu\Services\FairuCache;
 
 trait TransformAssets
 {
@@ -279,7 +280,7 @@ trait TransformAssets
 
         $fingerprint = md5($mode . '-' . json_encode($ids));
 
-        return Cache::flexible('file-' . $mode . '-' . $fingerprint, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids, $mode, $result) {
+        return Cache::flexible(FairuCache::key('file-' . $mode . '-' . $fingerprint), config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids, $mode, $result) {
             $files = null;
             try {
                 $fairu = new Fairu($this->getConnectionName());

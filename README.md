@@ -14,6 +14,8 @@ This addon provides:
 - Import all your assets into [fairu.app](https://fairu.app) using our commands
 - Antlers tags making image handling smooth sailing.
 - Fieldset to easily embed Fairu hosted files into your new or existing project
+- Galleries and channels (video shows and podcasts) rendered straight from Fairu
+- A control panel utility for clearing the caches and checking the connection
 
 # How to use
 
@@ -314,6 +316,199 @@ For more complex layouts, add media queries and a default or fallback value as l
 ```
 sizes="(min-width: 1200px) 1200px, (min-width: 768px) 800px, 100vw"
 ```
+
+# Galleries
+
+A gallery in Fairu is a folder somebody curated: sorted, given a cover, a date, a
+place, and with the copyrights already attached. Point a page at one instead of
+rebuilding it as a `fairu` field holding two hundred ids kept in order by hand.
+
+## {{ fairu:gallery }}
+
+Renders its body once with the gallery in scope. Every transform parameter of
+`{{ fairu:image }}` works here and applies to every item.
+
+```antlers
+{{ fairu:gallery id="GALLERY_ID" width="1200" sources="320,320w;800,1200w" }}
+    <h2>{{ name }}</h2>
+    <p>{{ date }} · {{ location }}</p>
+
+    {{ items }}
+        <img src="{{ url }}" srcset="{{ srcset }}" alt="{{ alt }}" style="object-position: {{ focus_css }}">
+    {{ /items }}
+
+    <small>{{ copyright_text }}</small>
+{{ /fairu:gallery }}
+```
+
+Available in scope: `id`, `name`, `description`, `date`, `location`,
+`copyright_text`, `copyrights`, `cover_image`, `items`, `total_items`, `paginate`.
+Each item carries `id`, `name`, `alt`, `caption`, `mime`, `width`, `height`,
+`focal_point`, `focus_css`, `blurhash`, `duration`, `url`, `srcset`, `is_image`,
+`is_video`, `is_audio`.
+
+| Parameter | Description |
+| --- | --- |
+| `id` | The gallery ID (required) |
+| `limit` / `perPage` | How many items to load (default 50) |
+| `page` | Switches to the paginated list; `paginate` then holds `total`, `currentPage`, `lastPage`, `hasMorePages` |
+| `orderBy` / `orderDirection` | Overrides the sorting configured on the gallery |
+| *image parameters* | `width`, `height`, `quality`, `format`, `fit`, `focal_point`, `sources`, `ratio`, `raw` — applied to every item |
+
+## {{ fairu:galleries }}
+
+The index page. Lists the galleries of the workspace that are not excluded from
+listings.
+
+```antlers
+{{ fairu:galleries perPage="12" from="2026-01-01" }}
+    {{ galleries }}
+        <a href="/galerien/{{ id }}">
+            <img src="{{ cover_image:url }}" alt="{{ cover_image:alt }}">
+            {{ name }}
+        </a>
+    {{ /galleries }}
+{{ /fairu:galleries }}
+```
+
+Parameters: `page`, `perPage`, `search`, `from`, `until`, `orderBy`,
+`orderDirection`, plus the image parameters for the covers.
+
+## The `fairu_gallery` fieldtype
+
+A picker that stores the gallery id, so an editor chooses the gallery and the
+template stays fixed:
+
+```antlers
+{{ fairu:gallery :id="my_gallery_field" width="1200" }} … {{ /fairu:gallery }}
+```
+
+# Channels and podcasts
+
+A channel is a show — video or audio. Fairu holds its seasons, episodes, show
+notes, release windows, player settings and chapters, and publishes a podcast
+feed for it.
+
+## {{ fairu:channel }}
+
+Addressed by `id` or by `slug`, which is unique inside the workspace and reads
+better in a route.
+
+```antlers
+{{ fairu:channel slug="die-werkstatt" }}
+    <h1>{{ name }}</h1>
+    <img src="{{ cover_image:url }}" alt="{{ cover_image:alt }}">
+    <link rel="alternate" type="application/rss+xml" href="{{ feed_url }}">
+
+    {{ episodes }}
+        <article>
+            <h2>{{ number }} · {{ title }}</h2>
+            <p>{{ description }}</p>
+            <span>{{ duration_for_humans }}</span>
+            {{ embed_html }}
+        </article>
+    {{ /episodes }}
+{{ /fairu:channel }}
+```
+
+> [!IMPORTANT]
+> **Only what a visitor may see.** The addon deliberately reads the *public*
+> channel queries. It holds a workspace API key, so the authenticated query would
+> hand a template the drafts and the episodes whose release window has not opened
+> — and a template looping over `episodes` has no way to tell. Pass
+> `preview="true"` for the workspace's own view; use it in a live preview, not in
+> a public template.
+
+In scope: `id`, `name`, `slug`, `kind`, `is_audio`, `is_video`, `description`,
+`author`, `copyright`, `itunes_type`, `itunes_category`, `itunes_subcategory`,
+`explicit`, `cover_image`, `player_settings`, `feed_url`, `embed`, `episodes`,
+and `seasons` when asked for.
+
+Each episode carries `id`, `number`, `title`, `description`, `show_notes`,
+`published_at`, `episode_type`, `explicit`, `orientation`, `aspect_ratio`,
+`duration`, `duration_for_humans`, `url` (the media file), `asset`, `embed_url`,
+`embed_html`, `embed_iframe`.
+
+| Parameter | Description |
+| --- | --- |
+| `id` / `slug` | Which channel. One of them is required |
+| `episode` | An episode ID; that episode is additionally exposed as `episode` for an episode page |
+| `seasons` | `"true"` also nests the episodes under their seasons |
+| `episodes` | `"false"` skips the flat episode list |
+| `embed_width` | Width written into the embed snippets |
+| `preview` | `"true"` reads the workspace's own view instead of the visitor's |
+
+`embed_html` is the snippet with Fairu's loader script, which keeps the frame at
+the height the player reports. `embed_iframe` is the same player as a plain
+iframe for hosts where a script cannot run — a newsletter, an editor that strips
+`<script>`.
+
+## {{ fairu:channels }}
+
+```antlers
+{{ fairu:channels }}
+    {{ channels }}
+        <a href="/podcasts/{{ slug }}">{{ name }} ({{ kind }})</a>
+    {{ /channels }}
+{{ /fairu:channels }}
+```
+
+Parameters: `page`, `perPage`, `search`, `preview`.
+
+## The `fairu_channel` fieldtype
+
+Stores the channel id. The picker also offers unpublished shows — the page that
+publishes one has to be built before it goes live.
+
+## Caching
+
+Galleries follow `caching_meta`. Channels get their own, shorter pair, because an
+episode goes live at a moment somebody chose:
+
+```php
+'caching_channels' => [5, 15], // fresh for 5 minutes, stale-while-revalidate until 15
+```
+
+# Utilities → Fairu
+
+The addon registers a **Fairu** utility in the control panel (**Utilities → Fairu**),
+gated by the `access fairu utility` permission that Statamic registers for it.
+
+## Metadata cache
+
+Everything the addon reads from Fairu — filenames, alt texts, captions, dimensions,
+focal points — is cached for `caching_meta` (60 minutes fresh, 120 stale by default).
+So a caption fixed in Fairu keeps rendering stale on the site for up to two hours,
+and until now the only way out was `php artisan cache:clear`, which needs shell
+access and takes the rest of the application cache with it.
+
+The utility clears the addon's cache and nothing else. Cache **tags** would be the
+obvious tool, but they only exist on redis and memcached, so the version rides in
+the key instead: every key the addon writes is prefixed `fairu.v{n}.`, and clearing
+bumps `n`. That orphans every entry in a single write on any driver, including the
+file driver, and the orphans expire on their own schedule.
+
+Tick **Also flush the static page cache** when static caching is on — a statically
+cached page already has the old metadata baked into its HTML, so clearing the
+metadata behind it changes nothing a visitor sees.
+
+## Delivery cache
+
+Clears what Fairu, its proxy and every CDN in front of it are holding for a file
+— the other half of the story, and the one the addon cannot do on its own. Paste
+up to 50 file IDs after replacing a file's content in Fairu when the old version
+is still being served.
+
+Requires an API key carrying the `cache::purge` permission and a Fairu backend
+that exposes the `purgeFairuCache` mutation. Purging also rotates each file's
+ETag, so a CDN that kept the response revalidates into a miss rather than being
+told its copy is still good.
+
+## Connection
+
+Shows which workspace the site talks to (tenant, API and proxy URL) and tests the
+credentials against `GET /api/users/scope` on demand — the first thing to check
+when images render as broken links.
 
 ## Details
 

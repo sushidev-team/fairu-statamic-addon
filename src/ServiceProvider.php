@@ -6,7 +6,9 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
 use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Permission;
+use Statamic\Facades\Utility;
 use Statamic\Providers\AddonServiceProvider;
+use Sushidev\Fairu\Http\Controllers\CacheUtilityController;
 use Sushidev\Fairu\Services\FairuMetaBag;
 
 class ServiceProvider extends AddonServiceProvider
@@ -22,6 +24,8 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $fieldtypes = [
         \Sushidev\Fairu\Fieldtypes\Fairu::class,
+        \Sushidev\Fairu\Fieldtypes\GallerySelector::class,
+        \Sushidev\Fairu\Fieldtypes\ChannelSelector::class,
     ];
 
     protected $middlewareGroups = [
@@ -76,6 +80,26 @@ class ServiceProvider extends AddonServiceProvider
         $this->publishes([
             __DIR__ . '/../config/fairu.php' => config_path('statamic/fairu.php'),
         ], 'fairu-config');
+
+        /*
+         * Utilities → Fairu. Registered through the repository's extension
+         * point rather than at boot: utilities are booted per CP request, and a
+         * registration made here directly would be thrown away before the
+         * router asks for it.
+         */
+        Utility::extend(function ($utilities) {
+            $utilities->register('fairu')
+                ->title(__('fairu::utility.title'))
+                ->navTitle(__('fairu::utility.nav_title'))
+                ->icon(file_get_contents(__DIR__ . '/../resources/svg/fairu-favicon.svg'))
+                ->description(__('fairu::utility.description'))
+                ->inertia('fairu/CacheUtility', fn ($request) => CacheUtilityController::data($request))
+                ->routes(function ($router) {
+                    $router->post('clear-meta', [CacheUtilityController::class, 'clearMeta'])->name('clear-meta');
+                    $router->post('test-connection', [CacheUtilityController::class, 'testConnection'])->name('test-connection');
+                    $router->post('purge-delivery', [CacheUtilityController::class, 'purgeDelivery'])->name('purge-delivery');
+                });
+        });
 
         Permission::group('fairu', 'Fairu Assets', function () {
             Permission::register('view fairu assets')->label('View Fairu assets');

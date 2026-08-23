@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Sushidev\Fairu\Http\Controllers\AssetController;
+use Sushidev\Fairu\Http\Controllers\LibraryController;
 
 // Public: streams the original file with a forced attachment header so that
 // {{ fairu:url ... download="true" }} downloads instead of opening inline.
@@ -26,4 +27,8 @@ Route::name('fairu.')
         Route::post('/fairu/files/{id}/rename', [AssetController::class, 'renameFile'])->name('file_rename');
         Route::post('/fairu/files/{id}/move', [AssetController::class, 'moveFile'])->name('file_move');
         Route::post('/fairu/files/list', [AssetController::class, 'getFilesList'])->name('files-list');
+
+        // What the gallery and channel fieldtype pickers read.
+        Route::post('/fairu/galleries', [LibraryController::class, 'galleries'])->name('galleries');
+        Route::post('/fairu/channels', [LibraryController::class, 'channels'])->name('channels');
     });

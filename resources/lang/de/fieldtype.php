@@ -52,6 +52,18 @@ return [
         "save_error" => "Asset konnte nicht aktualisiert werden.",
         "load_error" => "Asset konnte nicht geladen werden.",
     ],
+    "connection" => "Verbindung",
+    "connection_instructions" => "Die Fairu-Verbindung, aus der gelesen wird. `default` belassen, sofern diese Seite nicht mit mehreren Workspaces spricht.",
+    "gallery" => [
+        "select" => "Galerie auswählen",
+        "empty" => "In diesem Workspace gibt es noch keine Galerien.",
+        "load_error" => "Galerien konnten nicht geladen werden.",
+    ],
+    "channel" => [
+        "select" => "Channel auswählen",
+        "empty" => "In diesem Workspace gibt es noch keine Channels.",
+        "load_error" => "Channels konnten nicht geladen werden.",
+    ],
     "meta_data_fetching" => "Metadaten werden ermittelt",
     "open_in_fairu" => "In Fairu öffnen",
     "or_add_per_drag_and_drop" => "oder per Drag & Drop hierher ziehen.",

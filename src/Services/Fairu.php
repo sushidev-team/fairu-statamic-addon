@@ -186,12 +186,12 @@ class Fairu
 
         if ($container == null) {
 
-            $containers = (array) Cache::flexible('asset-containers', [120, 240], function () {
+            $containers = (array) Cache::flexible(FairuCache::key('asset-containers'), [120, 240], function () {
                 return AssetContainer::all()?->pluck('handle')->toArray();
             });
 
             if (count($containers) == 1) {
-                $disk = Cache::remember('asset-container-' . $containers[0], now()->addMinutes(15), function () use ($containers) {
+                $disk = Cache::remember(FairuCache::key('asset-container-' . $containers[0]), now()->addMinutes(15), function () use ($containers) {
                     $container = FacadesAssetContainer::findByHandle($containers[0]);
                     return $container->disk;
                 });
@@ -199,7 +199,7 @@ class Fairu
             }
         } else {
 
-            $disk = Cache::remember('asset-container-' . $container, now()->addMinutes(60), function () use ($container) {
+            $disk = Cache::remember(FairuCache::key('asset-container-' . $container), now()->addMinutes(60), function () use ($container) {
                 $container = FacadesAssetContainer::findByHandle($container);
                 return $container->disk;
             });
@@ -209,27 +209,92 @@ class Fairu
         return $id;
     }
 
-    public function createUploadLink(string $filename, ?string $folder): ?array
+    /**
+     * Run a GraphQL document against the workspace.
+     *
+     * The REST endpoints answer in two fixed shapes; GraphQL is how the addon
+     * asks for the shapes it actually renders — a gallery with its cover and
+     * first twelve items in one round trip rather than three.
+     *
+     * `errors` comes back with a 200, so it has to be read rather than left to
+     * the status code. Raised as an exception because every caller either has a
+     * cache to fall back to or a template that would otherwise render a
+     * confident empty state over a broken connection.
+     *
+     * @param  array<string, mixed>  $variables
+     * @return array<string, mixed>
+     */
+    public function graphql(string $query, array $variables = []): array
     {
         $response = $this->client->post($this->endpoint('graphql'), [
-            'query' => <<<'GRAPHQL'
-                mutation CreateUploadLink($filename: String!, $folder: ID) {
-                    createFairuUploadLink(filename: $filename, type: STANDARD, folder: $folder) {
-                        id
-                        mime
-                        upload_url
-                        sync_url
-                    }
-                }
-            GRAPHQL,
-            'variables' => [
-                'filename' => $filename,
-                'folder' => $folder,
-            ],
+            'query' => $query,
+            'variables' => (object) $variables,
         ]);
 
+        $json = $response->json() ?? [];
 
-        return data_get($response->json(), 'data.createFairuUploadLink', []);
+        if ($errors = data_get($json, 'errors')) {
+            throw new Exception('Fairu GraphQL: ' . (data_get($errors, '0.message') ?? json_encode($errors)));
+        }
+
+        if ($response->status() != 200) {
+            throw new Exception(json_encode($json));
+        }
+
+        return (array) (data_get($json, 'data') ?? []);
+    }
+
+    public function createUploadLink(string $filename, ?string $folder): ?array
+    {
+        $data = $this->graphql(<<<'GRAPHQL'
+            mutation CreateUploadLink($filename: String!, $folder: ID) {
+                createFairuUploadLink(filename: $filename, type: STANDARD, folder: $folder) {
+                    id
+                    mime
+                    upload_url
+                    sync_url
+                }
+            }
+        GRAPHQL, [
+            'filename' => $filename,
+            'folder' => $folder,
+        ]);
+
+        return data_get($data, 'createFairuUploadLink', []);
+    }
+
+    /**
+     * Purge the delivery cache for up to 50 files.
+     *
+     * The other half of the addon's cache story: FairuCache drops what this
+     * site remembers about a file, this drops what the proxy and everything
+     * downstream of it remember of the bytes. Needs `cache::purge` on the API
+     * key — a key made before the permission existed does not carry it.
+     *
+     * @param  array<int, string>  $ids
+     * @return array{queued: array<int, string>, missing: array<int, string>}
+     */
+    public function purgeCache(array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter($ids)));
+
+        if (empty($ids)) {
+            return ['queued' => [], 'missing' => []];
+        }
+
+        $data = $this->graphql(<<<'GRAPHQL'
+            mutation PurgeFairuCache($ids: [ID!]!) {
+                purgeFairuCache(ids: $ids) {
+                    queued
+                    missing
+                }
+            }
+        GRAPHQL, ['ids' => $ids]);
+
+        return [
+            'queued' => (array) (data_get($data, 'purgeFairuCache.queued') ?? []),
+            'missing' => (array) (data_get($data, 'purgeFairuCache.missing') ?? []),
+        ];
     }
 
     public function uploadFile(string $content, string $filename, ?string $folder): ?string

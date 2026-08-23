@@ -85,6 +85,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Channel caching
+    |--------------------------------------------------------------------------
+    |
+    | Galleries follow `caching_meta`; channels get their own pair because they
+    | move on a schedule. An episode goes live at a moment somebody chose —
+    | `publish_at` is read on every request in Fairu, so the API is accurate to
+    | the second and this cache is what stands between that and the page.
+    |
+    | Same shape as above: fresh for the first number of minutes, then served
+    | stale and refreshed in the background until the second.
+    |
+    */
+
+    'caching_channels' => [5, 15],
+
+    /*
+    |--------------------------------------------------------------------------
     | Meta Coalescing
     |--------------------------------------------------------------------------
     |

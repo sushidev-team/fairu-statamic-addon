@@ -11,6 +11,7 @@ use Statamic\Facades\AssetContainer;
 use Statamic\Fieldtypes\Assets\UndefinedContainerException;
 use Statamic\Statamic;
 use Sushidev\Fairu\Services\Fairu as ServicesFairu;
+use Sushidev\Fairu\Services\FairuCache;
 use Illuminate\Support\Str;
 use Statamic\Assets\Asset as AssetsAsset;
 use Sushidev\Fairu\Traits\TransformAssets;
@@ -68,7 +69,7 @@ class Fairu extends Fieldtype
                 if (Str::isUuid($item)) {
                     return $item;
                 }
-                return Cache::flexible('asset-container-item-' . sha1($item), [120, 240], function () use ($item) {
+                return Cache::flexible(FairuCache::key('asset-container-item-' . sha1($item)), [120, 240], function () use ($item) {
                     return (new ServicesFairu)->parse($item, data_get($this->config(), 'container'));
                 });
             })->toArray();
@@ -78,7 +79,7 @@ class Fairu extends Fieldtype
             return $data;
         }
 
-        return Cache::flexible('asset-container-item-' . sha1($data), [120, 240], function () use ($data) {
+        return Cache::flexible(FairuCache::key('asset-container-item-' . sha1($data)), [120, 240], function () use ($data) {
             return (new ServicesFairu)->parse($data);
         });
     }
@@ -206,7 +207,7 @@ class Fairu extends Fieldtype
 
     public function shallowAugment($value)
     {
-        $cacheKey = md5(json_encode($value));
+        $cacheKey = FairuCache::key('field-' . md5(json_encode($value)));
         $ids = $this->resolveIds($value);
 
         $files = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids) {
