@@ -26,6 +26,7 @@ class ServiceProvider extends AddonServiceProvider
         \Sushidev\Fairu\Fieldtypes\Fairu::class,
         \Sushidev\Fairu\Fieldtypes\GallerySelector::class,
         \Sushidev\Fairu\Fieldtypes\ChannelSelector::class,
+        \Sushidev\Fairu\Fieldtypes\EpisodeSelector::class,
     ];
 
     protected $middlewareGroups = [

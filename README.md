@@ -15,6 +15,7 @@ This addon provides:
 - Antlers tags making image handling smooth sailing.
 - Fieldset to easily embed Fairu hosted files into your new or existing project
 - Galleries and channels (video shows and podcasts) rendered straight from Fairu
+- Fieldtypes for picking a gallery, a show or a single episode
 - A control panel utility for clearing the caches and checking the connection
 
 # How to use
@@ -459,6 +460,60 @@ Parameters: `page`, `perPage`, `search`, `preview`.
 
 Stores the channel id. The picker also offers unpublished shows — the page that
 publishes one has to be built before it goes live.
+
+## {{ fairu:episode }}
+
+An episode page addresses one episode, and Fairu has no query for an episode on
+its own — it belongs to its show. This tag is `{{ fairu:channel }}` with the loop
+already done: the show is fetched (and cached) once and the episode picked out of
+it, with the show left reachable as `channel`, because a page about an episode
+nearly always names the show it came from.
+
+```antlers
+{{ fairu:episode :id="my_episode_field" }}
+    <h1>{{ title }}</h1>
+    <p>{{ channel:name }} · {{ duration_for_humans }}</p>
+
+    {{ embed_html }}
+
+    {{ show_notes }}
+{{ /fairu:episode }}
+```
+
+In scope: everything an episode carries under `{{ fairu:channel }}` — `id`,
+`number`, `title`, `description`, `show_notes`, `published_at`, `episode_type`,
+`explicit`, `orientation`, `aspect_ratio`, `duration`, `duration_for_humans`,
+`url`, `asset`, `embed_url`, `embed_html`, `embed_iframe` — plus `channel` with
+the show's `id`, `name`, `slug`, `kind`, `is_audio`, `is_video`, `description`,
+`cover_image` and `feed_url`.
+
+| Parameter | Description |
+| --- | --- |
+| `id` | The pair the `fairu_episode` fieldtype stores. A bare id is read as the channel |
+| `channel` / `episode` | The two ids by hand — what a route with a slug in it needs |
+| `embed_width` | Width written into the embed snippets |
+| `preview` | `"true"` reads the workspace's own view instead of the visitor's |
+
+With no episode given, the first episode the show hands over is used, so a page
+linked to a show alone still has something to render.
+
+## The `fairu_episode` fieldtype
+
+Two dropdowns: the show, then one of its episodes. It stores the pair, because
+that is what addressing an episode takes:
+
+```yaml
+episode:
+  channel: 9ed6a425-df6f-433d-b65f-7219959080ce
+  episode: 9f00cbf4-b082-4dee-af47-cc344aa29297
+```
+
+The episode may be left empty — that means the show as a whole, which is what an
+episode page falls back to before a particular episode has been chosen. Like the channel
+picker, it offers unpublished shows and episodes whose release window has not
+opened: the page has to be built before it goes live. A plain string already in
+the field is read as the channel, so a `fairu_channel` field can be widened to
+this one without losing what is stored.
 
 ## Caching
 

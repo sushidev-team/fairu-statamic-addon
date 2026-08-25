@@ -28,7 +28,8 @@ Route::name('fairu.')
         Route::post('/fairu/files/{id}/move', [AssetController::class, 'moveFile'])->name('file_move');
         Route::post('/fairu/files/list', [AssetController::class, 'getFilesList'])->name('files-list');
 
-        // What the gallery and channel fieldtype pickers read.
+        // What the gallery, channel and episode fieldtype pickers read.
         Route::post('/fairu/galleries', [LibraryController::class, 'galleries'])->name('galleries');
         Route::post('/fairu/channels', [LibraryController::class, 'channels'])->name('channels');
+        Route::post('/fairu/episodes', [LibraryController::class, 'episodes'])->name('episodes');
     });

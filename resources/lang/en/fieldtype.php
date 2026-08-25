@@ -64,6 +64,12 @@ return [
         "empty" => "No channels in this workspace yet.",
         "load_error" => "Could not load channels.",
     ],
+    "episode" => [
+        "select" => "Select an episode",
+        "empty" => "This channel has no episodes yet.",
+        "optional" => "No episode selected — the show as a whole.",
+        "load_error" => "Could not load episodes.",
+    ],
     "meta_data_fetching" => "Meta data is being fetched",
     "open_in_fairu" => "Open in Fairu",
     "or_add_per_drag_and_drop" => "or add by using Drag & Drop.",

@@ -364,6 +364,97 @@ class FairuAssetTags extends Tags
     }
 
     /**
+     * The {{ fairu:episode }} tag — one episode of a show.
+     *
+     * Fairu has no query for an episode on its own, so this is `{{ fairu:channel }}`
+     * with the loop already done: the show is fetched (and cached) once and the
+     * episode picked out of it. The show stays reachable as `channel`, because a
+     * page about an episode nearly always names the show it belongs to.
+     *
+     * Takes the pair the `fairu_episode` fieldtype stores:
+     *
+     *     {{ fairu:episode :id="my_episode_field" }}
+     *
+     * or the two ids by hand, which is what a route with a slug in it needs:
+     *
+     *     {{ fairu:episode channel="ID" episode="ID" }}
+     *
+     * With no episode given, the first episode the show hands over is used — an
+     * episode page linked to a show alone still has something to render.
+     *
+     * @return array|null
+     */
+    public function episode()
+    {
+        [$channelId, $episodeId] = $this->episodeIds();
+
+        if (! Str::isUuid((string) $channelId)) {
+            return null;
+        }
+
+        $channels = new FairuChannels($this->getConnectionName());
+
+        $channel = $channels->find($channelId, [
+            'preview' => filter_var($this->params->get('preview', false), FILTER_VALIDATE_BOOLEAN),
+            'episodes' => true,
+            'seasons' => false,
+            'embedWidth' => $this->params->get('embed_width') ?? $this->params->get('embedWidth'),
+        ]);
+
+        if (! is_array($channel)) {
+            return null;
+        }
+
+        $episodes = $this->augmentEpisodes(data_get($channel, 'episodes'));
+
+        $episode = $episodeId
+            ? collect($episodes)->first(fn ($candidate) => data_get($candidate, 'id') === $episodeId)
+            : Arr::first($episodes);
+
+        if (! is_array($episode)) {
+            return null;
+        }
+
+        $episode['channel'] = [
+            'id' => data_get($channel, 'id'),
+            'name' => data_get($channel, 'name'),
+            'slug' => data_get($channel, 'slug'),
+            'kind' => data_get($channel, 'kind'),
+            'is_audio' => data_get($channel, 'kind') === 'audio',
+            'is_video' => data_get($channel, 'kind') === 'video',
+            'description' => data_get($channel, 'description'),
+            'cover_image' => $this->augmentFairuAsset(data_get($channel, 'cover_image')),
+            'feed_url' => $channels->feedUrl(data_get($channel, 'id')),
+        ];
+
+        return $episode;
+    }
+
+    /**
+     * The two ids `{{ fairu:episode }}` needs, from whichever of its shapes the
+     * template used.
+     *
+     * @return array{0: mixed, 1: mixed}
+     */
+    protected function episodeIds(): array
+    {
+        $value = $this->params->get('id');
+
+        $channelId = $this->params->get('channel');
+        $episodeId = $this->params->get('episode');
+
+        if (is_array($value)) {
+            $channelId ??= Arr::get($value, 'channel');
+            $episodeId ??= Arr::get($value, 'episode');
+        } elseif (is_string($value) && $value !== '') {
+            // A bare id is the channel: the episode is what may be left out.
+            $channelId ??= $value;
+        }
+
+        return [$channelId, $episodeId];
+    }
+
+    /**
      * The {{ fairu:channels }} tag — the shows of this workspace.
      *
      * @return array
