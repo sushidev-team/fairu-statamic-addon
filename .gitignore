@@ -9,3 +9,6 @@ resources/lang/.DS_Store
 
 resources/dist/hot
 .DS_Store
+
+build/coverage/
+.phpunit.cache/

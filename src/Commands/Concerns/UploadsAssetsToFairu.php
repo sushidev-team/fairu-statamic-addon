@@ -169,7 +169,7 @@ trait UploadsAssetsToFairu
                     try {
                         $success = $this->importAssetToFairu($asset, $uuid, $folders, $progress);
                     } catch (Throwable $ex) {
-                        Log::error('Fairu: unexpected error retrying ' . $asset->path() . ': ' . $ex->getMessage());
+                        Log::error('Fairu: unexpected error retrying ' . data_get($entry, 'path', 'unknown asset') . ': ' . $ex->getMessage());
                         $success = false;
                     }
 

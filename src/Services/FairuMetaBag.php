@@ -32,6 +32,11 @@ class FairuMetaBag
         $this->active = true;
     }
 
+    public function disable(): void
+    {
+        $this->active = false;
+    }
+
     public function isActive(): bool
     {
         return $this->active;
@@ -78,12 +83,13 @@ class FairuMetaBag
      * Queue a {{ fairu }} list-tag invocation. Stores the Antlers body and outer
      * context so the middleware can re-render after meta is resolved in bulk.
      */
-    public function queueList(array $ids, array $params, string $body, array $context, string $connection = 'default'): string
+    public function queueList(array $ids, array $params, string $body, array $context, string $connection = 'default', string $language = 'antlers'): string
     {
         $handle = bin2hex(random_bytes(8));
 
         $this->entries[$handle] = [
             'type' => 'list',
+            'language' => $language,
             'id' => null,
             'ids' => array_values(array_filter($ids)),
             'params' => $params,
@@ -138,18 +144,18 @@ class FairuMetaBag
         return array_map(static fn ($ids) => array_keys($ids), $grouped);
     }
 
-    public function setResolved(string $id, array $meta): void
+    public function setResolved(string $id, array $meta, string $connection = 'default'): void
     {
-        $this->resolved[$id] = $meta;
+        $this->resolved[$connection][$id] = $meta;
     }
 
-    public function meta(?string $id): ?array
+    public function meta(?string $id, string $connection = 'default'): ?array
     {
         if ($id === null) {
             return null;
         }
 
-        return $this->resolved[$id] ?? null;
+        return $this->resolved[$connection][$id] ?? null;
     }
 
     public function reset(): void

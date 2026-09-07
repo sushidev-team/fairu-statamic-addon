@@ -3,6 +3,7 @@
 namespace Sushidev\Fairu;
 
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\View;
 use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Permission;
@@ -45,6 +46,8 @@ class ServiceProvider extends AddonServiceProvider
 
     public function bootAddon()
     {
+        Blade::componentNamespace('Sushidev\\Fairu\\View\\Components', 'fairu');
+
         $packageName = str_replace('\\', '-', strtolower(__NAMESPACE__));
 
         if (config('statamic.fairu.deactivate_old') == true) {

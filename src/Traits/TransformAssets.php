@@ -74,7 +74,7 @@ trait TransformAssets
 
         // Check if we're in a controller context with request
         if (method_exists($this, 'request')) {
-            return $this->request->input($key, $default);
+            return $this->request()->input($key, $default);
         }
 
         // Fallback to default
@@ -277,7 +277,7 @@ trait TransformAssets
             return $result;
         }
 
-        $fingerprint = md5($mode . '-' . json_encode($ids));
+        $fingerprint = md5($this->getConnectionName() . '-' . $mode . '-' . json_encode($ids));
 
         return Cache::flexible('file-' . $mode . '-' . $fingerprint, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids, $mode, $result) {
             $files = null;

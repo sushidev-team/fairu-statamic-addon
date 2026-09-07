@@ -63,24 +63,15 @@ class Fairu extends Fieldtype
         if (!is_array($data)) {
             $data = [$data];
         }
-        if (is_array($data)) {
-            return collect($data)->map(function ($item) {
-                if (Str::isUuid($item)) {
-                    return $item;
-                }
-                return Cache::flexible('asset-container-item-' . sha1($item), [120, 240], function () use ($item) {
-                    return (new ServicesFairu)->parse($item, data_get($this->config(), 'container'));
-                });
-            })->toArray();
-        }
+        return collect($data)->map(function ($item) {
+            if (Str::isUuid($item)) {
+                return $item;
+            }
+            return Cache::flexible('asset-container-item-' . sha1($item), [120, 240], function () use ($item) {
+                return (new ServicesFairu)->parse($item, data_get($this->config(), 'container'));
+            });
+        })->toArray();
 
-        if (Str::isUuid($data)) {
-            return $data;
-        }
-
-        return Cache::flexible('asset-container-item-' . sha1($data), [120, 240], function () use ($data) {
-            return (new ServicesFairu)->parse($data);
-        });
     }
 
 
@@ -155,8 +146,6 @@ class Fairu extends Fieldtype
         })->all();
     }
 
-    protected function container() {}
-
     protected function configFieldItems(): array
     {
         return [
@@ -223,8 +212,6 @@ class Fairu extends Fieldtype
                 return $asset;
             });
         })?->toArray();
-
-        if (!is_array($files)) return $files;
 
         return $this->config('max_files') === 1 ? data_get($files, 0) : $files;
     }
