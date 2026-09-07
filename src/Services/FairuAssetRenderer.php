@@ -3,14 +3,12 @@
 namespace Sushidev\Fairu\Services;
 
 use Statamic\Facades\Antlers;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Collection;
+use Illuminate\View\ComponentAttributeBag;
 use Sushidev\Fairu\Traits\TransformAssets;
 
-/**
- * Renders the final HTML/URL for a queued fairu tag given its params and the
- * asset meta that was fetched in bulk by CoalesceFairuMeta. Mirrors the
- * behaviour of FairuAssetTags::image() and FairuAssetTags::url() so that a
- * tag rendered via placeholder produces byte-identical output.
- */
+/** Shared renderer for Antlers tags, Blade tags, components and deferred output. */
 class FairuAssetRenderer
 {
     use TransformAssets;
@@ -25,11 +23,13 @@ class FairuAssetRenderer
         $this->renderParams = $params;
         $this->renderConnection = $connection;
 
-        return match ($type) {
+        $output = match ($type) {
             'image' => $this->renderImage($params, $asset),
             'url' => $this->renderUrl($params, $asset),
             default => '',
         };
+
+        return $type === 'url' && ($params['_escape'] ?? false) ? e($output) : $output;
     }
 
     /**
@@ -40,7 +40,7 @@ class FairuAssetRenderer
      * @param  array<string, mixed>  $params
      * @param  array<string, mixed>  $context  outer Antlers context captured at queue time
      */
-    public function renderList(array $assets, array $params, string $body, array $context, string $connection = 'default'): string
+    public function renderList(array $assets, array $params, string $body, array $context, string $connection = 'default', string $language = 'antlers'): string
     {
         $this->renderParams = $params;
         $this->renderConnection = $connection;
@@ -49,41 +49,47 @@ class FairuAssetRenderer
             return '';
         }
 
+        if ($language === 'blade') {
+            return Blade::render(
+                '@foreach ($assets as $asset){!! $renderAsset($asset, $loop) !!}@endforeach',
+                [
+                    'assets' => $assets,
+                    'renderAsset' => function ($asset, $loop) use ($params, $body, $context) {
+                        $asset = $this->augmentAsset((array) $asset, $params);
+                        $data = array_merge($context, isset($params['scope']) ? [$params['scope'] => $asset] : $asset);
+                        $loop->parent = $context['loop'] ?? $loop->parent;
+                        $loop->depth = ($loop->parent->depth ?? 0) + 1;
+                        $data['loop'] = $loop;
+
+                        return Blade::render($body, $data);
+                    },
+                ],
+            );
+        }
+
         $out = '';
 
         foreach ($assets as $asset) {
             $asset = $this->augmentAsset((array) $asset, $params);
             $data = array_merge($context, $asset);
 
-            // trusted: true is required.
-            //
-            // Antlers::parse() defaults to $trusted = false, which sets
-            // GlobalRuntimeState::$isEvaluatingUserData and puts the parse into the sandbox
-            // Statamic uses for user-authored content. In that mode NodeProcessor::guardRuntimeTag()
-            // rejects any tag not on statamic.antlers.allowedContentTags - {{ partial }} included -
-            // logging "Runtime Access Violation: partial:..." and emitting NOTHING.
-            //
-            // The result is that a {{ fairu }} block whose body contains a partial silently
-            // disappears when it is deferred, while the same block renders fine inline inside a
-            // {{ cache }} tag (where shouldDefer() is false). A real-world case:
-            //
-            //     {{ fairu :id="$logo" fetchMeta="true" }}
-            //         {{ partial:core/dyntag type="a" link="/" }}
-            //             <img src="{{ url }}" alt="{{ alt }}" />
-            //         {{ /partial:core/dyntag }}
-            //     {{ /fairu }}
-            //
-            // This body is template source, not user data - it was read from the Antlers file
-            // that called the tag - so the sandbox does not apply to it.
+            // This is trusted template source. Antlers partials require trusted parsing.
             $out .= (string) Antlers::parse($body, $data, true);
         }
 
         return $out;
     }
 
+    public function assets(array $assets, array $params, string $connection = 'default'): Collection
+    {
+        $this->renderParams = $params;
+        $this->renderConnection = $connection;
+
+        return collect($assets)->map(fn ($asset) => $this->augmentAsset($asset, $params));
+    }
+
     /**
-     * Mirror the url/srcset/focus_css augmentation that FairuAssetTags::index()
-     * applies before returning the collection to Antlers.
+     * Add the same URL, responsive sources and focal point data in both languages.
      */
     protected function augmentAsset(array $asset, array $params): array
     {
@@ -155,18 +161,24 @@ class FairuAssetRenderer
             $params['ratio'] ?? null
         );
 
-        $altText = $params['alt'] ?? data_get($asset, 'description');
+        $attributes = new ComponentAttributeBag(array_map(
+            fn ($value) => is_string($value) ? e($value, false) : $value,
+            $params['_attributes'] ?? [],
+        ));
+        $generated = [
+            'src' => $url,
+            'alt' => strip_tags((string) ($params['alt'] ?? data_get($asset, 'alt') ?? data_get($asset, 'description') ?? '')),
+        ];
+        foreach (['width', 'height', 'class', 'sizes', 'loading', 'decoding', 'fetchpriority'] as $key) {
+            if (isset($params[$key])) {
+                $generated[$key] = $params[$key];
+            }
+        }
+        if ($srcsetEntries !== []) {
+            $generated['srcset'] = implode(', ', $srcsetEntries);
+        }
 
-        $attrs = array_filter([
-            ! empty($params['width']) ? "width='".$params['width']."'" : null,
-            ! empty($params['height']) ? "height='".$params['height']."'" : null,
-            ! empty($params['class']) ? "class='".$params['class']."'" : null,
-            ! empty($params['alt']) ? "alt='".strip_tags((string) $altText)."'" : null,
-            ! empty($params['sizes']) ? "sizes='".$params['sizes']."'" : null,
-            ! empty($srcsetEntries) ? "srcset='".implode(', ', $srcsetEntries)."'" : null,
-        ]);
-
-        return "<img src='{$url}' ".implode(' ', $attrs).'>';
+        return '<img '.$attributes->merge($generated).'>';
     }
 
     /**

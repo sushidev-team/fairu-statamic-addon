@@ -32,3 +32,26 @@ it('boots without a views directory', function () {
 
     expect($this->app->isBooted())->toBeTrue();
 });
+
+it('registers the replacement asset navigation and creates its view directory', function () {
+    config(['statamic.fairu.deactivate_old' => true]);
+    \Illuminate\Support\Facades\Route::name('statamic.cp.')->group(__DIR__.'/../routes/cp.php');
+    app('router')->getRoutes()->refreshNameLookups();
+    $path = base_path('resources/views/vendor/sushidev-fairu');
+    // Use the real filesystem, while capturing the navigation extension for inspection.
+    \Statamic\Facades\CP\Nav::shouldReceive('extend')->once()->andReturnUsing(function ($callback) {
+        $nav = Mockery::mock();
+        $nav->shouldReceive('remove')->once()->with('Content', 'Assets');
+        $nav->shouldReceive('content')->once()->with('Assets')->andReturnSelf();
+        $nav->shouldReceive('url')->once()->with(cp_route('fairu.browser'))->andReturnSelf();
+        $nav->shouldReceive('icon')->once()->with('assets')->andReturnSelf();
+        $nav->shouldReceive('can')->once()->with('view fairu assets')->andReturnSelf();
+        $callback($nav);
+    });
+    try {
+        (new \Sushidev\Fairu\ServiceProvider(app()))->bootAddon();
+        expect(File::isDirectory($path))->toBeTrue();
+    } finally {
+        File::deleteDirectory($path);
+    }
+});

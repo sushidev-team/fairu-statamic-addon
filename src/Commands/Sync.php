@@ -32,21 +32,23 @@ class Sync extends Command
 
     protected ?string $connection = null;
 
-    public function handle(): void
+    public function handle(): int
     {
         try {
             $this->resolveConnection();
         } catch (Throwable $ex) {
             error($ex->getMessage());
-            exit;
+            return self::FAILURE;
         }
 
         try {
             $this->syncContainer();
         } catch (Throwable $ex) {
             error($ex->getMessage());
-            exit;
+            return self::FAILURE;
         }
+
+        return self::SUCCESS;
     }
 
     protected function resolveConnection(): void

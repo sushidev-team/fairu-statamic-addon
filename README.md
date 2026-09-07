@@ -12,7 +12,7 @@ Fairu is your new powerful image and file proxy with the goal in mind to deliver
 This addon provides:
 
 - Import all your assets into [fairu.app](https://fairu.app) using our commands
-- Antlers tags making image handling smooth sailing.
+- Antlers tags, native Statamic Blade tags, and Laravel Blade components for images and file URLs.
 - Fieldset to easily embed Fairu hosted files into your new or existing project
 
 # How to use
@@ -41,6 +41,94 @@ php please fairu:setup
 ```
 
 After the initial import, file paths will be transformed into the new Fairu-ID format dynamically.
+
+# Blade support
+
+All four Fairu tags work in Antlers and Statamic 6 Blade templates. The same
+renderer handles URLs, metadata, responsive sources, and escaped image attributes.
+
+## Native Statamic tags
+
+```blade
+<s:fairu:image :id="$image" width="800" fetchMeta="true" />
+<s:fairu:images :ids="$gallery" width="800" fetchMeta="true" />
+
+<s:fairu :ids="$gallery" fetchMeta="true">
+    <figure>
+        <img src="{{ $url }}" alt="{{ $alt }}" style="object-position: {{ $focus_css }}">
+        <figcaption>{{ $name }}</figcaption>
+    </figure>
+</s:fairu>
+```
+
+Use Statamic's fluent API for data and URLs:
+
+```blade
+<a href="{{ Statamic::tag('fairu:url')->params([
+    'id' => $document,
+    'name' => 'plan.pdf',
+    'download' => true,
+])->fetch() }}">Download</a>
+
+@foreach (Statamic::tag('fairu')->params(['ids' => $gallery, 'fetchMeta' => true])->fetch() as $file)
+    <img src="{{ $file['url'] }}" alt="{{ $file['alt'] ?? '' }}">
+@endforeach
+```
+
+Fluent data collections resolve immediately so PHP can inspect their metadata.
+Native tag pairs can defer their body until metadata has been fetched.
+
+## Laravel Blade components
+
+The addon also registers `<x-fairu::image>`, `<x-fairu::images>` and
+`<x-fairu::url>`. No manual registration is required.
+
+```blade
+<x-fairu::image
+    :id="$image"
+    fetch-meta="true"
+    width="800"
+    sources="320,320w;640,640w;1280,1280w"
+    ratio="16/9"
+    sizes="(min-width: 1024px) 50vw, 100vw"
+    loading="lazy"
+    class="rounded"
+    data-testid="hero"
+/>
+
+<x-fairu::images :ids="$gallery" width="640" fetch-meta="true" />
+
+<a href="<x-fairu::url :id="$document" name="plan.pdf" download="true" />">
+    Download
+</a>
+```
+
+All documented tag parameters are available. Use `fetch-meta` and `focal-point`
+for kebab-case attributes, or supply an array with `:params="$options"`.
+Explicit component attributes override corresponding options in `params`.
+Additional HTML attributes are forwarded to each generated image. Attribute bags
+work in wrapper components, including `{{ $attributes->merge(['class' => 'rounded']) }}`.
+Image alt text uses an explicit `alt`, then metadata `alt`, then `description`,
+with an empty alt attribute as the fallback.
+
+## Metadata batching in Blade
+
+On Statamic web routes, the existing middleware batches Antlers tags, native Blade
+tags and Laravel components together: one lean metadata request per connection
+for the IDs queued during the initial render. Deferred tag pairs retain their
+original template language and outer context. Tags nested inside a deferred body
+render immediately and may require additional metadata requests.
+
+On custom Laravel routes, add
+`Sushidev\Fairu\Http\Middleware\CoalesceFairuMeta` to the route middleware
+if you want batching. Components also work without the middleware.
+
+`fetchMeta="full"` always uses the full metadata endpoint. Tags without metadata
+render locally. Do not persist unresolved output in Blade fragment caches;
+cache the final response after the middleware has resolved its placeholders.
+Only HTML responses support placeholder replacement. Do not use deferred URLs
+for PHP string manipulation; supply a filename, disable coalescing, or resolve
+asset data before building the URL.
 
 # Antlers tags
 
@@ -85,10 +173,10 @@ When a page uses many `{{ fairu:image }}` / `{{ fairu:url ... fetchMeta="true" }
 
 1. Each tag emits an opaque placeholder token instead of immediately fetching meta.
 2. A response middleware (`CoalesceFairuMeta`) queues all ids while the view renders.
-3. After Antlers finishes, it fires **one** `POST /api/files/meta` call for every unique id across the whole response.
+3. After template rendering finishes, it fires **one** `POST /api/files/meta` call per connection for the queued unique IDs.
 4. The placeholders are replaced in-place with the final `<img>` / URL output.
 
-Result: a page with 15, 30, or 300 images issues exactly one meta round-trip per request, independent of template nesting.
+A page with 15, 30, or 300 initially queued images on one connection needs one metadata round-trip. Tags nested inside a deferred tag-pair body render immediately and may need additional calls.
 
 ### Enabling / disabling
 
@@ -106,7 +194,7 @@ FAIRU_COALESCE_META=false
 
 ### Caveats
 
-- **Do not wrap fairu tags in `{{ cache }}` blocks.** The placeholder would get cached without the corresponding queue entry, so subsequent cache-hit renders can't resolve it. Use Statamic's response-level static caching instead — the middleware runs *before* static caching stores, so the cached HTML contains the final output.
+- Inside Antlers `{{ cache }}` blocks, Fairu renders immediately to avoid caching unresolved placeholders. Use response-level caching after the middleware to retain batching.
 - **String operations on tag output** (e.g. `{{ fairu:url ... | upper }}`) will operate on the placeholder, not the URL. Rare, but worth noting.
 - Only `text/html` responses are rewritten. JSON, streamed, and binary responses pass through untouched.
 - Tags without `fetchMeta` or with an explicit `name` parameter render immediately and don't go through the coalescer — no change in behaviour.
@@ -318,3 +406,28 @@ sizes="(min-width: 1200px) 1200px, (min-width: 768px) 800px, 100vw"
 ## Details
 
 For more information, visit the documentation at https://docs.fairu.app/docs/addons/00-statamic to find out what else you can do with Fairu.
+
+# Tests and coverage
+
+```shell
+composer install
+composer test
+composer test:coverage
+```
+
+The coverage command requires PCOV or Xdebug (`XDEBUG_MODE=coverage` for Xdebug).
+It enforces **100% PHP line coverage across every file in `src/`**, including
+commands, controllers, validation rules, services, tags and Blade components.
+There are no source-file exclusions. Blade templates are exercised through
+rendering integration tests; JavaScript and vendor code are outside this PHP
+coverage measurement. Line coverage does not measure every possible branch or
+input combination.
+
+Reports are generated in `build/coverage/clover.xml` and
+`build/coverage/html/index.html`. The GitHub Actions workflow runs the suite and
+coverage gate on PHP 8.3, 8.4 and 8.5 and uploads the reports. These use
+[Pest's coverage threshold](https://pestphp.com/docs/test-coverage).
+
+HTTP responses are faked; the suite does not require Fairu credentials. The
+Composer commands disable `pcntl_fork` so Laravel Prompts uses a static spinner
+in command tests without spawning subprocesses during coverage collection.

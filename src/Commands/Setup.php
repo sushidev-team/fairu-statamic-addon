@@ -40,18 +40,22 @@ class Setup extends Command
     protected ?array $credentials = null;
     protected ?string $connection = null;
 
-    public function handle(): void
+    public function handle(): int
     {
         try {
-            $this->checkConnection();
+            if (! $this->checkConnection()) {
+                return self::SUCCESS;
+            }
         } catch (Throwable $ex) {
             error($ex->getMessage());
-            exit;
+            return self::FAILURE;
         }
         $this->importFiles();
+
+        return self::SUCCESS;
     }
 
-    protected function checkConnection(): void
+    protected function checkConnection(): bool
     {
 
         $connection = select(
@@ -69,19 +73,11 @@ class Setup extends Command
             throw new Error('Cannot check the given credentials. Please make sure you have set the environment keys "FAIRU_TENANT" and "FAIRU_TENANT_SECRET" or that you defined your custom connection in the configuration.');
         }
 
-        if (count($result) == 0) {
-            throw new Error('Cannot check the given credentials. Please make sure you have set the environment keys "FAIRU_TENANT" and "FAIRU_TENANT_SECRET" or that you defined your custom connection in the configuration.');
-        }
-
         // Output some information about the keys
         info('Your api keys are valid and we could receive the following user data associated with the api.');
         table(['id', 'email'], [Arr::only($result, ['id', 'email'])]);
 
-        $continue = confirm("Want to continue with the import of your files to fairu?");
-
-        if ($continue == false) {
-            exit;
-        }
+        return confirm("Want to continue with the import of your files to fairu?");
     }
 
     protected function importFiles()
