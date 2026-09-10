@@ -92,7 +92,7 @@ class FairuAssetTags extends Tags
                     filename: $this->params->get('name') ?? data_get($asset, 'name'),
                     focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point'),
                     fit: $this->params->get('fit') ?? data_get($asset, 'fit'),
-                    appendQuery: data_get($asset, 'is_image') || $this->params->get('width') || $this->params->get('height') || $this->params->get('sources') || $this->params->get('timestamp'),
+                    appendQuery: data_get($asset, 'is_image') || $this->params->get('width') || $this->params->get('height') || $this->params->get('sources') || $this->params->get('timestamp') || $this->params->get('version'),
                 );
                 $srcset_entries = $this->getSources($asset, $this->params->get('sources'), $this->params->get('name'), $this->params->get('ratio'));
                 if (!empty($srcset_entries)) {
@@ -137,7 +137,7 @@ class FairuAssetTags extends Tags
                 filename: $this->params->get('name') ?? data_get($asset, 'name'),
                 focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point'),
                 fit: $this->params->get('fit') ?? data_get($asset, 'fit'),
-                appendQuery: data_get($asset, 'is_image') || $this->params->get('width') || $this->params->get('height') || $this->params->get('sources') || $this->params->get('timestamp')
+                appendQuery: data_get($asset, 'is_image') || $this->params->get('width') || $this->params->get('height') || $this->params->get('sources') || $this->params->get('timestamp') || $this->params->get('version')
             );
             data_set($asset, 'url', $url);
 
@@ -185,7 +185,7 @@ class FairuAssetTags extends Tags
                     filename: $this->params->get('name') ?? data_get($asset, 'name'),
                     focalPoint: $this->params->get('focal_point') ?? data_get($asset, 'focal_point'),
                     fit: $this->params->get('fit') ?? data_get($asset, 'fit'),
-                    appendQuery: data_get($asset, 'is_image') || $this->params->get('width') || $this->params->get('height') || $this->params->get('sources') || $this->params->get('timestamp')
+                    appendQuery: data_get($asset, 'is_image') || $this->params->get('width') || $this->params->get('height') || $this->params->get('sources') || $this->params->get('timestamp') || $this->params->get('version')
                 );
                 data_set($asset, 'url', $url);
 

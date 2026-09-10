@@ -130,10 +130,25 @@ The `POST /api/files/meta` endpoint is required on your Fairu backend for the de
 | **⁠format**      | Convert image format               | **✓** |       | **✓**  | **✓**   |
 | **fit**          | cover / contain the image          | **✓** |       | **✓**  | **✓**   |
 | **⁠focal_point** | Focal point for cropping           | **✓** |       | **✓**  | **✓**   |
+| **version**     | Video rendition to request from the proxy (e.g. `medium`) | **✓** | **✓** | **✓** | **✓** |
 | **timestamp**   | Video thumbnail timestamp (HH:MM:SS.mmm) | **✓** | **✓** | **✓**  | **✓**   |
 | **fetchMeta**   | `"true"` for lean meta (default), `"full"` for full `File` resource, `"false"` to skip | **✓** | **✓** | **✓**  | **✓**   |
 | **raw**          | `"true"` returns the untouched original (no `?quality`/`focal`/transform query). Use for PDFs and other files that must not be routed through the image proxy | **✓** | **✓** | **✓**  | **✓**   |
 | **download**     | `"true"` emits a same-origin URL that forces a browser download (`Content-Disposition: attachment`) instead of opening inline. **`{{ fairu:url }}` only** — ignored on all other tags | | **✓** | | |
+
+Request a video rendition with `version="medium"`:
+
+```antlers
+<video controls src='{{ fairu:url :id="video" version="medium" }}'></video>
+
+{{ fairu :id="video" version="medium" }}
+    <video controls src="{{ url }}"></video>
+{{ /fairu }}
+```
+
+The value is passed to the proxy as `version=medium`, including in generated
+srcset URLs. Available renditions depend on your Fairu proxy. `raw="true"`
+suppresses this parameter; `fairu:url download="true"` downloads the original.
 
 ## {{ fairu }}
 

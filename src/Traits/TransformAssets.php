@@ -148,6 +148,7 @@ trait TransformAssets
                 'height' => $this->getParam('height', $height),
                 'quality' => $this->getParam('quality', null, 90),
                 'timestamp' => $this->getParam('timestamp'),
+                'version' => $this->getParam('version'),
                 'format' => $this->getParam('format'),
                 'fit' => $this->getParam('fit'),
                 'focal' => $focalPoint,

@@ -96,7 +96,8 @@ class FairuAssetRenderer
                 || ! empty($params['width'])
                 || ! empty($params['height'])
                 || ! empty($params['sources'])
-                || ! empty($params['timestamp']),
+                || ! empty($params['timestamp'])
+                || ! empty($params['version']),
         );
 
         $srcsetEntries = $this->getSources(
@@ -146,6 +147,7 @@ class FairuAssetRenderer
                 || ! empty($params['height'])
                 || ! empty($params['sources'])
                 || ! empty($params['timestamp'])
+                || ! empty($params['version'])
         );
 
         $srcsetEntries = $this->getSources(
