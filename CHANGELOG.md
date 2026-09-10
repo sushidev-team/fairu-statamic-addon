@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.2.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v3.1.3...v3.2.0) (2026-09-10)
+
+
+### Features
+
+* added version prop ([ca7fd76](https://github.com/sushidev-team/fairu-statamic-addon/commit/ca7fd7664930eea189941bae2a81a9f6c81ee1f8))
+
+
+### Bug Fixes
+
+* **browser:** show freshly uploaded files without page refresh ([aa0784a](https://github.com/sushidev-team/fairu-statamic-addon/commit/aa0784aede0031a32061fbc535293d1bf8567200))
+
 ## [3.1.3](https://github.com/sushidev-team/fairu-statamic-addon/compare/v3.1.2...v3.1.3) (2026-07-28)
 
 
