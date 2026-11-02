@@ -6,7 +6,10 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 use Sushidev\Fairu\Services\Fairu;
+use Sushidev\Fairu\Support\WatermarkKeyWarning;
+use Sushidev\Fairu\Support\WatermarkSignature;
 
 trait TransformAssets
 {
@@ -160,9 +163,64 @@ trait TransformAssets
 
         $id = $this->fairu->parse($id);
 
+        if ($id !== null && $this->watermarkDisabled()) {
+            $queryString = $this->signWatermarkBypass($id, $queryString);
+        }
+
         $url = $this->buildFileUrl($id, $filename);
-        $url .= ($appendQuery) ? '?' .  $queryString : '';
+        $url .= ($appendQuery || $queryString !== '') ? '?' .  $queryString : '';
         return $url;
+    }
+
+    /**
+     * Whether the visible watermark should be bypassed for this render.
+     *
+     * The tag parameter (watermark="false") wins; in a fieldtype context the
+     * blueprint option "disable_watermark" is the default. Anything that is not
+     * an explicit false keeps the watermark (fail closed).
+     */
+    protected function watermarkDisabled(): bool
+    {
+        $param = $this->getParam('watermark');
+
+        if ($param === null || $param === '') {
+            if (! property_exists($this, 'params') && method_exists($this, 'config')) {
+                return (bool) $this->config('disable_watermark', false);
+            }
+
+            return false;
+        }
+
+        return filter_var($param, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) === false;
+    }
+
+    /**
+     * Append wm=0 and its signature (wms) to the final query string. Without a
+     * usable key the query is returned unchanged (watermarked) and a warning is
+     * logged once per request; templates never throw.
+     */
+    protected function signWatermarkBypass(string $id, string $queryString): string
+    {
+        $connection = (string) ($this->getConnectionName() ?: 'default');
+        $key = config('statamic.fairu.connections.' . $connection . '.watermark_key');
+
+        if (! is_string($key) || trim($key) === '') {
+            WatermarkKeyWarning::log($connection, 'no watermark key is configured');
+
+            return $queryString;
+        }
+
+        $signedQuery = ltrim($queryString . '&wm=0', '&');
+
+        try {
+            $wms = WatermarkSignature::sign($key, $id, WatermarkSignature::parseQuery($signedQuery));
+        } catch (InvalidArgumentException) {
+            WatermarkKeyWarning::log($connection, 'the watermark key is invalid');
+
+            return $queryString;
+        }
+
+        return $signedQuery . '&wms=' . $wms;
     }
 
     /**
