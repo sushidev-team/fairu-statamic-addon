@@ -6,6 +6,19 @@
 
 * **watermark:** `watermark="false"` tag parameter and "Disable watermark for this field" fieldtype option sign proxy URLs (`wm=0&wms=…`) with `FAIRU_WATERMARK_KEY` to skip the visible watermark; srcset entries, `raw="true"` originals and deferred (coalesced) rendering are signed too
 
+## [3.3.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v3.2.0...v3.3.0) (2026-11-04)
+
+
+### Features
+
+* **watermark:** sign image URLs with watermark="false" ([a66eed6](https://github.com/sushidev-team/fairu-statamic-addon/commit/a66eed6618bc1859651334976087af8a878a4530))
+
+
+### Bug Fixes
+
+* **watermark:** omit trailing ? on unsigned field URLs ([e8b58e0](https://github.com/sushidev-team/fairu-statamic-addon/commit/e8b58e049b2e0817f046cea89e434bf7d1af5e45))
+* **watermark:** sign lower-case IDs and pin query separator ([6e49681](https://github.com/sushidev-team/fairu-statamic-addon/commit/6e496812d819f012530296225d54e1f8245236d5))
+
 ## [3.2.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v3.1.3...v3.2.0) (2026-09-10)
 
 
