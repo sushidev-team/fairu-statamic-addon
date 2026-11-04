@@ -157,7 +157,8 @@ trait TransformAssets
                 'focal' => $focalPoint,
             ];
 
-            $queryString = http_build_query($params);
+            // Fixed separator when signing: the signature must cover the parameters the proxy reads.
+            $queryString = http_build_query($params, '', $this->watermarkDisabled() ? '&' : null);
         }
 
 
@@ -213,7 +214,8 @@ trait TransformAssets
         $signedQuery = ltrim($queryString . '&wm=0', '&');
 
         try {
-            $wms = WatermarkSignature::sign($key, $id, WatermarkSignature::parseQuery($signedQuery));
+            // Lower case: the proxy signs the file's canonical UUID.
+            $wms = WatermarkSignature::sign($key, strtolower($id), WatermarkSignature::parseQuery($signedQuery));
         } catch (InvalidArgumentException) {
             WatermarkKeyWarning::log($connection, 'the watermark key is invalid');
 

@@ -70,6 +70,27 @@ it('produces a signature that breaks when any parameter changes', function () {
     expect(WatermarkSignature::sign(WM_KEY, WM_FILE_ID, $query))->not->toBe($query['wms']);
 });
 
+it('signs the canonical lower-case file ID', function () {
+    $url = wmTag(['id' => strtoupper(WM_FILE_ID), 'name' => 'hero.jpg', 'width' => 1600, 'watermark' => false]);
+
+    expectValidWatermarkSignature($url);
+});
+
+it('pins the query separator only for signed URLs', function () {
+    $separator = ini_set('arg_separator.output', ';');
+
+    try {
+        $signed = wmTag(['id' => WM_FILE_ID, 'name' => 'hero.jpg', 'width' => 1600, 'watermark' => false]);
+        $unsigned = wmTag(['id' => WM_FILE_ID, 'name' => 'hero.jpg', 'width' => 1600]);
+    } finally {
+        ini_set('arg_separator.output', $separator);
+    }
+
+    expect($signed)->not->toContain(';');
+    expectValidWatermarkSignature($signed);
+    expect($unsigned)->toContain('width=1600;quality=90');
+});
+
 it('signs only wm=0 for raw originals', function () {
     $url = wmTag(['id' => WM_FILE_ID, 'name' => 'plan.jpg', 'raw' => 'true', 'watermark' => 'false']);
     $query = wmQuery($url);
