@@ -223,3 +223,13 @@ it('signs the augmented field URL when the field disables the watermark', functi
         expect($url)->toBe('https://files.fairu.app/'.WM_FILE_ID.'/file');
     }
 })->with(['disabled' => true, 'enabled' => false]);
+
+it('leaves the augmented field URL without a query when no usable key exists', function (?string $key) {
+    Http::fake(['*' => Http::response([], 500)]);
+    Log::spy();
+    config()->set('statamic.fairu.connections.default.watermark_key', $key);
+
+    $fieldtype = (new FairuFieldtype)->setField(new Field('image', ['type' => 'fairu', 'max_files' => 1, 'disable_watermark' => true]));
+
+    expect(data_get($fieldtype->shallowAugment(WM_FILE_ID), 'url'))->toBe('https://files.fairu.app/'.WM_FILE_ID.'/file');
+})->with(['missing' => null, 'invalid' => 'not-a-key']);

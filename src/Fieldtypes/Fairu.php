@@ -225,7 +225,11 @@ class Fairu extends Fieldtype
                 );
 
                 if ($url !== null && $watermarkDisabled) {
-                    $url .= '?' . $this->signWatermarkBypass((string) data_get($asset, 'id'), '');
+                    $signedQuery = $this->signWatermarkBypass((string) data_get($asset, 'id'), '');
+
+                    if ($signedQuery !== '') {
+                        $url .= '?' . $signedQuery;
+                    }
                 }
 
                 data_set($asset, 'url', $url);
