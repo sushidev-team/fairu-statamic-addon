@@ -5,7 +5,9 @@ namespace Sushidev\Fairu\Tags;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
+use Statamic\Fields\Value;
 use Statamic\Tags\Tags;
+use Sushidev\Fairu\Fieldtypes\Fairu as FairuFieldtype;
 use Sushidev\Fairu\Services\Fairu;
 use Sushidev\Fairu\Services\FairuMetaBag;
 use Sushidev\Fairu\Traits\TransformAssets;
@@ -15,6 +17,52 @@ class FairuAssetTags extends Tags
     use TransformAssets;
 
     protected static $handle = 'fairu';
+
+    /**
+     * Carry the fieldtype's "Disable watermark for this field" option into the
+     * tag params. Statamic unwraps Value objects in Parameters::make(), so the
+     * field config is only visible here. An explicit watermark="..." parameter
+     * always wins. Injecting it into the params also covers deferred rendering
+     * (FairuAssetRenderer) and the tag cache keys.
+     */
+    public function setParameters($parameters)
+    {
+        parent::setParameters($parameters);
+
+        $parameters = collect($parameters)->all();
+
+        if ($this->params->has('watermark')) {
+            return $this;
+        }
+
+        foreach (['id', 'ids', ':id', ':ids'] as $key) {
+            $value = $parameters[$key] ?? null;
+
+            if (is_string($value) && str_starts_with($key, ':')) {
+                $value = $this->context->get($value);
+            }
+
+            if ($this->fieldDisablesWatermark($value)) {
+                $this->params->put('watermark', false);
+
+                break;
+            }
+        }
+
+        return $this;
+    }
+
+    protected function fieldDisablesWatermark(mixed $value): bool
+    {
+        if (! $value instanceof Value) {
+            return false;
+        }
+
+        $fieldtype = $value->fieldtype();
+
+        return $fieldtype instanceof FairuFieldtype
+            && (bool) $fieldtype->config('disable_watermark', false);
+    }
 
     /**
      * The {{ fairu:url }} tag.

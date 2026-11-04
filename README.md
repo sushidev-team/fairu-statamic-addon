@@ -32,6 +32,33 @@ FAIRU_TENANT=[YOUR_TENANT_ID]
 FAIRU_TENANT_SECRET=[YOUR_API_KEY_SECRET]
 ```
 
+## Visible watermark
+
+If your tenant uses the visible watermark (logo overlay), templates can request
+a clean rendition with `watermark="false"`. The addon signs the final URL
+(`wm=0&wms=…`) with your tenant's watermark key, so visitors cannot strip the
+watermark by editing the URL: removing `wm=0`/`wms` or changing any parameter
+(width, crop, focal point, file) brings the watermark back. Every srcset entry
+is signed separately.
+
+```bash
+FAIRU_WATERMARK_KEY=fwm_...   # watermark key from the Fairu tenant settings
+```
+
+```antlers
+{{ fairu:image :id="image" width="400" }}                      {{# teaser: watermark rules apply #}}
+{{ fairu:image :id="image" width="1600" watermark="false" }}   {{# entry: signed, clean #}}
+{{ fairu:url :id="image" raw="true" watermark="false" }}       {{# original: ?wm=0&wms=... #}}
+```
+
+Instead of repeating the parameter, enable **Disable watermark for this field**
+on the Fairu fieldtype in your blueprint. A `watermark` tag parameter overrides
+the field setting. The key is configured per connection
+(`connections.*.watermark_key`).
+
+Without a key, `watermark="false"` logs a warning once per request and emits
+the normal (watermarked) URL; templates never fail.
+
 ## Import
 
 On an existing project, you can run the following command which will automatically import all the connected assets into your fairu account. Depending on on the amount of files it might take some time.
@@ -134,6 +161,7 @@ The `POST /api/files/meta` endpoint is required on your Fairu backend for the de
 | **timestamp**   | Video thumbnail timestamp (HH:MM:SS.mmm) | **✓** | **✓** | **✓**  | **✓**   |
 | **fetchMeta**   | `"true"` for lean meta (default), `"full"` for full `File` resource, `"false"` to skip | **✓** | **✓** | **✓**  | **✓**   |
 | **raw**          | `"true"` returns the untouched original (no `?quality`/`focal`/transform query). Use for PDFs and other files that must not be routed through the image proxy | **✓** | **✓** | **✓**  | **✓**   |
+| **watermark**    | `"false"` skips the tenant's visible watermark for this rendition by signing the URL (`wm=0&wms=…`). Needs `FAIRU_WATERMARK_KEY`; overrides the field's "Disable watermark for this field" option | **✓** | **✓** | **✓**  | **✓**   |
 | **download**     | `"true"` emits a same-origin URL that forces a browser download (`Content-Disposition: attachment`) instead of opening inline. **`{{ fairu:url }}` only** — ignored on all other tags | | **✓** | | |
 
 Request a video rendition with `version="medium"`:

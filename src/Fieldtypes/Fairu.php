@@ -195,6 +195,12 @@ class Fairu extends Fieldtype
                 'instructions' => 'The folder to begin browsing in.',
                 'type' => 'folder_selector',
             ],
+            'disable_watermark' => [
+                'display' => 'Disable watermark for this field',
+                'instructions' => 'Sign URLs rendered from this field with `wm=0` so the visible watermark is skipped. Requires `FAIRU_WATERMARK_KEY`. A `watermark` tag parameter overrides this.',
+                'type' => 'toggle',
+                'default' => false,
+            ],
 
         ];
     }
@@ -206,16 +212,25 @@ class Fairu extends Fieldtype
 
     public function shallowAugment($value)
     {
-        $cacheKey = md5(json_encode($value));
+        $watermarkDisabled = $this->watermarkDisabled();
+        $cacheKey = md5(json_encode($value) . ($watermarkDisabled ? '|wm0|' . $this->getConnectionName() : ''));
         $ids = $this->resolveIds($value);
 
-        $files = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids) {
-            return collect($this->getFiles($ids, true))->map(function ($asset) {
+        $files = Cache::flexible($cacheKey, config('app.debug') ? [0, 0] : config('statamic.fairu.caching_meta'), function () use ($ids, $watermarkDisabled) {
+            return collect($this->getFiles($ids, true))->map(function ($asset) use ($watermarkDisabled) {
 
                 $url = $this->buildFileUrl(
                     id: data_get($asset, 'id'),
                     filename: data_get($asset, 'name'),
                 );
+
+                if ($url !== null && $watermarkDisabled) {
+                    $signedQuery = $this->signWatermarkBypass((string) data_get($asset, 'id'), '');
+
+                    if ($signedQuery !== '') {
+                        $url .= '?' . $signedQuery;
+                    }
+                }
 
                 data_set($asset, 'url', $url);
                 data_set($asset, 'focus_css', $this->formatFocalPoint(data_get($asset, 'focal_point')));

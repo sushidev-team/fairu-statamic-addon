@@ -14,6 +14,10 @@ return [
         'default' => [
             'tenant' => env('FAIRU_TENANT'),
             'tenant_secret' => env('FAIRU_TENANT_SECRET'),
+
+            // Watermark key ("fwm_...") from the Fairu tenant settings. Used to sign
+            // watermark="false" URLs (wm=0&wms=...) so the visible watermark is skipped.
+            'watermark_key' => env('FAIRU_WATERMARK_KEY'),
         ],
     ],
 
