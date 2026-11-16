@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, useId, getCurrentInstance, defineAsyncComponent } from 'vue';
-import { Fieldtype } from '@statamic/cms';
+import { Fieldtype, SortableList } from '@statamic/cms';
 import { toast, progress } from '@statamic/cms/api';
-import { Button } from '@statamic/cms/ui';
+import { Button, Icon } from '@statamic/cms/ui';
 import FairuAssetEditor from '../FairuAssetEditor.vue';
 import Dropzone from '../Dropzone.vue';
 import { fairuUpload, fairuLoadFilesMeta } from '../../utils/fetches';
@@ -12,7 +12,7 @@ const FairuBrowser = defineAsyncComponent(() => import('../FairuBrowser.vue'));
 
 const emit = defineEmits(Fieldtype.emits);
 const props = defineProps(Fieldtype.props);
-const { expose, update } = Fieldtype.use(emit, props);
+const { expose, update, isReadOnly } = Fieldtype.use(emit, props);
 defineExpose(expose);
 
 const __ = getCurrentInstance().appContext.config.globalProperties.__;
@@ -33,6 +33,7 @@ const multiselect = computed(() => props.config.max_files !== 1);
 
 const { canView, canUpload: hasUploadPermission, canEdit } = useFairuPermissions();
 const canUpload = computed(() => hasUploadPermission.value && props.config.allow_uploads);
+const canSort = computed(() => multiselect.value && assets.value?.length > 1 && !isReadOnly.value);
 
 function openSearch() {
     if (!canView.value) return;
@@ -101,6 +102,11 @@ function clearAsset(item) {
 function handleSelected(selected) {
     assets.value = multiselect.value ? selected : [selected];
     nextTick(() => sendUpdate());
+}
+
+function handleSorted(sorted) {
+    assets.value = sorted;
+    sendUpdate();
 }
 
 function handleFileDrop(files) {
@@ -262,12 +268,29 @@ onMounted(async () => {
                     <span v-if="props.config.max_files">{{ __('fairu::fieldtype.rules.max') }}: {{ props.config.max_files }}</span>
                 </div>
                 <!-- Asset rows -->
+                <sortable-list
+                    :model-value="assets"
+                    item-class="fairu-sortable-row"
+                    handle-class="fairu-sortable-handle"
+                    :disabled="!canSort"
+                    :distance="5"
+                    :mirror="false"
+                    :vertical="true"
+                    @update:model-value="handleSorted">
+                <div>
                 <div
-                    v-for="(item, index) in assets"
-                    :key="item.id + index"
-                    class="group relative flex items-center gap-2 sm:gap-3 p-3 bg-white dark:bg-gray-900 border-b dark:border-gray-600 last:border-b-0"
+                    v-for="item in assets"
+                    :key="item.id"
+                    class="fairu-sortable-row group relative flex items-center gap-2 sm:gap-3 p-3 bg-white dark:bg-gray-900 border-b dark:border-gray-600 last:border-b-0"
                     :class="canView ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900' : 'cursor-default'"
                     @click.prevent="openSearch">
+                    <!-- Drag handle -->
+                    <div
+                        v-if="canSort"
+                        class="fairu-sortable-handle shrink-0 -ml-1 cursor-grab text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        @click.stop>
+                        <Icon name="handles" class="size-4" />
+                    </div>
                     <!-- Availability dot -->
                     <div
                         :aria-label="__('fairu::fieldtype.asset.availability')"
@@ -285,7 +308,7 @@ onMounted(async () => {
                             !metaItemsFetching.has(item.id) &&
                             item?.mime?.match(/^(image|video)\//)
                         "
-                        :key="item.id + index + 'image'"
+                        :key="item.id + 'image'"
                         class="shrink-0 size-7 rounded-sm object-cover"
                         :src="meta.proxy + '/' + item?.id + '/thumbnail.webp?width=50&height=50'" />
                     <svg v-if="metaItemsFetching.has(item.id)" class="animate-spin shrink-0 size-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -324,6 +347,8 @@ onMounted(async () => {
                             @click.prevent.stop="clearAsset(item)" />
                     </div>
                 </div>
+                </div>
+                </sortable-list>
             </div>
         </dropzone>
     </div>
