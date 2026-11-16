@@ -6,6 +6,13 @@
 
 * **watermark:** `watermark="false"` tag parameter and "Disable watermark for this field" fieldtype option sign proxy URLs (`wm=0&wms=…`) with `FAIRU_WATERMARK_KEY` to skip the visible watermark; srcset entries, `raw="true"` originals and deferred (coalesced) rendering are signed too
 
+## [3.4.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v3.3.0...v3.4.0) (2026-11-16)
+
+
+### Features
+
+* draggable items in field entry list ([1e8578f](https://github.com/sushidev-team/fairu-statamic-addon/commit/1e8578f43336cf86962174c755989e06485590dd))
+
 ## [3.3.0](https://github.com/sushidev-team/fairu-statamic-addon/compare/v3.2.0...v3.3.0) (2026-11-04)
 
 
